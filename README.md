@@ -17,3 +17,9 @@ idf.py -C firmware set-target esp32s3
 idf.py -C firmware build
 idf.py -C firmware -p COM5 flash monitor
 ```
+
+## Flashing without the toolchain
+
+`firmware/flash/` holds the latest built image and a one-line script for
+esptool, so any PC with Python can flash the gauge. See
+`firmware/flash/README.md`.
