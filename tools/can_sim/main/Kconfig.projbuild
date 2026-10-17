@@ -1,0 +1,8 @@
+menu "MS2 CAN simulator"
+    config SIM_CAN_TX
+        int "CAN TX GPIO"
+        default 16
+    config SIM_CAN_RX
+        int "CAN RX GPIO"
+        default 17
+endmenu

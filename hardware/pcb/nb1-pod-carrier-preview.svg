@@ -1,0 +1,487 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="820" viewBox="0 0 1500 820" font-family="Segoe UI, Arial, sans-serif">
+<rect width="1500" height="820" fill="#f6f3ec"/>
+<text x="400" y="36" text-anchor="middle" font-size="20" font-weight="700" fill="#222">NB1 pod carrier rev B: parts side (rear of the pod), copper on the far side</text>
+<circle cx="400" cy="400" r="322.0" fill="#1f6f3f" stroke="#111" stroke-width="2"/>
+<path d="M 488.9 661.5 L 488.9 638.0 L 526.0 600.9 L 526.0 533.0" fill="none" stroke="#3a3a3a" stroke-width="14.0" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>
+<path d="M 526.0 533.0 L 526.0 459.5 L 453.3 459.5 L 453.3 491.0" fill="none" stroke="#3a3a3a" stroke-width="14.0" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>
+<path d="M 372.0 197.0 L 372.0 232.0" fill="none" stroke="#eab308" stroke-width="8.4" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>
+<path d="M 344.0 197.0 L 298.8 213.7" fill="none" stroke="#3a3a3a" stroke-width="14.0" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>
+<path d="M 298.8 213.7 L 298.8 320.3" fill="none" stroke="#3a3a3a" stroke-width="14.0" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>
+<path d="M 344.0 197.0 L 351.0 163.4 L 596.0 176.0 L 638.0 211.0 L 673.0 274.0 L 684.2 344.0 L 667.1 386.0" fill="none" stroke="#3a3a3a" stroke-width="14.0" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>
+<path d="M 524.9 386.0 L 588.4 449.0" fill="none" stroke="#f48c06" stroke-width="14.0" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>
+<path d="M 524.5 661.5 L 550.5 631.0 L 555.4 554.0" fill="none" stroke="#c9184a" stroke-width="14.0" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>
+<path d="M 311.1 661.5 L 311.1 582.0 L 323.0 568.0" fill="none" stroke="#888" stroke-width="8.4" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>
+<path d="M 155.0 442.0 L 134.0 449.0 L 120.0 414.0 L 127.0 351.0 L 274.0 351.0 L 298.8 351.0 L 298.8 320.3" fill="none" stroke="#3a3a3a" stroke-width="14.0" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>
+<path d="M 401.4 195.6 L 401.4 391.6 L 310.4 482.6 L 310.4 489.6" fill="none" stroke="#0891b2" stroke-width="11.2" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>
+<path d="M 488.9 489.6 L 488.9 521.1 L 492.4 524.6 L 492.4 601.6 L 453.9 640.1 L 453.9 661.1" fill="none" stroke="#e07a5f" stroke-width="11.2" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>
+<path d="M 383.9 661.1 L 383.9 556.1 L 418.9 521.1 L 418.9 489.6" fill="none" stroke="#7c3aed" stroke-width="11.2" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>
+<path d="M 359.4 538.6 L 359.4 517.6 L 383.9 493.1 L 383.9 489.6" fill="none" stroke="#a855f7" stroke-width="11.2" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>
+<path d="M 418.9 661.1 L 418.9 584.1 L 464.4 538.6" fill="none" stroke="#9333ea" stroke-width="11.2" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>
+<path d="M 156.4 412.6 L 166.9 412.6 L 201.9 447.6 L 201.9 468.6" fill="none" stroke="#888" stroke-width="11.2" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>
+<path d="M 201.9 472.1 L 194.9 479.1 L 191.4 479.1" fill="none" stroke="#888" stroke-width="11.2" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>
+<path d="M 156.4 384.6 L 236.9 384.6" fill="none" stroke="#888" stroke-width="11.2" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>
+<path d="M 229.9 391.6 L 229.9 398.6" fill="none" stroke="#888" stroke-width="11.2" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>
+<path d="M 313.9 412.6 L 313.9 444.1 L 275.4 482.6 L 275.4 661.1" fill="none" stroke="#888" stroke-width="11.2" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>
+<path d="M 345.4 489.6 L 345.4 486.1 L 495.9 335.6 L 516.9 335.6 L 530.9 321.6 L 530.9 279.6 L 471.4 220.1 L 443.4 220.1 L 429.4 206.1 L 429.4 195.6" fill="none" stroke="#1d4ed8" stroke-width="11.2" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>
+<path d="M 457.4 195.6 L 502.9 195.6 L 544.9 237.6" fill="none" stroke="#d62828" stroke-width="14.0" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>
+<path d="M 555.4 552.6 L 576.4 552.6 L 614.9 514.1 L 614.9 503.6" fill="none" stroke="#c9184a" stroke-width="14.0" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>
+<path d="M 614.9 503.6 L 660.4 458.1 L 660.4 447.6" fill="none" stroke="#c9184a" stroke-width="14.0" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>
+<path d="M 229.9 535.1 L 215.9 535.1 L 156.4 475.6 L 156.4 468.6" fill="none" stroke="#c9184a" stroke-width="14.0" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>
+<path d="M 264.9 213.1 L 254.4 223.6 L 254.4 227.1 L 184.4 297.1 L 170.4 297.1" fill="none" stroke="#a16207" stroke-width="11.2" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>
+<path d="M 646.4 307.6 L 646.4 276.1 L 618.4 248.1 L 618.4 237.6" fill="none" stroke="#e85d04" stroke-width="14.0" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>
+<path d="M 264.9 321.6 L 226.4 321.6" fill="none" stroke="#ca8a04" stroke-width="11.2" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>
+<path d="M 667.4 384.6 L 667.4 395.1 L 625.4 437.1 L 625.4 447.6" fill="none" stroke="#3a3a3a" stroke-width="14.0" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>
+<path d="M 625.4 447.6 L 625.4 454.6 L 604.4 475.6 L 597.4 475.6 L 579.9 493.1 L 579.9 503.6" fill="none" stroke="#3a3a3a" stroke-width="14.0" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>
+<path d="M 579.9 503.6 L 527.4 503.6" fill="none" stroke="#3a3a3a" stroke-width="14.0" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>
+<path d="M 292.9 349.6 L 292.9 374.1" fill="none" stroke="#3a3a3a" stroke-width="14.0" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>
+<path d="M 292.9 381.1 L 306.9 381.1" fill="none" stroke="#3a3a3a" stroke-width="14.0" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>
+<path d="M 429.4 279.6 L 429.4 276.1 L 439.9 265.6" fill="none" stroke="#3a3a3a" stroke-width="14.0" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>
+<path d="M 373.4 230.6 L 359.4 230.6" fill="none" stroke="#eab308" stroke-width="11.2" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>
+<path d="M 226.4 216.6 L 226.4 213.1" fill="none" stroke="#eab308" stroke-width="11.2" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>
+<path d="M 523.9 384.6 L 523.9 370.6" fill="none" stroke="#f48c06" stroke-width="14.0" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>
+<path d="M 502.9 307.6 L 502.9 293.6 L 474.9 265.6" fill="none" stroke="#f48c06" stroke-width="14.0" stroke-linecap="round" stroke-linejoin="round" opacity="0.8"/>
+<line x1="257.2" y1="679.7" x2="542.8" y2="679.7" stroke="#eee" stroke-width="1.5" stroke-dasharray="4 3"/>
+<line x1="257.2" y1="643.3" x2="542.8" y2="643.3" stroke="#eee" stroke-width="1.5" stroke-dasharray="4 3"/>
+<line x1="257.2" y1="679.7" x2="257.2" y2="643.3" stroke="#eee" stroke-width="1.5" stroke-dasharray="4 3"/>
+<line x1="542.8" y1="679.7" x2="542.8" y2="643.3" stroke="#eee" stroke-width="1.5" stroke-dasharray="4 3"/>
+<rect x="259.8" y="645.8" width="31.5" height="31.5" fill="#d4a017" stroke="#fff" stroke-width="1.2"/>
+<circle cx="275.5" cy="661.5" r="7.0" fill="#f6f3ec"/>
+<text x="275.5" y="693.7" font-size="10" fill="#fff" text-anchor="end" dominant-baseline="middle" transform="rotate(-90 275.5 693.7)">AIN2</text>
+<circle cx="311.1" cy="661.5" r="15.8" fill="#d4a017" stroke="#fff" stroke-width="1.2"/>
+<circle cx="311.1" cy="661.5" r="7.0" fill="#f6f3ec"/>
+<text x="311.1" y="693.7" font-size="10" fill="#fff" text-anchor="end" dominant-baseline="middle" transform="rotate(-90 311.1 693.7)">AIN1</text>
+<circle cx="346.7" cy="661.5" r="15.8" fill="#d4a017" stroke="#fff" stroke-width="1.2"/>
+<circle cx="346.7" cy="661.5" r="7.0" fill="#f6f3ec"/>
+<circle cx="382.2" cy="661.5" r="15.8" fill="#7c3aed" stroke="#fff" stroke-width="1.2"/>
+<circle cx="382.2" cy="661.5" r="7.0" fill="#f6f3ec"/>
+<text x="382.2" y="693.7" font-size="10" fill="#fff" text-anchor="end" dominant-baseline="middle" transform="rotate(-90 382.2 693.7)">CAN_TX</text>
+<circle cx="417.8" cy="661.5" r="15.8" fill="#9333ea" stroke="#fff" stroke-width="1.2"/>
+<circle cx="417.8" cy="661.5" r="7.0" fill="#f6f3ec"/>
+<text x="417.8" y="693.7" font-size="10" fill="#fff" text-anchor="end" dominant-baseline="middle" transform="rotate(-90 417.8 693.7)">CAN_RX</text>
+<circle cx="453.3" cy="661.5" r="15.8" fill="#e07a5f" stroke="#fff" stroke-width="1.2"/>
+<circle cx="453.3" cy="661.5" r="7.0" fill="#f6f3ec"/>
+<text x="453.3" y="693.7" font-size="10" fill="#fff" text-anchor="end" dominant-baseline="middle" transform="rotate(-90 453.3 693.7)">3V3</text>
+<circle cx="488.9" cy="661.5" r="15.8" fill="#3a3a3a" stroke="#fff" stroke-width="1.2"/>
+<circle cx="488.9" cy="661.5" r="7.0" fill="#f6f3ec"/>
+<text x="488.9" y="693.7" font-size="10" fill="#fff" text-anchor="end" dominant-baseline="middle" transform="rotate(-90 488.9 693.7)">GND</text>
+<circle cx="524.5" cy="661.5" r="15.8" fill="#c9184a" stroke="#fff" stroke-width="1.2"/>
+<circle cx="524.5" cy="661.5" r="7.0" fill="#f6f3ec"/>
+<text x="524.5" y="693.7" font-size="10" fill="#fff" text-anchor="end" dominant-baseline="middle" transform="rotate(-90 524.5 693.7)">5V</text>
+<rect x="386.0" y="652.5" width="28" height="18" rx="4" fill="#111" opacity="0.75"/>
+<text x="400.0" y="665.5" font-size="12" font-weight="700" fill="#fff" text-anchor="middle">J1</text>
+<line x1="292.2" y1="512.0" x2="507.8" y2="512.0" stroke="#eee" stroke-width="1.5" stroke-dasharray="4 3"/>
+<line x1="292.2" y1="320.2" x2="507.8" y2="320.2" stroke="#eee" stroke-width="1.5" stroke-dasharray="4 3"/>
+<line x1="292.2" y1="512.0" x2="292.2" y2="320.2" stroke="#eee" stroke-width="1.5" stroke-dasharray="4 3"/>
+<line x1="507.8" y1="512.0" x2="507.8" y2="320.2" stroke="#eee" stroke-width="1.5" stroke-dasharray="4 3"/>
+<rect x="295.4" y="475.2" width="31.5" height="31.5" fill="#0891b2" stroke="#fff" stroke-width="1.2"/>
+<circle cx="311.1" cy="491.0" r="7.0" fill="#f6f3ec"/>
+<text x="311.1" y="463.0" font-size="10" fill="#fff" text-anchor="start" dominant-baseline="middle" transform="rotate(90 311.1 463.0)">CANL</text>
+<circle cx="346.7" cy="491.0" r="15.8" fill="#1d4ed8" stroke="#fff" stroke-width="1.2"/>
+<circle cx="346.7" cy="491.0" r="7.0" fill="#f6f3ec"/>
+<text x="346.7" y="463.0" font-size="10" fill="#fff" text-anchor="start" dominant-baseline="middle" transform="rotate(90 346.7 463.0)">CANH</text>
+<circle cx="382.2" cy="491.0" r="15.8" fill="#a855f7" stroke="#fff" stroke-width="1.2"/>
+<circle cx="382.2" cy="491.0" r="7.0" fill="#f6f3ec"/>
+<text x="382.2" y="463.0" font-size="10" fill="#fff" text-anchor="start" dominant-baseline="middle" transform="rotate(90 382.2 463.0)">CAN_RXM</text>
+<circle cx="417.8" cy="491.0" r="15.8" fill="#7c3aed" stroke="#fff" stroke-width="1.2"/>
+<circle cx="417.8" cy="491.0" r="7.0" fill="#f6f3ec"/>
+<text x="417.8" y="463.0" font-size="10" fill="#fff" text-anchor="start" dominant-baseline="middle" transform="rotate(90 417.8 463.0)">CAN_TX</text>
+<circle cx="453.3" cy="491.0" r="15.8" fill="#3a3a3a" stroke="#fff" stroke-width="1.2"/>
+<circle cx="453.3" cy="491.0" r="7.0" fill="#f6f3ec"/>
+<text x="453.3" y="463.0" font-size="10" fill="#fff" text-anchor="start" dominant-baseline="middle" transform="rotate(90 453.3 463.0)">GND</text>
+<circle cx="488.9" cy="491.0" r="15.8" fill="#e07a5f" stroke="#fff" stroke-width="1.2"/>
+<circle cx="488.9" cy="491.0" r="7.0" fill="#f6f3ec"/>
+<text x="488.9" y="463.0" font-size="10" fill="#fff" text-anchor="start" dominant-baseline="middle" transform="rotate(90 488.9 463.0)">3V3</text>
+<rect x="386.0" y="405.0" width="28" height="18" rx="4" fill="#111" opacity="0.75"/>
+<text x="400.0" y="418.0" font-size="12" font-weight="700" fill="#fff" text-anchor="middle">U2</text>
+<line x1="311.8" y1="225.0" x2="488.2" y2="225.0" stroke="#eee" stroke-width="1.5" stroke-dasharray="4 3"/>
+<line x1="311.8" y1="145.2" x2="488.2" y2="145.2" stroke="#eee" stroke-width="1.5" stroke-dasharray="4 3"/>
+<line x1="311.8" y1="225.0" x2="311.8" y2="145.2" stroke="#eee" stroke-width="1.5" stroke-dasharray="4 3"/>
+<line x1="488.2" y1="225.0" x2="488.2" y2="145.2" stroke="#eee" stroke-width="1.5" stroke-dasharray="4 3"/>
+<rect x="332.8" y="185.8" width="22.4" height="22.4" fill="#3a3a3a" stroke="#fff" stroke-width="1.2"/>
+<circle cx="344.0" cy="197.0" r="6.3" fill="#f6f3ec"/>
+<text x="344.0" y="230.6" font-size="10" fill="#fff" text-anchor="end" dominant-baseline="middle" transform="rotate(-90 344.0 230.6)">GND</text>
+<circle cx="372.0" cy="197.0" r="11.2" fill="#eab308" stroke="#fff" stroke-width="1.2"/>
+<circle cx="372.0" cy="197.0" r="6.3" fill="#f6f3ec"/>
+<text x="372.0" y="230.6" font-size="10" fill="#fff" text-anchor="end" dominant-baseline="middle" transform="rotate(-90 372.0 230.6)">LIGHTS</text>
+<circle cx="400.0" cy="197.0" r="11.2" fill="#0891b2" stroke="#fff" stroke-width="1.2"/>
+<circle cx="400.0" cy="197.0" r="6.3" fill="#f6f3ec"/>
+<text x="400.0" y="230.6" font-size="10" fill="#fff" text-anchor="end" dominant-baseline="middle" transform="rotate(-90 400.0 230.6)">CANL</text>
+<circle cx="428.0" cy="197.0" r="11.2" fill="#1d4ed8" stroke="#fff" stroke-width="1.2"/>
+<circle cx="428.0" cy="197.0" r="6.3" fill="#f6f3ec"/>
+<text x="428.0" y="230.6" font-size="10" fill="#fff" text-anchor="end" dominant-baseline="middle" transform="rotate(-90 428.0 230.6)">CANH</text>
+<circle cx="456.0" cy="197.0" r="11.2" fill="#d62828" stroke="#fff" stroke-width="1.2"/>
+<circle cx="456.0" cy="197.0" r="6.3" fill="#f6f3ec"/>
+<text x="456.0" y="230.6" font-size="10" fill="#fff" text-anchor="end" dominant-baseline="middle" transform="rotate(-90 456.0 230.6)">12V_IN</text>
+<rect x="386.0" y="165.6" width="28" height="18" rx="4" fill="#111" opacity="0.75"/>
+<text x="400.0" y="178.6" font-size="12" font-weight="700" fill="#fff" text-anchor="middle">J2</text>
+<line x1="103.2" y1="502.2" x2="183.0" y2="502.2" stroke="#eee" stroke-width="1.5" stroke-dasharray="4 3"/>
+<line x1="103.2" y1="353.8" x2="183.0" y2="353.8" stroke="#eee" stroke-width="1.5" stroke-dasharray="4 3"/>
+<line x1="103.2" y1="502.2" x2="103.2" y2="353.8" stroke="#eee" stroke-width="1.5" stroke-dasharray="4 3"/>
+<line x1="183.0" y1="502.2" x2="183.0" y2="353.8" stroke="#eee" stroke-width="1.5" stroke-dasharray="4 3"/>
+<rect x="143.8" y="458.8" width="22.4" height="22.4" fill="#c9184a" stroke="#fff" stroke-width="1.2"/>
+<circle cx="155.0" cy="470.0" r="6.3" fill="#f6f3ec"/>
+<text x="185.8" y="470.0" font-size="10" fill="#fff" text-anchor="start" dominant-baseline="middle" transform="rotate(0 185.8 470.0)">5V</text>
+<circle cx="155.0" cy="442.0" r="11.2" fill="#3a3a3a" stroke="#fff" stroke-width="1.2"/>
+<circle cx="155.0" cy="442.0" r="6.3" fill="#f6f3ec"/>
+<text x="185.8" y="442.0" font-size="10" fill="#fff" text-anchor="start" dominant-baseline="middle" transform="rotate(0 185.8 442.0)">GND</text>
+<circle cx="155.0" cy="414.0" r="11.2" fill="#d4a017" stroke="#fff" stroke-width="1.2"/>
+<circle cx="155.0" cy="414.0" r="6.3" fill="#f6f3ec"/>
+<text x="185.8" y="414.0" font-size="10" fill="#fff" text-anchor="start" dominant-baseline="middle" transform="rotate(0 185.8 414.0)">NODE1</text>
+<circle cx="155.0" cy="386.0" r="11.2" fill="#d4a017" stroke="#fff" stroke-width="1.2"/>
+<circle cx="155.0" cy="386.0" r="6.3" fill="#f6f3ec"/>
+<text x="185.8" y="386.0" font-size="10" fill="#fff" text-anchor="start" dominant-baseline="middle" transform="rotate(0 185.8 386.0)">NODE2</text>
+<rect x="141.0" y="419.0" width="28" height="18" rx="4" fill="#111" opacity="0.75"/>
+<text x="155.0" y="432.0" font-size="12" font-weight="700" fill="#fff" text-anchor="middle">J3</text>
+<rect x="200.5" y="554.0" width="12.6" height="14.0" fill="#d4a017" stroke="#fff" stroke-width="1.2"/>
+<rect x="222.9" y="554.0" width="12.6" height="14.0" fill="#c9184a" stroke="#fff" stroke-width="1.2"/>
+<rect x="204.0" y="552.0" width="28" height="18" rx="4" fill="#111" opacity="0.75"/>
+<text x="218.0" y="565.0" font-size="12" font-weight="700" fill="#fff" text-anchor="middle">RP2</text>
+<rect x="199.8" y="384.6" width="14.0" height="16.8" fill="#d4a017" stroke="#fff" stroke-width="1.2"/>
+<rect x="222.2" y="384.6" width="14.0" height="16.8" fill="#d4a017" stroke="#fff" stroke-width="1.2"/>
+<rect x="204.0" y="384.0" width="28" height="18" rx="4" fill="#111" opacity="0.75"/>
+<text x="218.0" y="397.0" font-size="12" font-weight="700" fill="#fff" text-anchor="middle">SJ2</text>
+<rect x="200.5" y="512.0" width="12.6" height="14.0" fill="#d4a017" stroke="#fff" stroke-width="1.2"/>
+<rect x="222.9" y="512.0" width="12.6" height="14.0" fill="#c9184a" stroke="#fff" stroke-width="1.2"/>
+<rect x="204.0" y="510.0" width="28" height="18" rx="4" fill="#111" opacity="0.75"/>
+<text x="218.0" y="523.0" font-size="12" font-weight="700" fill="#fff" text-anchor="middle">RP1</text>
+<rect x="200.5" y="470.0" width="12.6" height="14.0" fill="#d4a017" stroke="#fff" stroke-width="1.2"/>
+<rect x="222.9" y="470.0" width="12.6" height="14.0" fill="#d4a017" stroke="#fff" stroke-width="1.2"/>
+<rect x="204.0" y="468.0" width="28" height="18" rx="4" fill="#111" opacity="0.75"/>
+<text x="218.0" y="481.0" font-size="12" font-weight="700" fill="#fff" text-anchor="middle">R11</text>
+<rect x="200.5" y="428.0" width="12.6" height="14.0" fill="#d4a017" stroke="#fff" stroke-width="1.2"/>
+<rect x="222.9" y="428.0" width="12.6" height="14.0" fill="#d4a017" stroke="#fff" stroke-width="1.2"/>
+<rect x="204.0" y="426.0" width="28" height="18" rx="4" fill="#111" opacity="0.75"/>
+<text x="218.0" y="439.0" font-size="12" font-weight="700" fill="#fff" text-anchor="middle">R21</text>
+<rect x="143.8" y="524.6" width="14.0" height="16.8" fill="#d4a017" stroke="#fff" stroke-width="1.2"/>
+<rect x="166.2" y="524.6" width="14.0" height="16.8" fill="#d4a017" stroke="#fff" stroke-width="1.2"/>
+<rect x="148.0" y="524.0" width="28" height="18" rx="4" fill="#111" opacity="0.75"/>
+<text x="162.0" y="537.0" font-size="12" font-weight="700" fill="#fff" text-anchor="middle">SJ1</text>
+<rect x="263.5" y="428.0" width="12.6" height="14.0" fill="#d4a017" stroke="#fff" stroke-width="1.2"/>
+<rect x="285.9" y="428.0" width="12.6" height="14.0" fill="#3a3a3a" stroke="#fff" stroke-width="1.2"/>
+<rect x="267.0" y="426.0" width="28" height="18" rx="4" fill="#111" opacity="0.75"/>
+<text x="281.0" y="439.0" font-size="12" font-weight="700" fill="#fff" text-anchor="middle">R12</text>
+<rect x="263.5" y="386.0" width="12.6" height="14.0" fill="#d4a017" stroke="#fff" stroke-width="1.2"/>
+<rect x="285.9" y="386.0" width="12.6" height="14.0" fill="#3a3a3a" stroke="#fff" stroke-width="1.2"/>
+<rect x="267.0" y="384.0" width="28" height="18" rx="4" fill="#111" opacity="0.75"/>
+<text x="281.0" y="397.0" font-size="12" font-weight="700" fill="#fff" text-anchor="middle">R22</text>
+<rect x="153.2" y="279.8" width="31.5" height="31.5" fill="#a16207" stroke="#fff" stroke-width="1.2"/>
+<circle cx="169.0" cy="295.6" r="7.0" fill="#f6f3ec"/>
+<text x="197.0" y="295.6" font-size="10" fill="#fff" text-anchor="start" dominant-baseline="middle" transform="rotate(0 197.0 295.6)">EX0</text>
+<circle cx="169.0" cy="260.0" r="15.8" fill="#6b7280" stroke="#fff" stroke-width="1.2"/>
+<circle cx="169.0" cy="260.0" r="7.0" fill="#f6f3ec"/>
+<text x="197.0" y="260.0" font-size="10" fill="#fff" text-anchor="start" dominant-baseline="middle" transform="rotate(0 197.0 260.0)">SDA</text>
+<circle cx="169.0" cy="224.4" r="15.8" fill="#6b7280" stroke="#fff" stroke-width="1.2"/>
+<circle cx="169.0" cy="224.4" r="7.0" fill="#f6f3ec"/>
+<text x="197.0" y="224.4" font-size="10" fill="#fff" text-anchor="start" dominant-baseline="middle" transform="rotate(0 197.0 224.4)">SCL</text>
+<rect x="155.0" y="251.0" width="28" height="18" rx="4" fill="#111" opacity="0.75"/>
+<text x="169.0" y="264.0" font-size="12" font-weight="700" fill="#fff" text-anchor="middle">J5</text>
+<rect x="342.1" y="524.2" width="31.5" height="31.5" fill="#a855f7" stroke="#fff" stroke-width="1.2"/>
+<circle cx="357.9" cy="540.0" r="7.0" fill="#f6f3ec"/>
+<circle cx="464.5" cy="540.0" r="15.8" fill="#9333ea" stroke="#fff" stroke-width="1.2"/>
+<circle cx="464.5" cy="540.0" r="7.0" fill="#f6f3ec"/>
+<rect x="397.2" y="531.0" width="28" height="18" rx="4" fill="#111" opacity="0.75"/>
+<text x="411.2" y="544.0" font-size="12" font-weight="700" fill="#fff" text-anchor="middle">R3</text>
+<rect x="530.7" y="223.2" width="31.5" height="31.5" fill="#d62828" stroke="#fff" stroke-width="1.2"/>
+<circle cx="546.4" cy="239.0" r="7.0" fill="#f6f3ec"/>
+<circle cx="617.6" cy="239.0" r="15.8" fill="#e85d04" stroke="#fff" stroke-width="1.2"/>
+<circle cx="617.6" cy="239.0" r="7.0" fill="#f6f3ec"/>
+<rect x="568.0" y="230.0" width="28" height="18" rx="4" fill="#111" opacity="0.75"/>
+<text x="582.0" y="243.0" font-size="12" font-weight="700" fill="#fff" text-anchor="middle">F1</text>
+<rect x="488.1" y="293.2" width="31.5" height="31.5" fill="#f48c06" stroke="#fff" stroke-width="1.2"/>
+<circle cx="503.9" cy="309.0" r="7.0" fill="#f6f3ec"/>
+<circle cx="646.1" cy="309.0" r="15.8" fill="#e85d04" stroke="#fff" stroke-width="1.2"/>
+<circle cx="646.1" cy="309.0" r="7.0" fill="#f6f3ec"/>
+<rect x="561.0" y="300.0" width="28" height="18" rx="4" fill="#111" opacity="0.75"/>
+<text x="575.0" y="313.0" font-size="12" font-weight="700" fill="#fff" text-anchor="middle">D1</text>
+<rect x="509.1" y="370.2" width="31.5" height="31.5" fill="#f48c06" stroke="#fff" stroke-width="1.2"/>
+<circle cx="524.9" cy="386.0" r="8.4" fill="#f6f3ec"/>
+<circle cx="667.1" cy="386.0" r="15.8" fill="#3a3a3a" stroke="#fff" stroke-width="1.2"/>
+<circle cx="667.1" cy="386.0" r="8.4" fill="#f6f3ec"/>
+<rect x="582.0" y="377.0" width="28" height="18" rx="4" fill="#111" opacity="0.75"/>
+<text x="596.0" y="390.0" font-size="12" font-weight="700" fill="#fff" text-anchor="middle">D2</text>
+<rect x="422.5" y="251.2" width="31.5" height="31.5" fill="#3a3a3a" stroke="#fff" stroke-width="1.2"/>
+<circle cx="438.2" cy="267.0" r="7.0" fill="#f6f3ec"/>
+<circle cx="473.8" cy="267.0" r="15.8" fill="#f48c06" stroke="#fff" stroke-width="1.2"/>
+<circle cx="473.8" cy="267.0" r="7.0" fill="#f6f3ec"/>
+<rect x="442.0" y="258.0" width="28" height="18" rx="4" fill="#111" opacity="0.75"/>
+<text x="456.0" y="271.0" font-size="12" font-weight="700" fill="#fff" text-anchor="middle">C1</text>
+<line x1="542.1" y1="470.0" x2="705.9" y2="470.0" stroke="#eee" stroke-width="1.5" stroke-dasharray="4 3"/>
+<line x1="542.1" y1="428.0" x2="705.9" y2="428.0" stroke="#eee" stroke-width="1.5" stroke-dasharray="4 3"/>
+<line x1="542.1" y1="470.0" x2="542.1" y2="428.0" stroke="#eee" stroke-width="1.5" stroke-dasharray="4 3"/>
+<line x1="705.9" y1="470.0" x2="705.9" y2="428.0" stroke="#eee" stroke-width="1.5" stroke-dasharray="4 3"/>
+<rect x="572.7" y="433.2" width="31.5" height="31.5" fill="#f48c06" stroke="#fff" stroke-width="1.2"/>
+<circle cx="588.4" cy="449.0" r="7.0" fill="#f6f3ec"/>
+<text x="588.4" y="421.0" font-size="10" fill="#fff" text-anchor="start" dominant-baseline="middle" transform="rotate(90 588.4 421.0)">12V_P</text>
+<circle cx="624.0" cy="449.0" r="15.8" fill="#3a3a3a" stroke="#fff" stroke-width="1.2"/>
+<circle cx="624.0" cy="449.0" r="7.0" fill="#f6f3ec"/>
+<text x="624.0" y="421.0" font-size="10" fill="#fff" text-anchor="start" dominant-baseline="middle" transform="rotate(90 624.0 421.0)">GND</text>
+<circle cx="659.6" cy="449.0" r="15.8" fill="#c9184a" stroke="#fff" stroke-width="1.2"/>
+<circle cx="659.6" cy="449.0" r="7.0" fill="#f6f3ec"/>
+<text x="659.6" y="421.0" font-size="10" fill="#fff" text-anchor="start" dominant-baseline="middle" transform="rotate(90 659.6 421.0)">5V</text>
+<rect x="610.0" y="440.0" width="28" height="18" rx="4" fill="#111" opacity="0.75"/>
+<text x="624.0" y="453.0" font-size="12" font-weight="700" fill="#fff" text-anchor="middle">U1</text>
+<rect x="562.5" y="489.2" width="31.5" height="31.5" fill="#3a3a3a" stroke="#fff" stroke-width="1.2"/>
+<circle cx="578.2" cy="505.0" r="7.0" fill="#f6f3ec"/>
+<circle cx="613.8" cy="505.0" r="15.8" fill="#c9184a" stroke="#fff" stroke-width="1.2"/>
+<circle cx="613.8" cy="505.0" r="7.0" fill="#f6f3ec"/>
+<rect x="582.0" y="496.0" width="28" height="18" rx="4" fill="#111" opacity="0.75"/>
+<text x="596.0" y="509.0" font-size="12" font-weight="700" fill="#fff" text-anchor="middle">C2</text>
+<rect x="209.2" y="304.6" width="31.5" height="31.5" fill="#ca8a04" stroke="#fff" stroke-width="1.2"/>
+<circle cx="225.0" cy="320.3" r="7.0" fill="#f6f3ec"/>
+<circle cx="225.0" cy="213.7" r="15.8" fill="#eab308" stroke="#fff" stroke-width="1.2"/>
+<circle cx="225.0" cy="213.7" r="7.0" fill="#f6f3ec"/>
+<rect x="211.0" y="258.0" width="28" height="18" rx="4" fill="#111" opacity="0.75"/>
+<text x="225.0" y="271.0" font-size="12" font-weight="700" fill="#fff" text-anchor="middle">R2</text>
+<rect x="247.5" y="304.6" width="31.5" height="31.5" fill="#ca8a04" stroke="#fff" stroke-width="1.2"/>
+<circle cx="263.2" cy="320.3" r="7.0" fill="#f6f3ec"/>
+<circle cx="298.8" cy="320.3" r="15.8" fill="#3a3a3a" stroke="#fff" stroke-width="1.2"/>
+<circle cx="298.8" cy="320.3" r="7.0" fill="#f6f3ec"/>
+<circle cx="298.8" cy="213.7" r="15.8" fill="#3a3a3a" stroke="#fff" stroke-width="1.2"/>
+<circle cx="298.8" cy="213.7" r="7.0" fill="#f6f3ec"/>
+<circle cx="263.2" cy="213.7" r="15.8" fill="#a16207" stroke="#fff" stroke-width="1.2"/>
+<circle cx="263.2" cy="213.7" r="7.0" fill="#f6f3ec"/>
+<rect x="267.0" y="258.0" width="28" height="18" rx="4" fill="#111" opacity="0.75"/>
+<text x="281.0" y="271.0" font-size="12" font-weight="700" fill="#fff" text-anchor="middle">U3</text>
+<circle cx="207.5" cy="605.8" r="23.8" fill="#d4a017" stroke="#fff" stroke-width="1.2"/>
+<circle cx="207.5" cy="605.8" r="15.4" fill="#f6f3ec"/>
+<rect x="193.5" y="596.8" width="28" height="18" rx="4" fill="#111" opacity="0.75"/>
+<text x="207.5" y="609.8" font-size="12" font-weight="700" fill="#fff" text-anchor="middle">H1</text>
+<circle cx="592.5" cy="605.8" r="23.8" fill="#d4a017" stroke="#fff" stroke-width="1.2"/>
+<circle cx="592.5" cy="605.8" r="15.4" fill="#f6f3ec"/>
+<rect x="578.5" y="596.8" width="28" height="18" rx="4" fill="#111" opacity="0.75"/>
+<text x="592.5" y="609.8" font-size="12" font-weight="700" fill="#fff" text-anchor="middle">H2</text>
+<circle cx="400.0" cy="113.0" r="23.8" fill="#d4a017" stroke="#fff" stroke-width="1.2"/>
+<circle cx="400.0" cy="113.0" r="15.4" fill="#f6f3ec"/>
+<rect x="386.0" y="104.0" width="28" height="18" rx="4" fill="#111" opacity="0.75"/>
+<text x="400.0" y="117.0" font-size="12" font-weight="700" fill="#fff" text-anchor="middle">H3</text>
+<circle cx="372.0" cy="232.0" r="15.8" fill="#eab308" stroke="#fff" stroke-width="1.2"/>
+<circle cx="372.0" cy="232.0" r="7.0" fill="#f6f3ec"/>
+<rect x="358.0" y="223.0" width="28" height="18" rx="4" fill="#111" opacity="0.75"/>
+<text x="372.0" y="236.0" font-size="12" font-weight="700" fill="#fff" text-anchor="middle">VL</text>
+<circle cx="555.4" cy="554.0" r="15.8" fill="#c9184a" stroke="#fff" stroke-width="1.2"/>
+<circle cx="555.4" cy="554.0" r="7.0" fill="#f6f3ec"/>
+<rect x="541.4" y="545.0" width="28" height="18" rx="4" fill="#111" opacity="0.75"/>
+<text x="555.4" y="558.0" font-size="12" font-weight="700" fill="#fff" text-anchor="middle">VP5</text>
+<circle cx="323.0" cy="568.0" r="15.8" fill="#d4a017" stroke="#fff" stroke-width="1.2"/>
+<circle cx="323.0" cy="568.0" r="7.0" fill="#f6f3ec"/>
+<rect x="309.0" y="559.0" width="28" height="18" rx="4" fill="#111" opacity="0.75"/>
+<text x="323.0" y="572.0" font-size="12" font-weight="700" fill="#fff" text-anchor="middle">VA1</text>
+<circle cx="201.9" cy="468.6" r="15.8" fill="#d4a017" stroke="#fff" stroke-width="1.2"/>
+<circle cx="201.9" cy="468.6" r="7.0" fill="#f6f3ec"/>
+<rect x="187.9" y="459.6" width="28" height="18" rx="4" fill="#111" opacity="0.75"/>
+<text x="201.9" y="472.6" font-size="12" font-weight="700" fill="#fff" text-anchor="middle">V4</text>
+<circle cx="236.9" cy="384.6" r="15.8" fill="#d4a017" stroke="#fff" stroke-width="1.2"/>
+<circle cx="236.9" cy="384.6" r="7.0" fill="#f6f3ec"/>
+<rect x="222.9" y="375.6" width="28" height="18" rx="4" fill="#111" opacity="0.75"/>
+<text x="236.9" y="388.6" font-size="12" font-weight="700" fill="#fff" text-anchor="middle">V5</text>
+<circle cx="313.9" cy="412.6" r="15.8" fill="#d4a017" stroke="#fff" stroke-width="1.2"/>
+<circle cx="313.9" cy="412.6" r="7.0" fill="#f6f3ec"/>
+<rect x="299.9" y="403.6" width="28" height="18" rx="4" fill="#111" opacity="0.75"/>
+<text x="313.9" y="416.6" font-size="12" font-weight="700" fill="#fff" text-anchor="middle">V6</text>
+<circle cx="229.9" cy="535.1" r="15.8" fill="#c9184a" stroke="#fff" stroke-width="1.2"/>
+<circle cx="229.9" cy="535.1" r="7.0" fill="#f6f3ec"/>
+<rect x="215.9" y="526.1" width="28" height="18" rx="4" fill="#111" opacity="0.75"/>
+<text x="229.9" y="539.1" font-size="12" font-weight="700" fill="#fff" text-anchor="middle">V7</text>
+<circle cx="292.9" cy="374.1" r="15.8" fill="#3a3a3a" stroke="#fff" stroke-width="1.2"/>
+<circle cx="292.9" cy="374.1" r="7.0" fill="#f6f3ec"/>
+<rect x="278.9" y="365.1" width="28" height="18" rx="4" fill="#111" opacity="0.75"/>
+<text x="292.9" y="378.1" font-size="12" font-weight="700" fill="#fff" text-anchor="middle">V8</text>
+<circle cx="429.4" cy="279.6" r="15.8" fill="#3a3a3a" stroke="#fff" stroke-width="1.2"/>
+<circle cx="429.4" cy="279.6" r="7.0" fill="#f6f3ec"/>
+<rect x="415.4" y="270.6" width="28" height="18" rx="4" fill="#111" opacity="0.75"/>
+<text x="429.4" y="283.6" font-size="12" font-weight="700" fill="#fff" text-anchor="middle">V9</text>
+<path d="M 555.4 554.0 L 512.0 596.0 L 274.0 596.0 L 246.0 575.0 L 229.2 561.0" fill="none" stroke="#c9184a" stroke-width="8.4" stroke-dasharray="6 4" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 323.0 568.0 L 302.0 533.0 L 295.0 512.0 L 249.5 498.0 L 249.5 477.0 L 229.2 477.0" fill="none" stroke="#888" stroke-width="8.4" stroke-dasharray="6 4" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 249.5 477.0 L 249.5 435.0 L 269.8 435.0" fill="none" stroke="#888" stroke-width="8.4" stroke-dasharray="6 4" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 201.9 468.6 L 201.9 472.1 L 205.4 475.6" fill="none" stroke="#888" stroke-width="11.2" stroke-dasharray="6 4" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 191.4 479.1 L 149.4 521.1 L 149.4 531.6" fill="none" stroke="#888" stroke-width="11.2" stroke-dasharray="6 4" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 236.9 384.6 L 229.9 391.6" fill="none" stroke="#888" stroke-width="11.2" stroke-dasharray="6 4" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 229.9 398.6 L 229.9 402.1 L 205.4 426.6 L 205.4 433.6" fill="none" stroke="#888" stroke-width="11.2" stroke-dasharray="6 4" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 173.9 531.6 L 191.4 531.6 L 205.4 517.6" fill="none" stroke="#888" stroke-width="11.2" stroke-dasharray="6 4" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 205.4 391.6 L 201.9 391.6 L 170.4 360.1 L 142.4 360.1 L 128.4 374.1 L 128.4 545.6 L 142.4 559.6 L 205.4 559.6" fill="none" stroke="#888" stroke-width="11.2" stroke-dasharray="6 4" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 268.4 391.6 L 268.4 395.1 L 247.4 416.1 L 240.4 416.1 L 240.4 419.6 L 236.9 419.6 L 236.9 423.1 L 233.4 423.1 L 233.4 430.1 L 229.9 433.6" fill="none" stroke="#888" stroke-width="11.2" stroke-dasharray="6 4" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 264.9 398.6 L 278.9 412.6 L 313.9 412.6" fill="none" stroke="#888" stroke-width="11.2" stroke-dasharray="6 4" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 229.9 559.6 L 229.9 517.6" fill="none" stroke="#c9184a" stroke-width="14.0" stroke-dasharray="6 4" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 292.9 374.1 L 292.9 391.6" fill="none" stroke="#3a3a3a" stroke-width="14.0" stroke-dasharray="6 4" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 306.9 381.1 L 327.9 381.1 L 345.4 398.6 L 345.4 426.6 L 327.9 444.1 L 299.9 444.1 L 292.9 437.1 L 292.9 433.6" fill="none" stroke="#3a3a3a" stroke-width="14.0" stroke-dasharray="6 4" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 327.9 381.1 L 429.4 279.6" fill="none" stroke="#3a3a3a" stroke-width="14.0" stroke-dasharray="6 4" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 359.4 230.6 L 324.4 230.6 L 313.9 241.1 L 250.9 241.1 L 226.4 216.6" fill="none" stroke="#eab308" stroke-width="11.2" stroke-dasharray="6 4" stroke-linecap="round" stroke-linejoin="round"/>
+<path d="M 523.9 370.6 L 523.9 328.6 L 502.9 307.6" fill="none" stroke="#f48c06" stroke-width="14.0" stroke-dasharray="6 4" stroke-linecap="round" stroke-linejoin="round"/>
+<text x="400" y="750.0" font-size="12" fill="#333" text-anchor="middle">Diameter 46.0 mm. Header J1 at the bottom plugs into the Waveshare; both HY2.0 connectors face away from the screen.</text>
+<text x="30" y="50" font-size="12" font-weight="700" fill="#222">Nets</text>
+<rect x="30" y="60" width="14" height="10" fill="#3a3a3a"/><text x="50" y="69" font-size="11" fill="#222">GND</text>
+<rect x="30" y="75" width="14" height="10" fill="#d62828"/><text x="50" y="84" font-size="11" fill="#222">12V_IN</text>
+<rect x="30" y="90" width="14" height="10" fill="#e85d04"/><text x="50" y="99" font-size="11" fill="#222">12V_F</text>
+<rect x="30" y="105" width="14" height="10" fill="#f48c06"/><text x="50" y="114" font-size="11" fill="#222">12V_P</text>
+<rect x="30" y="120" width="14" height="10" fill="#c9184a"/><text x="50" y="129" font-size="11" fill="#222">5V</text>
+<rect x="30" y="135" width="14" height="10" fill="#e07a5f"/><text x="50" y="144" font-size="11" fill="#222">3V3</text>
+<rect x="30" y="150" width="14" height="10" fill="#1d4ed8"/><text x="50" y="159" font-size="11" fill="#222">CANH</text>
+<rect x="30" y="165" width="14" height="10" fill="#0891b2"/><text x="50" y="174" font-size="11" fill="#222">CANL</text>
+<rect x="30" y="180" width="14" height="10" fill="#7c3aed"/><text x="50" y="189" font-size="11" fill="#222">CAN_TX</text>
+<rect x="30" y="195" width="14" height="10" fill="#9333ea"/><text x="50" y="204" font-size="11" fill="#222">CAN_RX</text>
+<rect x="30" y="210" width="14" height="10" fill="#a855f7"/><text x="50" y="219" font-size="11" fill="#222">CAN_RXM</text>
+<rect x="30" y="225" width="14" height="10" fill="#15803d"/><text x="50" y="234" font-size="11" fill="#222">ENC_A</text>
+<rect x="30" y="240" width="14" height="10" fill="#16a34a"/><text x="50" y="249" font-size="11" fill="#222">ENC_B</text>
+<rect x="30" y="255" width="14" height="10" fill="#65a30d"/><text x="50" y="264" font-size="11" fill="#222">ENC_SW</text>
+<rect x="30" y="270" width="14" height="10" fill="#eab308"/><text x="50" y="279" font-size="11" fill="#222">LIGHTS</text>
+<rect x="30" y="285" width="14" height="10" fill="#ca8a04"/><text x="50" y="294" font-size="11" fill="#222">LED_K</text>
+<rect x="30" y="300" width="14" height="10" fill="#a16207"/><text x="50" y="309" font-size="11" fill="#222">EX0</text>
+<rect x="30" y="315" width="14" height="10" fill="#6b7280"/><text x="50" y="324" font-size="11" fill="#222">SDA</text>
+<rect x="30" y="330" width="14" height="10" fill="#6b7280"/><text x="50" y="339" font-size="11" fill="#222">SCL</text>
+<text x="790" y="56" font-size="14" font-weight="700" fill="#222">Parts</text>
+<text x="790" y="74" font-size="11" fill="#555">Ref</text><text x="830" y="74" font-size="11" fill="#555">Value</text><text x="1020" y="74" font-size="11" fill="#555">What it does, pin order</text>
+<rect x="784" y="82" width="696" height="48" fill="#fff" stroke="#ddd"/>
+<text x="790" y="97" font-size="12" font-weight="700" fill="#222">J1</text>
+<text x="830" y="97" font-size="12" fill="#222">to Waveshare 1x8</text>
+<text x="1020" y="97" font-size="11" fill="#333">Long-pin header (&gt;=11 mm pins) soldered from the rear;</text>
+<text x="1020" y="111" font-size="11" fill="#333">pins protrude on the copper side into the Waveshare</text>
+<text x="1020" y="125" font-size="11" fill="#333">socket: IO18 IO17 IO16 RXD TXD 3V3 GND VBUS</text>
+<rect x="784" y="133" width="696" height="48" fill="#fff" stroke="#ddd"/>
+<text x="790" y="148" font-size="12" font-weight="700" fill="#222">U2</text>
+<text x="830" y="148" font-size="12" fill="#222">WCMCU-230 CAN module</text>
+<text x="1020" y="148" font-size="11" fill="#333">SN65HVD230 module in a 1x6 female header; body 15.45 x</text>
+<text x="1020" y="162" font-size="11" fill="#333">13.7 extends upward from the header. Has its own 120 ohm</text>
+<text x="1020" y="176" font-size="11" fill="#333">termination.</text>
+<rect x="784" y="184" width="696" height="34" fill="#fff" stroke="#ddd"/>
+<text x="790" y="199" font-size="12" font-weight="700" fill="#222">J2</text>
+<text x="830" y="199" font-size="12" fill="#222">HY2.0-5P car</text>
+<text x="1020" y="199" font-size="11" fill="#333">Car harness: GND, LIGHTS (12 V when headlights on), CAN L,</text>
+<text x="1020" y="213" font-size="11" fill="#333">CAN H, 12V IGN</text>
+<rect x="784" y="221" width="696" height="34" fill="#fff" stroke="#ddd"/>
+<text x="790" y="236" font-size="12" font-weight="700" fill="#222">J3</text>
+<text x="830" y="236" font-size="12" fill="#222">HY2.0-4P sensors</text>
+<text x="1020" y="236" font-size="11" fill="#333">Sensors: 5 V out for 0-5 V senders, GND, AIN1, AIN2. Pin 1</text>
+<text x="1020" y="250" font-size="11" fill="#333">(5V) at the bottom</text>
+<rect x="784" y="258" width="696" height="34" fill="#fff" stroke="#ddd"/>
+<text x="790" y="273" font-size="12" font-weight="700" fill="#222">RP2</text>
+<text x="830" y="273" font-size="12" fill="#222">1k</text>
+<text x="1020" y="273" font-size="11" fill="#333">Pull-up 1k from 5 V, in circuit when SJ2 is bridged (top</text>
+<text x="1020" y="287" font-size="11" fill="#333">side)</text>
+<rect x="784" y="295" width="696" height="34" fill="#fff" stroke="#ddd"/>
+<text x="790" y="310" font-size="12" font-weight="700" fill="#222">SJ2</text>
+<text x="830" y="310" font-size="12" fill="#222">bridge=resistive</text>
+<text x="1020" y="310" font-size="11" fill="#333">Solder bridge (top side): closed = resistive sender on</text>
+<text x="1020" y="324" font-size="11" fill="#333">input 2, open = 0-5 V sender</text>
+<rect x="784" y="332" width="696" height="34" fill="#fff" stroke="#ddd"/>
+<text x="790" y="347" font-size="12" font-weight="700" fill="#222">RP1</text>
+<text x="830" y="347" font-size="12" fill="#222">1k</text>
+<text x="1020" y="347" font-size="11" fill="#333">Pull-up 1k from 5 V, in circuit when SJ1 is bridged (top</text>
+<text x="1020" y="361" font-size="11" fill="#333">side)</text>
+<rect x="784" y="369" width="696" height="34" fill="#fff" stroke="#ddd"/>
+<text x="790" y="384" font-size="12" font-weight="700" fill="#222">R11</text>
+<text x="830" y="384" font-size="12" fill="#222">1k</text>
+<text x="1020" y="384" font-size="11" fill="#333">Series 1k, sensor node 1 to GPIO17 (top side)</text>
+<rect x="784" y="406" width="696" height="34" fill="#fff" stroke="#ddd"/>
+<text x="790" y="421" font-size="12" font-weight="700" fill="#222">R21</text>
+<text x="830" y="421" font-size="12" fill="#222">1k</text>
+<text x="1020" y="421" font-size="11" fill="#333">Series 1k, sensor node 2 to GPIO18 (top side)</text>
+<rect x="784" y="443" width="696" height="34" fill="#fff" stroke="#ddd"/>
+<text x="790" y="458" font-size="12" font-weight="700" fill="#222">SJ1</text>
+<text x="830" y="458" font-size="12" fill="#222">bridge=resistive</text>
+<text x="1020" y="458" font-size="11" fill="#333">Solder bridge (top side): closed = resistive sender on</text>
+<text x="1020" y="472" font-size="11" fill="#333">input 1, open = 0-5 V sender</text>
+<rect x="784" y="480" width="696" height="34" fill="#fff" stroke="#ddd"/>
+<text x="790" y="495" font-size="12" font-weight="700" fill="#222">R12</text>
+<text x="830" y="495" font-size="12" fill="#222">1k5</text>
+<text x="1020" y="495" font-size="11" fill="#333">1.5k GPIO17 to GND: with R11 scales 5 V to 3 V (top side)</text>
+<rect x="784" y="517" width="696" height="34" fill="#fff" stroke="#ddd"/>
+<text x="790" y="532" font-size="12" font-weight="700" fill="#222">R22</text>
+<text x="830" y="532" font-size="12" fill="#222">1k5</text>
+<text x="1020" y="532" font-size="11" fill="#333">1.5k GPIO18 to GND: with R21 scales 5 V to 3 V (top side)</text>
+<rect x="784" y="554" width="696" height="34" fill="#fff" stroke="#ddd"/>
+<text x="790" y="569" font-size="12" font-weight="700" fill="#222">J5</text>
+<text x="830" y="569" font-size="12" fill="#222">EX0 SDA SCL wires</text>
+<text x="1020" y="569" font-size="11" fill="#333">Short wires to the Waveshare test pads EX0 / SDA / SCL</text>
+<text x="1020" y="583" font-size="11" fill="#333">(SDA, SCL spare for a lux sensor)</text>
+<rect x="784" y="591" width="696" height="34" fill="#fff" stroke="#ddd"/>
+<text x="790" y="606" font-size="12" font-weight="700" fill="#222">R3</text>
+<text x="830" y="606" font-size="12" fill="#222">1k</text>
+<text x="1020" y="606" font-size="11" fill="#333">1k between module CRX (pin 1, left) and header RXD/GPIO43</text>
+<text x="1020" y="620" font-size="11" fill="#333">(pin 2, right); CAN_TX passes underneath</text>
+<rect x="784" y="628" width="696" height="34" fill="#fff" stroke="#ddd"/>
+<text x="790" y="643" font-size="12" font-weight="700" fill="#222">F1</text>
+<text x="830" y="643" font-size="12" fill="#222">Polyfuse 1.1A 30V</text>
+<text x="1020" y="643" font-size="11" fill="#333">Resettable fuse, Bourns MF-R110</text>
+<rect x="784" y="665" width="696" height="34" fill="#fff" stroke="#ddd"/>
+<text x="790" y="680" font-size="12" font-weight="700" fill="#222">D1</text>
+<text x="830" y="680" font-size="12" fill="#222">1N5822</text>
+<text x="1020" y="680" font-size="11" fill="#333">Reverse polarity Schottky; band (cathode) toward pin 1,</text>
+<text x="1020" y="694" font-size="11" fill="#333">the left end</text>
+<rect x="784" y="702" width="696" height="34" fill="#fff" stroke="#ddd"/>
+<text x="790" y="717" font-size="12" font-weight="700" fill="#222">D2</text>
+<text x="830" y="717" font-size="12" fill="#222">P6KE33A</text>
+<text x="1020" y="717" font-size="11" fill="#333">Load dump TVS; band toward pin 1 (left)</text>
+<rect x="784" y="739" width="696" height="34" fill="#fff" stroke="#ddd"/>
+<text x="790" y="754" font-size="12" font-weight="700" fill="#222">C1</text>
+<text x="830" y="754" font-size="12" fill="#222">47uF 50V</text>
+<text x="1020" y="754" font-size="11" fill="#333">Input bulk, + is pin 2 (right), - pin 1 (left)</text>
+<rect x="784" y="776" width="696" height="34" fill="#fff" stroke="#ddd"/>
+<text x="790" y="791" font-size="12" font-weight="700" fill="#222">U1</text>
+<text x="830" y="791" font-size="12" fill="#222">TSR 1-2450</text>
+<text x="1020" y="791" font-size="11" fill="#333">Traco TSR 1-2450: pin 1 +Vin (left), 2 GND, 3 +Vout</text>
+<text x="1020" y="805" font-size="11" fill="#333">(right). 6.5-36 V in, 5 V 1 A out</text>
+<rect x="784" y="813" width="696" height="34" fill="#fff" stroke="#ddd"/>
+<text x="790" y="828" font-size="12" font-weight="700" fill="#222">C2</text>
+<text x="830" y="828" font-size="12" fill="#222">100uF 10V</text>
+<text x="1020" y="828" font-size="11" fill="#333">5 V output bulk, + is pin 2 (right), - pin 1 (left)</text>
+<rect x="784" y="850" width="696" height="34" fill="#fff" stroke="#ddd"/>
+<text x="790" y="865" font-size="12" font-weight="700" fill="#222">R2</text>
+<text x="830" y="865" font-size="12" fill="#222">2k2</text>
+<text x="1020" y="865" font-size="11" fill="#333">Opto LED limit, ~5 mA at 12 V</text>
+<rect x="784" y="887" width="696" height="34" fill="#fff" stroke="#ddd"/>
+<text x="790" y="902" font-size="12" font-weight="700" fill="#222">U3</text>
+<text x="830" y="902" font-size="12" fill="#222">PC817</text>
+<text x="1020" y="902" font-size="11" fill="#333">1 anode (from R2), 2 cathode (GND), 3 emitter (GND), 4</text>
+<text x="1020" y="916" font-size="11" fill="#333">collector (EX0). Lights on = EX0 low</text>
+<rect x="784" y="924" width="696" height="34" fill="#fff" stroke="#ddd"/>
+<text x="790" y="939" font-size="12" font-weight="700" fill="#222">H1</text>
+<text x="830" y="939" font-size="12" fill="#222">M2 mount</text>
+<text x="1020" y="939" font-size="11" fill="#333">M2 mounting hole matching the Waveshare, 3.4 mm copper</text>
+<text x="1020" y="953" font-size="11" fill="#333">ring, no net</text>
+<rect x="784" y="961" width="696" height="34" fill="#fff" stroke="#ddd"/>
+<text x="790" y="976" font-size="12" font-weight="700" fill="#222">H2</text>
+<text x="830" y="976" font-size="12" fill="#222">M2 mount</text>
+<text x="1020" y="976" font-size="11" fill="#333">M2 mounting hole matching the Waveshare, 3.4 mm copper</text>
+<text x="1020" y="990" font-size="11" fill="#333">ring, no net</text>
+<rect x="784" y="998" width="696" height="34" fill="#fff" stroke="#ddd"/>
+<text x="790" y="1013" font-size="12" font-weight="700" fill="#222">H3</text>
+<text x="830" y="1013" font-size="12" fill="#222">M2 mount</text>
+<text x="1020" y="1013" font-size="11" fill="#333">M2 mounting hole matching the Waveshare, 3.4 mm copper</text>
+<text x="1020" y="1027" font-size="11" fill="#333">ring, no net</text>
+<rect x="784" y="1035" width="696" height="34" fill="#fff" stroke="#ddd"/>
+<text x="790" y="1050" font-size="12" font-weight="700" fill="#222">VL</text>
+<text x="830" y="1050" font-size="12" fill="#222">via</text>
+<text x="1020" y="1050" font-size="11" fill="#333">rivet via, headlight signal up to the top side to reach R2</text>
+<rect x="784" y="1072" width="696" height="34" fill="#fff" stroke="#ddd"/>
+<text x="790" y="1087" font-size="12" font-weight="700" fill="#222">VP5</text>
+<text x="830" y="1087" font-size="12" fill="#222">via</text>
+<text x="1020" y="1087" font-size="11" fill="#333">rivet via, 5 V up to the top side for the sensor cluster</text>
+<rect x="784" y="1109" width="696" height="34" fill="#fff" stroke="#ddd"/>
+<text x="790" y="1124" font-size="12" font-weight="700" fill="#222">VA1</text>
+<text x="830" y="1124" font-size="12" fill="#222">via</text>
+<text x="1020" y="1124" font-size="11" fill="#333">rivet via, analog input 1 up to its resistors</text>
+<rect x="784" y="1146" width="696" height="34" fill="#fff" stroke="#ddd"/>
+<text x="790" y="1161" font-size="12" font-weight="700" fill="#222">V4</text>
+<text x="830" y="1161" font-size="12" fill="#222">via</text>
+<text x="1020" y="1161" font-size="11" fill="#333">rivet via</text>
+<rect x="784" y="1183" width="696" height="34" fill="#fff" stroke="#ddd"/>
+<text x="790" y="1198" font-size="12" font-weight="700" fill="#222">V5</text>
+<text x="830" y="1198" font-size="12" fill="#222">via</text>
+<text x="1020" y="1198" font-size="11" fill="#333">rivet via</text>
+<rect x="784" y="1220" width="696" height="34" fill="#fff" stroke="#ddd"/>
+<text x="790" y="1235" font-size="12" font-weight="700" fill="#222">V6</text>
+<text x="830" y="1235" font-size="12" fill="#222">via</text>
+<text x="1020" y="1235" font-size="11" fill="#333">rivet via</text>
+<rect x="784" y="1257" width="696" height="34" fill="#fff" stroke="#ddd"/>
+<text x="790" y="1272" font-size="12" font-weight="700" fill="#222">V7</text>
+<text x="830" y="1272" font-size="12" fill="#222">via</text>
+<text x="1020" y="1272" font-size="11" fill="#333">rivet via</text>
+<rect x="784" y="1294" width="696" height="34" fill="#fff" stroke="#ddd"/>
+<text x="790" y="1309" font-size="12" font-weight="700" fill="#222">V8</text>
+<text x="830" y="1309" font-size="12" fill="#222">via</text>
+<text x="1020" y="1309" font-size="11" fill="#333">rivet via</text>
+<rect x="784" y="1331" width="696" height="34" fill="#fff" stroke="#ddd"/>
+<text x="790" y="1346" font-size="12" font-weight="700" fill="#222">V9</text>
+<text x="830" y="1346" font-size="12" fill="#222">via</text>
+<text x="1020" y="1346" font-size="11" fill="#333">rivet via</text>
+</svg>

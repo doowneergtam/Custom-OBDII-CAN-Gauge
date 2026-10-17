@@ -1,0 +1,593 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><style>body{margin:0;font:14px system-ui}[hidden]{display:none!important}</style></head><body><title>NB1 Gauge Setup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Montserrat:wght@300;600&display=swap">
+<style>
+/* Phone-first control panel the gauge will serve from its own Wi-Fi. A fixed
+   tab bar at the bottom, one scrolling sheet per tab, controls sized for
+   thumbs. Dark by choice: it is used in a car at night. */
+:root {
+  --bg: #0c0d10; --card: #15181d; --card2: #1b1f26; --line: #272c35;
+  --fg: #e9e7e1; --muted: #8c919c; --accent: #38bdf8; --warn: #fbbf24; --bad: #ff3b30; --good: #34d399; --cold: #60a5fa;
+  --font-ui: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+  --font-gauge: "Montserrat", "Segoe UI", Arial, sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font-ui); font-size: 15px; line-height: 1.45; padding-inline: 0; padding-block: 0; }
+.wrap { max-width: 560px; margin: 0 auto; padding: 0 16px calc(76px + env(safe-area-inset-bottom, 0px)); }
+header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--bg); display: flex; align-items: center; gap: 10px; padding: 14px 0 10px; border-bottom: 1px solid var(--line); }
+header.top h1 { font: 600 17px var(--font-ui); margin: 0; flex: 1; }
+.dot { width: 9px; height: 9px; border-radius: 50%; background: var(--good); box-shadow: 0 0 8px var(--good); }
+.dot.off { background: var(--muted); box-shadow: none; }
+.status { font: 500 12px var(--font-mono); color: var(--muted); }
+.sheet { display: flex; flex-direction: column; gap: 14px; padding-top: 14px; }
+.sheet[hidden] { display: none; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 10px; }
+.card h2 { font: 600 11px var(--font-ui); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 0; }
+.card p.note { color: var(--muted); font-size: 13px; margin: 0; }
+.row { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 12px; min-height: 40px; }
+.row label, .row .lab { font-size: 15px; }
+.row .sub { color: var(--muted); font-size: 12px; }
+select, input[type=number], input[type=text], input[type=password] { background: var(--card2); color: var(--fg); border: 1px solid var(--line); border-radius: 10px; padding: 9px 12px; font: 500 15px var(--font-ui); min-height: 42px; }
+select { max-width: 60vw; }
+input[type=number] { width: 86px; font-family: var(--font-mono); text-align: right; }
+input[type=range] { width: 100%; accent-color: var(--accent); margin: 0; height: 32px; }
+input[type=color] { width: 42px; height: 34px; border: 1px solid var(--line); border-radius: 9px; background: none; padding: 0; }
+.seg { display: flex; gap: 4px; background: var(--card2); border: 1px solid var(--line); border-radius: 11px; padding: 3px; }
+.seg button { flex: 1; min-height: 38px; background: transparent; color: var(--muted); border: 0; border-radius: 8px; font: 500 14px var(--font-ui); cursor: pointer; }
+.seg button[aria-pressed="true"] { background: #2a303b; color: var(--fg); }
+.switch { position: relative; width: 52px; height: 30px; border-radius: 15px; background: #2a303b; border: 1px solid var(--line); cursor: pointer; padding: 0; }
+.switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: var(--muted); transition: transform .15s; }
+.switch[aria-checked="true"] { background: var(--accent); }
+.switch[aria-checked="true"]::after { background: #fff; transform: translateX(22px); }
+@media (prefers-reduced-motion: reduce) { .switch::after { transition: none; } }
+button.btn { min-height: 42px; background: var(--card2); color: var(--fg); border: 1px solid var(--line); border-radius: 11px; padding: 8px 14px; font: 500 14px var(--font-ui); cursor: pointer; }
+button.btn.primary { background: var(--accent); color: #04121a; border-color: var(--accent); }
+button.btn.danger { color: var(--bad); border-color: var(--bad); }
+button.btn:focus-visible, .switch:focus-visible, .seg button:focus-visible, .tabs button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btnrow { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* live grid */
+.live { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 8px; }
+.tile { background: var(--card2); border: 1px solid var(--line); border-radius: 12px; padding: 10px 10px 8px; display: flex; flex-direction: column; gap: 2px; min-width: 0; border-left: 4px solid var(--muted); }
+.tile .n { font: 600 10px var(--font-ui); letter-spacing: .1em; color: var(--muted); text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tile .v { font: 300 26px var(--font-gauge); font-variant-numeric: tabular-nums; line-height: 1.1; }
+.tile .u { font: 400 11px var(--font-mono); color: var(--muted); }
+.tile .mm { font: 400 10px var(--font-mono); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-height: 14px; margin-top: 2px; opacity: .85; }
+.tile.onscreen { border-color: var(--accent); }
+.tile.onscreen .n::after { content: " · screen"; color: var(--accent); letter-spacing: 0; text-transform: none; }
+
+/* layout picker */
+.layouts { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.layouts button { aspect-ratio: 1; background: var(--card2); border: 2px solid var(--line); border-radius: 50%; padding: 0; cursor: pointer; position: relative; }
+.layouts button[aria-pressed="true"] { border-color: var(--accent); }
+.layouts svg { width: 100%; height: 100%; display: block; }
+.cells { display: flex; flex-direction: column; gap: 8px; }
+.cells .row .lab { font: 500 12px var(--font-mono); color: var(--muted); }
+
+/* channel list + zones */
+.chlist { display: flex; flex-direction: column; gap: 6px; }
+details.ch { background: var(--card2); border: 1px solid var(--line); border-radius: 12px; }
+details.ch summary { list-style: none; display: grid; grid-template-columns: 1fr auto auto; gap: 10px; align-items: center; padding: 10px 12px; cursor: pointer; min-height: 44px; }
+details.ch summary::-webkit-details-marker { display: none; }
+details.ch summary .n { font: 600 14px var(--font-ui); }
+details.ch summary .z { display: flex; gap: 3px; }
+details.ch summary .z i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+details.ch summary .chev { color: var(--muted); font-size: 12px; }
+details.ch[open] summary .chev { transform: rotate(90deg); display: inline-block; }
+details.ch .body { padding: 4px 12px 12px; display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--line); }
+.zrow { display: grid; grid-template-columns: minmax(0, 1fr) 72px 72px 32px; gap: 6px; align-items: center; }
+.zrow select { max-width: none; width: 100%; padding: 6px 8px; min-height: 36px; font-size: 13px; }
+.zrow input[type=number] { width: 100%; min-height: 36px; padding: 6px 8px; font-size: 13px; }
+.zrow button { min-height: 36px; background: var(--card); color: var(--muted); border: 1px solid var(--line); border-radius: 8px; cursor: pointer; }
+.zhead { display: grid; grid-template-columns: minmax(0, 1fr) 72px 72px 32px; gap: 6px; font: 500 11px var(--font-mono); color: var(--muted); }
+.zbar { height: 10px; border-radius: 5px; background: var(--line); position: relative; overflow: hidden; }
+.zbar i { position: absolute; top: 0; bottom: 0; }
+.tones { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.tones label { display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: var(--muted); }
+.tones select { max-width: none; width: 100%; }
+
+/* theme */
+.presets { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.presets button { background: var(--card2); border: 2px solid var(--line); border-radius: 12px; padding: 8px 4px 6px; cursor: pointer; color: var(--fg); font: 500 12px var(--font-ui); display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.presets button[aria-pressed="true"] { border-color: var(--accent); }
+.presets .sw { display: flex; gap: 3px; }
+.presets .sw i { width: 10px; height: 10px; border-radius: 50%; }
+.colors { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 14px; }
+.colors label { display: grid; grid-template-columns: 42px 1fr; align-items: center; gap: 10px; font-size: 13px; color: var(--muted); }
+.colors label span { display: flex; flex-direction: column; }
+.colors code { font: 400 11px var(--font-mono); color: var(--muted); }
+.mini { display: block; width: 100%; max-width: 240px; margin: 0 auto; aspect-ratio: 1; border-radius: 50%; }
+
+/* tab bar */
+.tabs { position: fixed; left: 0; right: 0; bottom: 0; z-index: 10; background: #0f1115; border-top: 1px solid var(--line); display: flex; padding: 6px 6px calc(6px + env(safe-area-inset-bottom, 0px)); }
+.tabs button { flex: 1; background: transparent; border: 0; color: var(--muted); font: 500 11px var(--font-ui); padding: 6px 0 4px; border-radius: 10px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.tabs button svg { width: 22px; height: 22px; }
+.tabs button[aria-selected="true"] { color: var(--accent); background: #161a22; }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(84px + env(safe-area-inset-bottom, 0px)); background: var(--card2); border: 1px solid var(--accent); color: var(--fg); border-radius: 999px; padding: 8px 16px; font-size: 13px; z-index: 20; }
+.toast[hidden] { display: none; }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <span class="dot" id="dot"></span>
+    <h1>NB1 Gauge</h1>
+    <span class="status" id="status">simulated</span>
+  </header>
+
+  <section class="sheet" id="tab-live"></section>
+  <section class="sheet" id="tab-screen" hidden></section>
+  <section class="sheet" id="tab-channels" hidden></section>
+  <section class="sheet" id="tab-theme" hidden></section>
+  <section class="sheet" id="tab-alarms" hidden></section>
+  <section class="sheet" id="tab-system" hidden></section>
+</div>
+
+<nav class="tabs" role="tablist" aria-label="Sections">
+  <button role="tab" data-tab="live" aria-selected="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 16a8 8 0 1 1 16 0"/><path d="M12 16l4-5"/></svg>Live</button>
+  <button role="tab" data-tab="screen" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg>Screen</button>
+  <button role="tab" data-tab="channels" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M4 12h10M4 17h13"/></svg>Channels</button>
+  <button role="tab" data-tab="theme" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg>Theme</button>
+  <button role="tab" data-tab="alarms" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 17V11a6 6 0 0 1 12 0v6l2 2H4z"/><path d="M10 21h4"/></svg>Alarms</button>
+  <button role="tab" data-tab="system" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M5 19l2-2M17 7l2-2"/></svg>System</button>
+</nav>
+<div class="toast" id="toast" hidden></div>
+<script>
+// ---------------------------------------------------------------- data model
+// Same channel set, zones and theme slots as the firmware config (gauge.json).
+const CH = [
+  { id:'RPM',    name:'RPM',      kind:'none',  units:'rpm', min:0,    max:8000, dp:0, zones:[[6500,7200,'warn'],[7200,1e9,'bad']] },
+  { id:'BOOST',  name:'BOOST',    kind:'press', units:'psi', min:-15,  max:20,   dp:1, zones:[[-1e9,0,'cold'],[12,16,'warn'],[16,1e9,'bad']] },
+  { id:'MAP',    name:'MAP',      kind:'none',  units:'kPa', min:0,    max:250,  dp:0, zones:[[185,210,'warn'],[210,1e9,'bad']] },
+  { id:'CLT',    name:'COOLANT',  kind:'temp',  units:'°F',  min:100,  max:260,  dp:0, zones:[[-1e9,160,'cold'],[215,230,'warn'],[230,1e9,'bad']] },
+  { id:'OILP',   name:'OIL PRES', kind:'press', units:'psi', min:0,    max:100,  dp:0, zones:[[-1e9,10,'bad'],[10,20,'warn'],[80,1e9,'warn']] },
+  { id:'OILT',   name:'OIL TEMP', kind:'temp',  units:'°F',  min:100,  max:300,  dp:0, zones:[[-1e9,140,'cold'],[240,260,'warn'],[260,1e9,'bad']] },
+  { id:'AFR',    name:'AFR',      kind:'none',  units:'afr', min:10,   max:20,   dp:1, zones:[[-1e9,11,'bad'],[11,12,'warn'],[15.5,17,'warn'],[17,1e9,'bad']] },
+  { id:'AFRTGT', name:'AFR TGT',  kind:'none',  units:'afr', min:10,   max:20,   dp:1, zones:[] },
+  { id:'EGOCOR', name:'EGO COR',  kind:'none',  units:'%',   min:50,   max:150,  dp:0, zones:[[-1e9,85,'warn'],[115,1e9,'warn']] },
+  { id:'MAT',    name:'INTAKE',   kind:'temp',  units:'°F',  min:0,    max:200,  dp:0, zones:[[120,150,'warn'],[150,1e9,'bad']] },
+  { id:'EGT',    name:'EGT',      kind:'temp',  units:'°F',  min:400,  max:1800, dp:0, zones:[[1500,1650,'warn'],[1650,1e9,'bad']] },
+  { id:'TPS',    name:'THROTTLE', kind:'none',  units:'%',   min:0,    max:100,  dp:0, zones:[] },
+  { id:'ADV',    name:'TIMING',   kind:'none',  units:'°',   min:-10,  max:50,   dp:1, zones:[] },
+  { id:'PW1',    name:'PULSE W',  kind:'none',  units:'ms',  min:0,    max:25,   dp:2, zones:[] },
+  { id:'DUTY',   name:'INJ DUTY', kind:'none',  units:'%',   min:0,    max:100,  dp:0, zones:[[80,90,'warn'],[90,1e9,'bad']] },
+  { id:'BATT',   name:'BATTERY',  kind:'none',  units:'V',   min:8,    max:16,   dp:1, zones:[[-1e9,11.5,'bad'],[11.5,12.5,'warn'],[15,15.5,'warn'],[15.5,1e9,'bad']] },
+  { id:'KNOCK',  name:'KNOCK',    kind:'none',  units:'°',   min:0,    max:10,   dp:1, zones:[[0.1,2,'warn'],[2,1e9,'bad']] },
+  { id:'VSS',    name:'SPEED',    kind:'speed', units:'mph', min:0,    max:160,  dp:0, zones:[] },
+  { id:'TCRET',  name:'TC RTD',   kind:'none',  units:'°',   min:0,    max:20,   dp:1, zones:[[0.1,1e9,'warn']] },
+  { id:'LAUNCH', name:'LAUNCH',   kind:'none',  units:'°',   min:-20,  max:20,   dp:1, zones:[] },
+];
+const byId = Object.fromEntries(CH.map(c => [c.id, c]));
+const THEME_KEYS = [['bg','Background'],['digits','Digits'],['label','Labels'],['units','Units, peaks'],['track','Track'],['tick','Ticks, scale'],['neutral','Neutral bar'],['good','Good zone'],['warn','Warning zone'],['bad','Bad zone'],['cold','Cold zone'],['stale','Stale data']];
+const PRESETS = {
+  Ice:   { bg:'#000000', digits:'#f4f6f8', label:'#8a93a0', units:'#6b737f', track:'#1b1f26', tick:'#5a6270', neutral:'#38bdf8', good:'#34d399', warn:'#fbbf24', bad:'#ff3b30', cold:'#60a5fa', stale:'#4b5058' },
+  Ember: { bg:'#000000', digits:'#fff3e0', label:'#9c8a78', units:'#75655a', track:'#221a14', tick:'#6a5a4c', neutral:'#ff8a00', good:'#9ae66e', warn:'#ffd166', bad:'#ff2d55', cold:'#7fb3ff', stale:'#4f463f' },
+  Mono:  { bg:'#000000', digits:'#ffffff', label:'#7a7a7a', units:'#5c5c5c', track:'#1c1c1c', tick:'#505050', neutral:'#ffffff', good:'#cfd6d0', warn:'#ffd36b', bad:'#ff5c5c', cold:'#9cc9ff', stale:'#454545' },
+  Miata: { bg:'#000000', digits:'#ffffff', label:'#8a7f80', units:'#6a6162', track:'#201617', tick:'#5e5052', neutral:'#e0202a', good:'#35d07f', warn:'#ffb020', bad:'#ff2b2b', cold:'#6ca8ff', stale:'#4a4042' },
+};
+const TONES = ['off', 'chirp', 'double', 'buzz', 'rising', 'siren'];
+const LAYOUTS = [1, 3, 4, 6, 7];
+const STYLES = ['ring', 'dial', 'numeric'], FILLS = ['gradient', 'segments', 'solid'];
+
+function defaultConfig() {
+  const cfg = {
+    layout: 1, cells: ['BOOST', 'OILP', 'CLT', 'AFR', 'BATT', 'OILT', 'RPM'], brightness: 80, sim: true, source: 'ms',
+    units: { temp_c: false, press_bar: false, speed_kmh: false },
+    theme: { preset: 'Ice', style: 'ring', fill: 'gradient', bands: true, digit_scale: 1, label_scale: 1, cell_scale: 1, units_scale: 1, minmax_scale: 1, bar_scale: 1, rgb: { ...PRESETS.Ice } },
+    alarms: { volume: 60, warn_on: true, bad_on: true, mute: false, repeat_s: 10, tone_warn: {}, tone_bad: {} },
+    channels: {},
+    wifi: { ssid: 'NB1-Gauge-3F2A', password: 'miata2000', timeout_min: 0, on: true },
+    theme_presets: [],   // user colour presets: { name, rgb }
+    screens: [],         // saved screens: { name, layout, cells, theme }
+  };
+  for (const c of CH) {
+    cfg.channels[c.id] = { min: c.min, max: c.max, zones: c.zones.map(z => [...z]), show_units: true, show_min: true, show_max: true };
+    cfg.alarms.tone_warn[c.id] = c.zones.length ? 'chirp' : 'off';
+    cfg.alarms.tone_bad[c.id]  = c.zones.length ? 'double' : 'off';
+  }
+  Object.assign(cfg.alarms.tone_bad, { OILP: 'siren', KNOCK: 'siren', EGT: 'siren', RPM: 'buzz' });
+  cfg.alarms.tone_warn.EGOCOR = 'off';
+  return cfg;
+}
+
+// ---------------------------------------------------------------- API
+// On the gauge, /api/config and /api/state are served by the ESP32. In this
+// preview a mock answers instead, kept in your browser.
+let cfg = defaultConfig();
+let live = {}, connected = false;
+const mock = {
+  async getConfig() { try { const s = JSON.parse(localStorage.getItem('nb1.webcfg') || 'null'); if (s && s.channels) return s; } catch (e) {} return defaultConfig(); },
+  async putConfig(c) { try { localStorage.setItem('nb1.webcfg', JSON.stringify(c)); } catch (e) {} return { ok: true }; },
+  async getState() { return { values: engine(performance.now() / 1000), screen: cfg.cells.slice(0, cfg.layout) }; },
+  async action(name) { return { ok: true, name }; },
+};
+const real = {
+  async getConfig() { return (await fetch('/api/config')).json(); },
+  async putConfig(c) { return (await fetch('/api/config', { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify(c) })).json(); },
+  async getState() { return (await fetch('/api/state')).json(); },
+  async action(name, body) { return (await fetch('/api/' + name, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body || {}) })).json(); },
+};
+// Embedded in the gauge preview page: talk to it over postMessage so the
+// phone drives the gauge beside it, the way the real page drives the gauge.
+const embedded = window.parent !== window;
+const pending = {}; let seq = 0;
+const frame = {
+  call(type, body) { return new Promise(res => { const id = ++seq; pending[id] = res; window.parent.postMessage({ nb1: true, id, type, body }, '*'); setTimeout(() => { if (pending[id]) { delete pending[id]; res(null); } }, 2000); }); },
+  getConfig() { return this.call('getConfig'); },
+  putConfig(c) { return this.call('putConfig', c); },
+  getState() { return this.call('getState'); },
+  action(name, body) { return this.call('action', { name, ...(body || {}) }); },
+};
+window.addEventListener('message', e => { const m = e.data; if (!m || !m.nb1 || !pending[m.id]) return; pending[m.id](m.result); delete pending[m.id]; });
+let api = mock;
+async function connect() {
+  if (embedded) { api = frame; connected = true; }
+  else { try { const r = await fetch('/api/config', { signal: AbortSignal.timeout(1500) }); if (r.ok) { api = real; connected = true; } } catch (e) {} }
+  cfg = (await api.getConfig()) || defaultConfig();
+  document.getElementById('dot').classList.toggle('off', !connected);
+  document.getElementById('status').textContent = embedded ? 'linked to gauge' : connected ? 'connected · ' + location.host : 'simulated';
+}
+// When the gauge side changes a setting, pick it up (only while idle, so an
+// edit in progress is never clobbered).
+// Pick up changes made on the gauge itself (its menu, or the linked preview).
+// Only when the gauge's own copy changed since we last saw it, and never
+// while a field is focused, so a page rebuild cannot steal the keyboard.
+let lastCfgJson = '';
+const editing = () => ['INPUT', 'SELECT', 'TEXTAREA'].includes((document.activeElement || {}).tagName);
+async function syncFromGauge() {
+  if (!embedded && !connected) return;
+  try {
+    const fresh = await api.getConfig();
+    if (fresh) { const j = JSON.stringify(fresh); if (j !== lastCfgJson && !editing()) { lastCfgJson = j; cfg = fresh; render(); } }
+  } catch (e) {}
+  setTimeout(syncFromGauge, 2000);
+}
+let saveTimer = 0;   // save() is defined with the poll loop below
+function toast(msg) { const t = document.getElementById('toast'); t.textContent = msg; t.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => t.hidden = true, 1600); }
+
+// ---------------------------------------------------------------- units + zones
+function conv(c, v) {
+  if (c.kind === 'temp'  && cfg.units.temp_c)    return (v - 32) * 5 / 9;
+  if (c.kind === 'press' && cfg.units.press_bar) return v * 0.0689476;
+  if (c.kind === 'speed' && cfg.units.speed_kmh) return v * 1.609344;
+  return v;
+}
+function unconv(c, v) {
+  if (c.kind === 'temp'  && cfg.units.temp_c)    return v * 9 / 5 + 32;
+  if (c.kind === 'press' && cfg.units.press_bar) return v / 0.0689476;
+  if (c.kind === 'speed' && cfg.units.speed_kmh) return v / 1.609344;
+  return v;
+}
+function unitLabel(c) {
+  if (c.kind === 'temp')  return cfg.units.temp_c ? '°C' : '°F';
+  if (c.kind === 'press') return cfg.units.press_bar ? 'bar' : 'psi';
+  if (c.kind === 'speed') return cfg.units.speed_kmh ? 'km/h' : 'mph';
+  return c.units;
+}
+function dpOf(c) { return (c.kind === 'press' && cfg.units.press_bar) ? 2 : c.dp; }
+function zoneOf(id, v) { for (const [a, b, l] of cfg.channels[id].zones) if (v >= a && v < b) return l; return 'good'; }
+function zoneColor(l) { return cfg.theme.rgb[l] || cfg.theme.rgb.neutral; }
+function fmt(v, dp) { return (v === undefined || isNaN(v)) ? '---' : (+v).toFixed(dp); }
+
+// ---------------------------------------------------------------- engine sim (mock only)
+function engine(t) {
+  const ph = (t % 30) / 30, pull = ph < 0.6 ? ph / 0.6 : (1 - ph) / 0.4;
+  const rpm = 900 + 5600 * pull + 60 * Math.sin(t * 9), tps = ph < 0.6 ? 100 * ph / 0.6 : 0;
+  const spool = Math.max(0, Math.min(1, (rpm - 2500) / 2000)), boost = tps / 100 * spool * 13;
+  const map = boost > 0.3 ? 101.3 + boost * 6.895 : 35 + 66 * tps / 100, clt = 170 + 30 * (1 - Math.exp(-t / 120)), pw = 1.8 + 12 * map / 200;
+  return { RPM: rpm, BOOST: boost > 0.3 ? boost : -(101.3 - map) / 6.895, MAP: map, TPS: tps, CLT: clt, MAT: 95 + 25 * spool, ADV: 24 - 14 * spool, PW1: pw,
+    DUTY: pw * rpm / 1200, AFRTGT: 14.7 - 3.2 * spool * tps / 100, AFR: 14.7 - 3.2 * spool * tps / 100 + 0.25 * Math.sin(t * 3), EGOCOR: 100 + 3 * Math.sin(t * 1.3),
+    EGT: 800 + 800 * tps / 100 * (0.5 + 0.5 * spool), BATT: 13.8 + 0.3 * Math.sin(t * 0.5), OILP: 15 + 55 * rpm / 6500, OILT: clt + 20, KNOCK: 0, VSS: 2.237 * 30 * tps / 100, TCRET: 0, LAUNCH: 0 };
+}
+</script>
+<script>
+// ---------------------------------------------------------------- helpers
+const $ = s => document.querySelector(s);
+const h = (tag, attrs = {}, ...kids) => {
+  const el = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) { if (k === 'class') el.className = v; else if (k.startsWith('on')) el.addEventListener(k.slice(2), v); else if (v !== false && v != null) el.setAttribute(k, v === true ? '' : v); }
+  for (const k of kids.flat()) if (k != null) el.append(k.nodeType ? k : document.createTextNode(String(k)));
+  return el;
+};
+const card = (title, ...kids) => h('div', { class: 'card' }, title ? h('h2', {}, title) : null, ...kids);
+const row = (label, sub, control) => h('div', { class: 'row' }, h('div', {}, h('div', { class: 'lab' }, label), sub ? h('div', { class: 'sub' }, sub) : null), control);
+function seg(values, labels, get, set) {
+  const el = h('div', { class: 'seg' });
+  values.forEach((v, i) => el.append(h('button', { type: 'button', 'aria-pressed': String(get() === v), onclick: () => { set(v); render(); } }, labels[i])));
+  return el;
+}
+const sw = (get, set) => h('button', { type: 'button', class: 'switch', role: 'switch', 'aria-checked': String(!!get()), onclick: e => { set(!get()); e.currentTarget.setAttribute('aria-checked', String(!!get())); } });
+function sel(options, labels, get, set) {
+  const el = h('select', { onchange: e => set(e.target.value) });
+  options.forEach((o, i) => el.append(h('option', { value: o, selected: get() === o }, labels ? labels[i] : o)));
+  return el;
+}
+const cap = s => s[0].toUpperCase() + s.slice(1);
+
+// ---------------------------------------------------------------- Live
+function renderLive() {
+  const grid = h('div', { class: 'live' });
+  const onScreen = new Set(cfg.cells.slice(0, cfg.layout));
+  for (const c of CH) {
+    const v = live[c.id], z = v === undefined ? 'good' : zoneOf(c.id, v);
+    const t = h('div', { class: 'tile' + (onScreen.has(c.id) ? ' onscreen' : ''), id: 'tile-' + c.id },
+      h('div', { class: 'n' }, c.name), h('div', { class: 'v' }, fmt(conv(c, v), dpOf(c))), h('div', { class: 'u' }, unitLabel(c)), h('div', { class: 'mm' }, mmText(c)));
+    t.style.borderLeftColor = cfg.channels[c.id].zones.length ? zoneColor(z) : cfg.theme.rgb.neutral;
+    grid.append(t);
+  }
+  return [card('Live', grid, h('p', { class: 'note' }, 'Every channel the gauge is receiving. Marked tiles are on the screen right now; the rest are watched silently for alarms.')),
+          card('Quick actions', h('div', { class: 'btnrow' },
+            h('button', { class: 'btn', onclick: () => { resetMM(); api.action('reset-peaks').then(() => toast('Min and max reset')); } }, 'Reset min/max'),
+            h('button', { class: 'btn', onclick: () => api.action('test-alarm', { tone: 'chirp' }).then(() => toast('Playing on gauge')) }, 'Test speaker'),
+            h('button', { class: 'btn', onclick: () => api.action('identify').then(() => toast('Gauge is flashing')) }, 'Identify')))];
+}
+// Min and max since the page opened (or since reset), tracked for every channel.
+const mm = {};
+function trackMM() { for (const c of CH) { const v = live[c.id]; if (v === undefined || isNaN(v)) continue; const m = mm[c.id] || (mm[c.id] = { lo: Infinity, hi: -Infinity }); if (v < m.lo) m.lo = v; if (v > m.hi) m.hi = v; } }
+function resetMM() { for (const k in mm) delete mm[k]; trackMM(); if (tab === 'live') updateLive(); }
+function mmText(c) { const m = mm[c.id]; return m && isFinite(m.lo) ? fmt(conv(c, m.lo), dpOf(c)) + '/' + fmt(conv(c, m.hi), dpOf(c)) : ''; }
+function updateLive() {
+  trackMM();
+  for (const c of CH) {
+    const t = document.getElementById('tile-' + c.id); if (!t) continue;
+    const v = live[c.id];
+    t.querySelector('.v').textContent = fmt(conv(c, v), dpOf(c));
+    t.querySelector('.mm').textContent = mmText(c);
+    t.style.borderLeftColor = cfg.channels[c.id].zones.length ? zoneColor(v === undefined ? 'good' : zoneOf(c.id, v)) : cfg.theme.rgb.neutral;
+  }
+}
+
+// ---------------------------------------------------------------- Screen
+function layoutIcon(n) {
+  const cells = n === 1 ? [[50, 50, 42]] : n === 3 ? [[50, 30, 18], [30, 66, 18], [70, 66, 18]] : n === 4 ? [[30, 30, 18], [70, 30, 18], [30, 70, 18], [70, 70, 18]]
+    : (() => { const k = n - 1, out = [[50, 50, 15]]; for (let i = 0; i < k; i++) { const a = (-90 + 360 * i / k) * Math.PI / 180; out.push([50 + 33 * Math.cos(a), 50 + 33 * Math.sin(a), 12]); } return out; })();
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); svg.setAttribute('viewBox', '0 0 100 100');
+  for (const [x, y, r] of cells) { const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle'); c.setAttribute('cx', x); c.setAttribute('cy', y); c.setAttribute('r', r); c.setAttribute('fill', 'none'); c.setAttribute('stroke', 'currentColor'); c.setAttribute('stroke-width', '4'); svg.append(c); }
+  return svg;
+}
+function renderScreen() {
+  const pick = h('div', { class: 'layouts' });
+  for (const n of LAYOUTS) pick.append(h('button', { type: 'button', 'aria-pressed': String(cfg.layout === n), 'aria-label': n + ' cells', onclick: () => { cfg.layout = n; save(); render(); } }, layoutIcon(n)));
+  const cells = h('div', { class: 'cells' });
+  for (let i = 0; i < cfg.layout; i++) {
+    cells.append(row(i === 0 && cfg.layout >= 6 ? 'Centre' : 'Cell ' + (i + 1), null,
+      sel(CH.map(c => c.id), CH.map(c => c.name + ' (' + unitLabel(c) + ')'), () => cfg.cells[i], v => { cfg.cells[i] = v; save(); })));
+  }
+  // Saved screens: layout + cells + the whole theme, named, loadable from here or the gauge menu.
+  cfg.screens = cfg.screens || [];
+  const list = h('div', { class: 'cells' });
+  cfg.screens.forEach((s, i) => list.append(h('div', { class: 'row' }, h('div', {}, h('div', { class: 'lab' }, s.name), h('div', { class: 'sub' }, s.layout + (s.layout === 1 ? ' cell · ' : ' cells · ') + cap(s.theme.style) + ' · ' + (s.theme.preset || 'Custom'))),
+    h('div', { class: 'btnrow' },
+      h('button', { class: 'btn', onclick: () => { cfg.layout = s.layout; cfg.cells = s.cells.slice(); cfg.theme = JSON.parse(JSON.stringify(s.theme)); save('Loaded ' + s.name); render(); } }, 'Load'),
+      h('button', { class: 'btn', 'aria-label': 'Delete ' + s.name, onclick: () => { cfg.screens.splice(i, 1); save('Deleted ' + s.name); render(); } }, '×')))));
+  const nameIn = h('input', { type: 'text', placeholder: 'Name, e.g. Track 7', maxlength: 20, 'aria-label': 'Screen name', id: 'screenName' });
+  const saveBtn = h('button', { class: 'btn primary', onclick: () => {
+    const name = nameIn.value.trim() || ('Screen ' + (cfg.screens.length + 1));
+    const snap = { name, layout: cfg.layout, cells: cfg.cells.slice(), theme: JSON.parse(JSON.stringify(cfg.theme)) };
+    const k = cfg.screens.findIndex(s => s.name.toLowerCase() === name.toLowerCase());
+    if (k >= 0) cfg.screens[k] = snap; else { if (cfg.screens.length >= 8) { toast('Eight screens is the limit'); return; } cfg.screens.push(snap); }
+    nameIn.value = ''; save('Saved ' + name); render(); } }, 'Save current screen');
+  return [card('Layout', pick, h('p', { class: 'note' }, 'One face, a triangle, quadrants, or a centre cell ringed by five or six.')),
+          card('Channel per cell', cells),
+          card('Saved screens', cfg.screens.length ? list : h('p', { class: 'note' }, 'Nothing saved yet. Set up a layout, channels and theme you like, then save it here to switch back to it later, from this page or from the gauge\'s Screens menu.'),
+            h('div', { class: 'row' }, nameIn, saveBtn)),
+          card('Brightness', h('input', { type: 'range', min: 10, max: 100, value: cfg.brightness, 'aria-label': 'Brightness', oninput: e => { cfg.brightness = +e.target.value; save('Brightness ' + cfg.brightness + '%'); } }))];
+}
+
+// ---------------------------------------------------------------- Channels
+function zoneBar(id) {
+  const c = byId[id], cc = cfg.channels[id], bar = h('div', { class: 'zbar' });
+  for (const [a, b, l] of cc.zones) {
+    const f0 = Math.max(0, (a - cc.min) / (cc.max - cc.min)), f1 = Math.min(1, (b - cc.min) / (cc.max - cc.min));
+    if (f1 <= f0) continue;
+    const i = h('i'); i.style.left = f0 * 100 + '%'; i.style.width = (f1 - f0) * 100 + '%'; i.style.background = zoneColor(l); bar.append(i);
+  }
+  return bar;
+}
+function renderChannel(c) {
+  const cc = cfg.channels[c.id], u = unitLabel(c), dp = dpOf(c), r = v => +conv(c, v).toFixed(dp);
+  const body = h('div', { class: 'body' });
+  body.append(zoneBar(c.id));
+  body.append(h('div', { class: 'zrow' }, h('span', { class: 'sub' }, 'Gauge range (' + u + ')'),
+    h('input', { type: 'number', value: r(cc.min), 'aria-label': 'Minimum', onchange: e => { cc.min = unconv(c, +e.target.value); save(); render(); } }),
+    h('input', { type: 'number', value: r(cc.max), 'aria-label': 'Maximum', onchange: e => { cc.max = unconv(c, +e.target.value); save(); render(); } }), h('span')));
+  body.append(h('div', { class: 'tones' },
+    h('label', {}, 'Show units', sw(() => cc.show_units !== false, v => { cc.show_units = v; save(); })),
+    h('label', {}, 'Show min', sw(() => cc.show_min !== false, v => { cc.show_min = v; save(); })),
+    h('label', {}, 'Show max', sw(() => cc.show_max !== false, v => { cc.show_max = v; save(); }))));
+  body.append(h('div', { class: 'zhead' }, h('span', {}, 'zone'), h('span', {}, 'from'), h('span', {}, 'to'), h('span')));
+  cc.zones.forEach((z, i) => body.append(h('div', { class: 'zrow' },
+    sel(['cold', 'good', 'warn', 'bad'], null, () => z[2], v => { z[2] = v; save(); render(); }),
+    h('input', { type: 'number', step: 'any', value: Math.abs(z[0]) >= 1e8 ? '' : r(z[0]), placeholder: 'min', 'aria-label': 'From', onchange: e => { z[0] = e.target.value === '' ? -1e9 : unconv(c, +e.target.value); save(); render(); } }),
+    h('input', { type: 'number', step: 'any', value: Math.abs(z[1]) >= 1e8 ? '' : r(z[1]), placeholder: 'max', 'aria-label': 'To', onchange: e => { z[1] = e.target.value === '' ? 1e9 : unconv(c, +e.target.value); save(); render(); } }),
+    h('button', { type: 'button', 'aria-label': 'Remove zone', onclick: () => { cc.zones.splice(i, 1); save(); render(); } }, '×'))));
+  body.append(h('div', { class: 'btnrow' }, h('button', { class: 'btn', onclick: () => { cc.zones.push([cc.max * 0.9, 1e9, 'warn']); save(); render(); } }, '+ Add zone')));
+  body.append(h('p', { class: 'note' }, 'Leave "from" empty for everything below, "to" empty for everything above. Outside the zones is good.'));
+  body.append(h('div', { class: 'tones' },
+    h('label', {}, 'Warn tone', sel(TONES, null, () => cfg.alarms.tone_warn[c.id], v => { cfg.alarms.tone_warn[c.id] = v; save(); api.action('test-alarm', { tone: v }); })),
+    h('label', {}, 'Bad tone', sel(TONES, null, () => cfg.alarms.tone_bad[c.id], v => { cfg.alarms.tone_bad[c.id] = v; save(); api.action('test-alarm', { tone: v }); }))));
+  const dots = h('span', { class: 'z' }, ...cc.zones.map(z => { const i = h('i'); i.style.background = zoneColor(z[2]); return i; }));
+  const d = h('details', { class: 'ch' }, h('summary', {}, h('span', { class: 'n' }, c.name), dots, h('span', { class: 'chev' }, '▶')), body);
+  if (openCh === c.id) d.open = true;
+  d.addEventListener('toggle', () => { if (d.open) openCh = c.id; else if (openCh === c.id) openCh = null; });
+  return d;
+}
+let openCh = null;
+function renderChannels() {
+  return [card('Channels', h('div', { class: 'chlist' }, ...CH.map(renderChannel)),
+    h('p', { class: 'note' }, 'Ranges and zones are in your chosen units. Zones drive bar colour, flashing, and alarms on every cell showing the channel.'))];
+}
+
+// ---------------------------------------------------------------- Theme
+// Mini preview: BOOST at 9.4 psi in the chosen style, fill mode, bands and
+// colours, so every Theme control has a visible effect.
+function hexA(hex, a) { const n = parseInt(hex.slice(1), 16); return `rgba(${n >> 16 & 255},${n >> 8 & 255},${n & 255},${a})`; }
+function lerpHex(a, b, t) { const A = parseInt(a.slice(1), 16), B = parseInt(b.slice(1), 16), ch = s => Math.round((A >> s & 255) + ((B >> s & 255) - (A >> s & 255)) * t); return `rgb(${ch(16)},${ch(8)},${ch(0)})`; }
+function miniGauge() {
+  const th = cfg.theme, t = th.rgb, cc = cfg.channels.BOOST, id = 'BOOST', ds = th.digit_scale || 1, ls = th.label_scale || 1;
+  const cv = h('canvas', { class: 'mini', width: 240, height: 240 }), x = cv.getContext('2d'), C = 120, R = 112;
+  const gf = getComputedStyle(document.documentElement).getPropertyValue('--font-gauge'), mf = getComputedStyle(document.documentElement).getPropertyValue('--font-mono');
+  const d2r = d => d * Math.PI / 180, span = cc.max - cc.min;
+  const frac = v => Math.max(0, Math.min(1, (v - cc.min) / span));
+  const zc = l => t[l] || t.neutral;
+  const value = 9.4, f = frac(value), z0 = cc.min < 0 && cc.max > 0 ? frac(0) : 0;
+  const colorAt = fr => zc(zoneOf(id, cc.min + fr * span));
+  const stops = (() => { const e = new Set([0, 1]); for (const [a, b] of cc.zones) { const f0 = frac(a), f1 = frac(b); if (f0 > 0 && f0 < 1) e.add(f0); if (f1 > 0 && f1 < 1) e.add(f1); } const s = [...e].sort((p, q) => p - q), out = []; for (let i = 0; i + 1 < s.length; i++) { const m = (s[i] + s[i + 1]) / 2; out.push([m, colorAt(m)]); } return out; })();
+  const tipColor = fr => { if (fr <= stops[0][0]) return stops[0][1]; for (let i = 0; i + 1 < stops.length; i++) if (fr <= stops[i + 1][0]) return lerpHex(stops[i][1], stops[i + 1][1], (fr - stops[i][0]) / (stops[i + 1][0] - stops[i][0])); return stops[stops.length - 1][1]; };
+  const bar = th.fill === 'gradient' ? tipColor(f) : zc(zoneOf(id, value));
+  const bands = cc.zones.map(([a, b, l]) => [frac(a), frac(b), zc(l)]).filter(b => b[1] > b[0]);
+  const arc = (r, w, a0, a1, col, round = true) => { if (a1 <= a0) return; x.beginPath(); x.lineWidth = w; x.lineCap = round ? 'round' : 'butt'; x.strokeStyle = col; x.arc(C, C, r, d2r(a0), d2r(a1)); x.stroke(); };
+  const text = (s, px, col, y, w = 500, font = gf) => { x.font = `${w} ${px}px ${font}`; x.fillStyle = col; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(s, C, y); };
+  x.fillStyle = t.bg; x.beginPath(); x.arc(C, C, 120, 0, 7); x.fill();
+  const lo = Math.min(z0, f), hi = Math.max(z0, f);
+
+  if (th.style === 'ring') {
+    const w = Math.max(3, 9 * (th.bar_scale || 1)), r = R - w / 2 - 3, a0 = 135, sp = 270;
+    if (th.fill === 'segments') {
+      const n = 40, step = sp / n;
+      for (let i = 0; i < n; i++) { const fm = (i + 0.5) / n, on = fm >= lo && fm <= hi; const z = bands.find(b => fm >= b[0] && fm < b[1]); arc(r, w, a0 + i * step + 1, a0 + (i + 1) * step - 1, on ? colorAt(fm) : (th.bands && z ? hexA(z[2], 0.28) : t.track), false); }
+    } else {
+      arc(r, w, a0, a0 + sp, t.track);
+      if (th.bands) for (const [f0, f1, col] of bands) arc(r, w, a0 + sp * f0, a0 + sp * f1, hexA(col, 0.28), false);
+      arc(r, w, a0 + sp * lo, a0 + sp * hi, bar);
+      const a = d2r(a0 + sp * f); x.beginPath(); x.fillStyle = '#fff'; x.globalAlpha = .85; x.arc(C + r * Math.cos(a), C + r * Math.sin(a), 2.2, 0, 7); x.fill(); x.globalAlpha = 1;
+    }
+    text('BOOST', 10 * ls, t.label, C - 56, 600); text('9.4', 44 * ds, t.digits, C + 2, 300); text(unitLabel(byId.BOOST), 10 * ls, t.units, C + 34, 400, mf);
+    x.font = `500 9px ${mf}`; x.fillStyle = t.tick; x.textAlign = 'center'; x.fillText(String(cc.min), C - 64, C + 70); x.fillText(String(cc.max), C + 64, C + 70);
+  } else if (th.style === 'dial') {
+    const a0 = 135, sp = 270;
+    arc(R - 2, 1.5, a0, a0 + sp, t.track, false);
+    if (th.bands) for (const [f0, f1, col] of bands) arc(R - 6, 4, a0 + sp * f0, a0 + sp * f1, hexA(col, 0.9), false);
+    for (let i = 0; i <= 20; i++) { const a = d2r(a0 + sp * i / 20), major = i % 4 === 0, r1 = R - 11, r0 = r1 - (major ? 11 : 5); x.beginPath(); x.lineWidth = major ? 1.6 : 1; x.strokeStyle = major ? t.digits : t.tick; x.moveTo(C + r0 * Math.cos(a), C + r0 * Math.sin(a)); x.lineTo(C + r1 * Math.cos(a), C + r1 * Math.sin(a)); x.stroke(); if (major) { x.font = `500 9px ${mf}`; x.fillStyle = t.tick; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(String(Math.round(cc.min + span * i / 20)), C + (r0 - 10) * Math.cos(a), C + (r0 - 10) * Math.sin(a)); } }
+    text('BOOST', 10 * ls, t.label, C - 44, 600); text('9.4', 24 * ds, t.digits, C + 56, 300);
+    const a = d2r(a0 + sp * f), L = R - 26; x.save(); x.translate(C, C); x.rotate(a); x.fillStyle = bar; x.beginPath(); x.moveTo(-9, -3); x.lineTo(L, -0.8); x.lineTo(L, 0.8); x.lineTo(-9, 3); x.closePath(); x.fill(); x.restore();
+    x.beginPath(); x.fillStyle = t.bg; x.arc(C, C, 7, 0, 7); x.fill(); x.beginPath(); x.lineWidth = 1.5; x.strokeStyle = bar; x.arc(C, C, 7, 0, 7); x.stroke();
+  } else {
+    // numeric: digits as large as the face allows, coloured by zone, no bar
+    text('BOOST', 11 * ls, t.label, C - 62, 600);
+    const px = 86 * ds;
+    text('9.4', px, bar, C + 2, 300);
+    text(unitLabel(byId.BOOST), 11 * ls, t.units, C + 44, 400, mf);
+    x.font = `500 9px ${mf}`; x.fillStyle = t.units; x.textAlign = 'center'; x.fillText('-2.1/13.6', C, C + 72);
+  }
+  return cv;
+}
+function refreshMini() { const m = $('#mini'); if (m) m.replaceWith(Object.assign(miniGauge(), { id: 'mini' })); }
+function renderTheme() {
+  const t = cfg.theme;
+  const presets = h('div', { class: 'presets' });
+  for (const [name, p] of Object.entries(PRESETS)) presets.append(h('button', { type: 'button', 'aria-pressed': String(t.preset === name), onclick: () => { t.preset = name; t.rgb = { ...p }; save(); render(); } },
+    h('span', { class: 'sw' }, ...['neutral', 'good', 'warn', 'bad'].map(k => { const i = h('i'); i.style.background = p[k]; return i; })), name));
+  // User presets: saved colour sets, selectable like the built-ins.
+  cfg.theme_presets = cfg.theme_presets || [];
+  const same = (a, b) => THEME_KEYS.every(([k]) => (a[k] || '').toLowerCase() === (b[k] || '').toLowerCase());
+  const mine = h('div', { class: 'presets' });
+  cfg.theme_presets.forEach((p, i) => mine.append(h('button', { type: 'button', 'aria-pressed': String(same(t.rgb, p.rgb)), onclick: () => { t.preset = p.name; t.rgb = { ...p.rgb }; save(); render(); } },
+    h('span', { class: 'sw' }, ...['neutral', 'good', 'warn', 'bad'].map(k => { const d = h('i'); d.style.background = p.rgb[k]; return d; })), p.name,
+    h('span', { class: 'sub', role: 'button', tabindex: 0, 'aria-label': 'Delete ' + p.name, onclick: e => { e.stopPropagation(); cfg.theme_presets.splice(i, 1); save('Deleted ' + p.name); render(); } }, '× delete'))));
+  const pName = h('input', { type: 'text', placeholder: 'Name', maxlength: 16, 'aria-label': 'Preset name', id: 'presetName' });
+  const pSave = h('button', { class: 'btn primary', onclick: () => {
+    const name = pName.value.trim() || ('Preset ' + (cfg.theme_presets.length + 1));
+    const k = cfg.theme_presets.findIndex(p => p.name.toLowerCase() === name.toLowerCase());
+    const snap = { name, rgb: { ...t.rgb } };
+    if (k >= 0) cfg.theme_presets[k] = snap; else { if (cfg.theme_presets.length >= 8) { toast('Eight presets is the limit'); return; } cfg.theme_presets.push(snap); }
+    t.preset = name; pName.value = ''; save('Saved ' + name); render(); } }, 'Save colours as preset');
+  const colors = h('div', { class: 'colors' });
+  for (const [k, lab] of THEME_KEYS) colors.append(h('label', {}, h('input', { type: 'color', value: t.rgb[k], 'aria-label': lab, oninput: e => { t.rgb[k] = e.target.value; t.preset = 'Custom'; save(); refreshMini(); } }), h('span', {}, lab, h('code', {}, t.rgb[k]))));
+  return [card('Preview', Object.assign(miniGauge(), { id: 'mini' }), h('p', { class: 'note' }, 'Boost at 9.4 psi, drawn the way the gauge will draw it.')),
+          card('Presets', presets, cfg.theme_presets.length ? mine : null, h('div', { class: 'row' }, pName, pSave)),
+          card('Style', seg(STYLES, STYLES.map(cap), () => t.style, v => { t.style = v; save(); }),
+            row('Bar fill', 'Gradient: one colour sampled from a blend through the zones at the tip. Segments: each block its own zone. Solid: the zone the tip is in.', null),
+            seg(FILLS, FILLS.map(cap), () => t.fill, v => { t.fill = v; save(); }),
+            row('Zone bands on track', 'Faint colour where each zone starts', sw(() => t.bands, v => { t.bands = v; save(); refreshMini(); }))),
+          card('Type size',
+            row('Digits', Math.round((t.digit_scale || 1) * 100) + '%', null),
+            h('input', { type: 'range', min: 50, max: 500, value: Math.round((t.digit_scale || 1) * 100), 'aria-label': 'Digit scale', oninput: e => { t.digit_scale = e.target.value / 100; e.target.previousSibling.querySelector('.sub').textContent = e.target.value + '%'; refreshMini(); }, onchange: () => save() }),
+            row('Labels', Math.round((t.label_scale || 1) * 100) + '%', null),
+            h('input', { type: 'range', min: 50, max: 400, value: Math.round((t.label_scale || 1) * 100), 'aria-label': 'Label scale', oninput: e => { t.label_scale = e.target.value / 100; e.target.previousSibling.querySelector('.sub').textContent = e.target.value + '%'; refreshMini(); }, onchange: () => save() }),
+            row('Units', Math.round((t.units_scale || 1) * 100) + '%', null),
+            h('input', { type: 'range', min: 50, max: 400, value: Math.round((t.units_scale || 1) * 100), 'aria-label': 'Units scale', oninput: e => { t.units_scale = e.target.value / 100; e.target.previousSibling.querySelector('.sub').textContent = e.target.value + '%'; refreshMini(); }, onchange: () => save() }),
+            row('Min and max', Math.round((t.minmax_scale || 1) * 100) + '%', null),
+            h('input', { type: 'range', min: 50, max: 400, value: Math.round((t.minmax_scale || 1) * 100), 'aria-label': 'Min max scale', oninput: e => { t.minmax_scale = e.target.value / 100; e.target.previousSibling.querySelector('.sub').textContent = e.target.value + '%'; refreshMini(); }, onchange: () => save() }),
+            row('Ring and segment thickness', Math.round((t.bar_scale || 1) * 100) + '%', null),
+            h('input', { type: 'range', min: 50, max: 300, value: Math.round((t.bar_scale || 1) * 100), 'aria-label': 'Ring thickness', oninput: e => { t.bar_scale = e.target.value / 100; e.target.previousSibling.querySelector('.sub').textContent = e.target.value + '%'; refreshMini(); }, onchange: () => save() }),
+            row('Outer cells', Math.round((t.cell_scale || 1) * 100) + '%', null),
+            h('input', { type: 'range', min: 100, max: 250, value: Math.round((t.cell_scale || 1) * 100), 'aria-label': 'Outer cell scale', oninput: e => { t.cell_scale = e.target.value / 100; e.target.previousSibling.querySelector('.sub').textContent = e.target.value + '%'; }, onchange: () => save() }),
+            h('p', { class: 'note' }, 'Outer cells enlarges every cell around the centre in the multi-cell layouts; in Numeric style they can overlap without harm. Digits above 48 px use a converted font on the gauge; the size chosen here picks the nearest one.')),
+          card('Colours', colors)];
+}
+
+// ---------------------------------------------------------------- Alarms
+function renderAlarms() {
+  const a = cfg.alarms;
+  return [card('Speaker',
+      row('Volume', a.volume + '%', null),
+      h('input', { type: 'range', min: 0, max: 100, value: a.volume, 'aria-label': 'Volume', onchange: e => { a.volume = +e.target.value; save(); api.action('test-alarm', { tone: 'chirp' }); render(); } }),
+      row('Mute everything', 'Banners still show', sw(() => a.mute, v => { a.mute = v; save(); }))),
+    card('Levels',
+      row('Warn alarms', 'Tone when a channel enters a warn zone', sw(() => a.warn_on, v => { a.warn_on = v; save(); })),
+      row('Bad alarms', 'Tone when a channel enters a bad zone', sw(() => a.bad_on, v => { a.bad_on = v; save(); })),
+      row('Repeat bad alarm', 'While the value stays in a bad zone', sel(['0', '5', '10', '30'], ['Once', 'Every 5 s', 'Every 10 s', 'Every 30 s'], () => String(a.repeat_s), v => { a.repeat_s = +v; save(); }))),
+    card('Audition', h('div', { class: 'btnrow' }, ...TONES.slice(1).map(tn => h('button', { class: 'btn', onclick: () => api.action('test-alarm', { tone: tn }).then(() => toast('Playing ' + tn)) }, cap(tn))))),
+    card('Rules', h('p', { class: 'note' }, 'Channels on screen sound their tone; the cell shows the state. Channels off screen never sound, they raise a banner on the gauge instead. Set each channel\'s tones in the Channels tab.'))];
+}
+
+// ---------------------------------------------------------------- System
+function renderSystem() {
+  const u = cfg.units, w = cfg.wifi;
+  const dl = () => { const blob = new Blob([JSON.stringify(cfg, null, 2)], { type: 'application/json' }); const url = URL.createObjectURL(blob); const a = h('a', { href: url, download: 'nb1-gauge-config.json' }); document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000); };
+  const up = h('input', { type: 'file', accept: 'application/json', hidden: true, onchange: async e => { const f = e.target.files[0]; if (!f) return; try { const j = JSON.parse(await f.text()); if (!j.channels) throw 0; cfg = j; save('Config restored'); render(); } catch (err) { toast('Not a gauge config file'); } } });
+  return [card('Data source',
+      seg(['ms', 'obd'], ['MegaSquirt CAN', 'Generic OBD-II CAN'], () => cfg.source || 'ms', v => { cfg.source = v; save(); }),
+      row('Simulated data', 'Synthetic engine instead of the bus. Turn off once the car is connected.', sw(() => cfg.sim !== false, v => { cfg.sim = v; save(v ? 'Simulation on' : 'Reading the bus'); })),
+      h('p', { class: 'note' }, 'MegaSquirt listens to the dash broadcast on 1512 to 1516. Generic polls Mode 01 PIDs on 0x7DF and fills RPM, speed, coolant, intake, throttle, timing, load, MAF, trims and O2.')),
+    card('Units', seg(['F', 'C'], ['°F', '°C'], () => u.temp_c ? 'C' : 'F', v => { u.temp_c = v === 'C'; save(); }),
+      seg(['psi', 'bar'], ['psi', 'bar'], () => u.press_bar ? 'bar' : 'psi', v => { u.press_bar = v === 'bar'; save(); }),
+      seg(['mph', 'kmh'], ['mph', 'km/h'], () => u.speed_kmh ? 'kmh' : 'mph', v => { u.speed_kmh = v === 'kmh'; save(); })),
+    card('Wi-Fi hotspot',
+      row('Network name', null, h('input', { type: 'text', value: w.ssid, maxlength: 24, 'aria-label': 'Network name', onchange: e => { w.ssid = e.target.value; save(); } })),
+      row('Password', 'At least 8 characters', h('input', { type: 'password', value: w.password, minlength: 8, 'aria-label': 'Password', onchange: e => { w.password = e.target.value; save(); } })),
+      row('On at startup', 'Hotspot starts with the gauge', sw(() => w.on !== false, v => { w.on = v; save(); })),
+      row('Turn off after', 'Idle minutes with no phone attached', sel(['0', '5', '10', '30'], ['Never', '5 min', '10 min', '30 min'], () => String(w.timeout_min || 0), v => { w.timeout_min = +v; save(); })),
+      h('p', { class: 'note' }, 'The gauge menu (System, Wi-Fi setup) also switches the hotspot on and off, and remembers the choice.')),
+    card('Backup', h('div', { class: 'btnrow' }, h('button', { class: 'btn', onclick: dl }, 'Download config'), h('button', { class: 'btn', onclick: () => up.click() }, 'Restore config'), up),
+      h('p', { class: 'note' }, 'Everything on these pages in one file, the same one the gauge keeps.')),
+    card('Gauge', h('div', { class: 'btnrow' },
+      h('button', { class: 'btn', onclick: () => api.action('reboot').then(() => toast('Rebooting')) }, 'Reboot'),
+      h('button', { class: 'btn danger', onclick: () => { if (confirmReset) { cfg = defaultConfig(); save('Factory defaults restored'); confirmReset = false; render(); } else { confirmReset = true; toast('Tap again to confirm'); setTimeout(() => confirmReset = false, 3000); } } }, 'Factory reset')),
+      h('p', { class: 'note' }, 'Firmware: 0.3.0 preview · ESP32-S3 · MegaSquirt CAN source'))];
+}
+let confirmReset = false;
+
+// ---------------------------------------------------------------- tabs + loop
+const RENDER = { live: renderLive, screen: renderScreen, channels: renderChannels, theme: renderTheme, alarms: renderAlarms, system: renderSystem };
+let tab = 'live';
+function render() {
+  for (const [k, fn] of Object.entries(RENDER)) {
+    const el = document.getElementById('tab-' + k);
+    el.hidden = k !== tab;
+    if (k === tab) { el.replaceChildren(...fn()); }
+  }
+  for (const b of document.querySelectorAll('.tabs button')) b.setAttribute('aria-selected', String(b.dataset.tab === tab));
+}
+for (const b of document.querySelectorAll('.tabs button')) b.addEventListener('click', () => { tab = b.dataset.tab; render(); window.scrollTo(0, 0); });
+async function poll() {
+  try { const s = await api.getState(); live = s.values || {}; if (tab === 'live') updateLive(); } catch (e) {}
+  setTimeout(poll, 250);
+}
+function save(msg) {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(async () => {
+    await api.putConfig(cfg);
+    // Take the gauge's echo as the reference copy so the sync loop sees no change.
+    try { const fresh = await api.getConfig(); if (fresh) lastCfgJson = JSON.stringify(fresh); } catch (e) {}
+    toast(msg || (embedded ? 'Applied to gauge' : 'Saved to gauge'));
+  }, 400);
+}
+connect().then(() => { try { const t = location.hash.slice(1); if (RENDER[t]) tab = t; } catch (e) {} lastCfgJson = JSON.stringify(cfg); render(); poll(); syncFromGauge(); });
+// Debug handle (also handy from the gauge preview's console).
+window.nb1 = { get cfg() { return cfg; }, set cfg(v) { cfg = v; }, get live() { return live; }, save, render, get embedded() { return embedded; } };
+</script>
+</body></html>

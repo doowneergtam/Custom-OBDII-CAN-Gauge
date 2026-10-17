@@ -1,0 +1,1017 @@
+<title>NB1 Pod Gauge Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a bench. The round display sits left with the encoder under it; a
+   tabbed instrument panel sits right and stacks below on phones. Single dark
+   theme by choice: an AMOLED gauge in a dark footwell. */
+:root {
+  --bg: #0c0d10; --bench: #13151a; --panel: #181b21; --line: #262a32;
+  --fg: #e9e7e1; --muted: #8c919c; --accent: #38bdf8; --warn: #ff3b30;
+  --font-ui: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+  --font-gauge: "Montserrat", "Segoe UI", Arial, sans-serif;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font-ui); font-size: 14px; line-height: 1.45; padding-inline: 16px; padding-block: 16px; }
+.app { display: grid; grid-template-columns: minmax(0, 1fr) minmax(330px, 380px); gap: 20px; max-width: 1200px; margin: 0 auto; }
+@media (max-width: 900px) { .app { grid-template-columns: minmax(0, 1fr); } .panel { max-width: 560px; width: 100%; margin: 0 auto; } }
+header.top { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 18px; border-bottom: 1px solid var(--line); padding-bottom: 10px; }
+header.top h1 { font: 600 18px/1.2 var(--font-ui); margin: 0; }
+header.top .sub { color: var(--muted); font-size: 13px; }
+header.top .chip { margin-left: auto; font: 500 12px var(--font-mono); color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; }
+
+.stage { background: var(--bench); border: 1px solid var(--line); border-radius: 14px; padding: 22px 18px 18px; display: flex; flex-direction: column; align-items: center; gap: 16px; min-width: 0; }
+.pod { position: relative; width: min(100%, 466px); aspect-ratio: 1; max-width: 100%; }
+.pod .bezel { position: absolute; inset: 0; border-radius: 50%; background: radial-gradient(circle at 50% 42%, #2a2d33 0 60%, #0f1013 61% 100%); box-shadow: 0 18px 40px rgba(0,0,0,.6), inset 0 2px 0 rgba(255,255,255,.06), inset 0 -3px 8px rgba(0,0,0,.6); }
+.pod canvas { position: absolute; left: 50%; top: 50%; transform: translate(-50%,-50%); width: 89.6%; height: 89.6%; border-radius: 50%; background: #000; display: block; }
+.pod.nobezel canvas { width: 100%; height: 100%; }
+.caption { color: var(--muted); font: 400 12px var(--font-mono); text-align: center; }
+.encoder { display: grid; grid-template-columns: auto auto auto auto; gap: 8px; align-items: center; }
+.encoder button { background: #1f232b; color: var(--fg); border: 1px solid var(--line); border-radius: 10px; padding: 9px 14px; font: 500 13px var(--font-ui); cursor: pointer; min-width: 44px; }
+.encoder button:hover { border-color: #3a4049; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.encoder .knob { width: 54px; height: 54px; border-radius: 50%; padding: 0; background: radial-gradient(circle at 45% 40%, #3a3f48, #1a1d23 70%); position: relative; }
+.encoder .knob::after { content: ""; position: absolute; left: 50%; top: 6px; width: 3px; height: 14px; margin-left: -1.5px; background: var(--accent); border-radius: 2px; }
+.hint { color: var(--muted); font-size: 12px; text-align: center; max-width: 48ch; margin: 0; }
+
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px 16px; display: flex; flex-direction: column; gap: 14px; min-width: 0; align-self: start; }
+.tabs { display: flex; flex-wrap: wrap; gap: 2px; border-bottom: 1px solid var(--line); }
+.tabs button { flex: 1 1 auto; min-width: 0; background: transparent; border: 0; color: var(--muted); font: 600 11px var(--font-ui); letter-spacing: .06em; text-transform: uppercase; padding: 8px 4px; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; }
+.tabs button[aria-selected="true"] { color: var(--fg); border-bottom-color: var(--accent); }
+.tab { display: flex; flex-direction: column; gap: 16px; }
+.group { display: flex; flex-direction: column; gap: 8px; }
+.group h2 { font: 600 11px var(--font-ui); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 0; }
+.seg { display: flex; gap: 4px; background: #0f1115; border: 1px solid var(--line); border-radius: 9px; padding: 3px; }
+.seg button { flex: 1; background: transparent; color: var(--muted); border: 0; border-radius: 6px; padding: 6px 0; font: 500 13px var(--font-ui); cursor: pointer; }
+.seg button[aria-pressed="true"] { background: #262b34; color: var(--fg); }
+.row { display: grid; grid-template-columns: 70px minmax(0,1fr) 78px; align-items: center; gap: 8px; }
+.row label { color: var(--muted); font-size: 12px; }
+.row .val { font: 500 12px var(--font-mono); text-align: right; color: var(--fg); white-space: nowrap; }
+input[type=range] { width: 100%; accent-color: var(--accent); margin: 0; }
+select { width: 100%; background: #0f1115; color: var(--fg); border: 1px solid var(--line); border-radius: 7px; padding: 6px 8px; font: 500 13px var(--font-ui); }
+.cells { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.cells .cell { display: flex; flex-direction: column; gap: 3px; }
+.cells .cell span { font: 500 11px var(--font-mono); color: var(--muted); }
+.toggles { display: flex; flex-wrap: wrap; gap: 6px; }
+.toggles button { background: #0f1115; color: var(--fg); border: 1px solid var(--line); border-radius: 999px; padding: 5px 11px; font: 500 12px var(--font-ui); cursor: pointer; }
+.toggles button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); }
+.toggles button.warn[aria-pressed="true"] { border-color: var(--warn); color: var(--warn); }
+.colors { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; }
+.colors label { display: grid; grid-template-columns: 28px 1fr auto; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+.colors input[type=color] { width: 28px; height: 22px; padding: 0; border: 1px solid var(--line); border-radius: 6px; background: none; cursor: pointer; }
+.colors code { font: 400 11px var(--font-mono); color: var(--muted); }
+.note { color: var(--muted); font-size: 12px; margin: 0; }
+.note code { font: 500 11px var(--font-mono); color: var(--fg); }
+.phone { background: #000; border: 6px solid #202329; border-radius: 28px; overflow: hidden; aspect-ratio: 375 / 760; max-height: 76vh; }
+.phone iframe { width: 100%; height: 100%; border: 0; display: block; background: #0c0d10; }
+.zones { font: 400 11px var(--font-mono); color: var(--muted); line-height: 1.7; }
+.zones b { color: var(--fg); font-weight: 500; }
+.zones i { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; vertical-align: -1px; }
+</style>
+
+<div class="app">
+  <header class="top">
+    <h1>NB1 Pod Gauge Preview</h1>
+    <span class="sub">Waveshare 1.75" AMOLED, 466 × 466, drawn to scale</span>
+    <span class="chip" id="fps">— fps</span>
+  </header>
+
+  <section class="stage">
+    <div class="pod" id="pod">
+      <div class="bezel" id="bezel"></div>
+      <canvas id="disp" width="466" height="466" aria-label="Gauge display preview"></canvas>
+    </div>
+    <div class="caption">1:1 pixels at 466 px · 44.5 mm active area</div>
+    <div class="encoder" aria-label="Encoder">
+      <button id="encL" title="Rotate anticlockwise">⟲</button>
+      <button class="knob" id="encPush" title="Push (click). Hold for long press." aria-label="Encoder push"></button>
+      <button id="encR" title="Rotate clockwise">⟳</button>
+      <button id="encLong" title="Long press">Hold</button>
+    </div>
+    <p class="hint">Encoder: rotate moves the selection ring between cells (it fades after 3 s), click resets that cell's min and max, hold opens the menu; in the menu rotate scrolls, click selects, hold backs out. Touch: tap a cell to select it, tap it again to reset, swipe to move, hold for the menu; in the menu tap the middle row to choose, tap above or below or swipe to scroll. Keyboard: arrows, Enter, Space. Mouse wheel rotates.</p>
+  </section>
+
+  <aside class="panel">
+    <div class="tabs" role="tablist">
+      <button role="tab" data-tab="screen" aria-selected="true">Screen</button>
+      <button role="tab" data-tab="cells" aria-selected="false">Cells</button>
+      <button role="tab" data-tab="theme" aria-selected="false">Theme</button>
+      <button role="tab" data-tab="data" aria-selected="false">Data</button>
+      <button role="tab" data-tab="alarms" aria-selected="false">Alarms</button>
+      <button role="tab" data-tab="phone" aria-selected="false">Phone</button>
+    </div>
+
+    <div class="tab" id="tab-screen">
+      <div class="group"><h2>Layout</h2>
+        <div class="seg" id="layoutSeg"><button data-v="1" aria-pressed="true">1</button><button data-v="3">3</button><button data-v="4">4</button><button data-v="6">6</button><button data-v="7">7</button></div></div>
+      <div class="group"><h2>Style, all layouts</h2>
+        <div class="seg" id="styleSeg"><button data-v="ring" aria-pressed="true">Ring</button><button data-v="dial">Dial</button><button data-v="numeric">Numeric</button></div></div>
+      <div class="group"><h2>Display</h2>
+        <div class="row"><label for="bright">Brightness</label><input id="bright" type="range" min="10" max="100" value="80"><span class="val" id="brightVal">80%</span></div>
+        <div class="row"><label for="valueSize">Digits</label><select id="valueSize"><option value="48">48 px, built-in font</option><option value="64">64 px</option><option value="80" selected>80 px</option><option value="96">96 px</option></select><span class="val"></span></div>
+        <div class="row"><label for="digitWeight">Weight</label><select id="digitWeight"><option value="300" selected>Light</option><option value="400">Regular</option><option value="600">Semibold</option></select><span class="val"></span></div>
+        <div class="row"><label for="digitScale">Digit scale</label><input id="digitScale" type="range" min="50" max="500" value="100"><span class="val" id="digitScaleVal">100%</span></div>
+        <div class="row"><label for="labelScale">Label scale</label><input id="labelScale" type="range" min="50" max="400" value="100"><span class="val" id="labelScaleVal">100%</span></div>
+        <div class="row"><label for="cellScale">Outer cells</label><input id="cellScale" type="range" min="100" max="250" value="100"><span class="val" id="cellScaleVal">100%</span></div>
+        <div class="row"><label for="unitsScale">Units scale</label><input id="unitsScale" type="range" min="50" max="400" value="100"><span class="val" id="unitsScaleVal">100%</span></div>
+        <div class="row"><label for="minmaxScale">Min/max scale</label><input id="minmaxScale" type="range" min="50" max="400" value="100"><span class="val" id="minmaxScaleVal">100%</span></div>
+        <div class="row"><label for="barScale">Ring thickness</label><input id="barScale" type="range" min="50" max="300" value="100"><span class="val" id="barScaleVal">100%</span></div>
+        <div class="toggles">
+          <button id="tglBezel" aria-pressed="true">52 mm bezel</button>
+          <button id="tglShift" aria-pressed="false">Pixel shift</button>
+          <button id="tglSweep" aria-pressed="false">Startup sweep</button>
+          <button id="tglGlow" aria-pressed="true">Glow</button>
+          <button id="tglBands" aria-pressed="true">Zone bands on track</button>
+        </div></div>
+      <div class="group"><h2>Units</h2>
+        <div class="seg" id="tempSeg"><button data-v="F" aria-pressed="true">°F</button><button data-v="C">°C</button></div>
+        <div class="seg" id="pressSeg"><button data-v="psi" aria-pressed="true">psi</button><button data-v="bar">bar</button></div>
+        <div class="seg" id="speedSeg"><button data-v="mph" aria-pressed="true">mph</button><button data-v="kmh">km/h</button></div></div>
+    </div>
+
+    <div class="tab" id="tab-cells" hidden>
+      <div class="group"><h2>Channel per cell</h2><div class="cells" id="cells"></div></div>
+      <div class="group"><h2>Zones of the focused cell</h2><div class="zones" id="zoneInfo"></div>
+        <p class="note">Zones live on the channel, so every cell showing it colours the same way. Edit them in the channel editor later; the preset values here are the ones I'd ship.</p></div>
+    </div>
+
+    <div class="tab" id="tab-theme" hidden>
+      <div class="group"><h2>Bar fill</h2>
+        <div class="seg" id="fillSeg"><button data-v="gradient" aria-pressed="true">Gradient</button><button data-v="segments">Segments</button><button data-v="solid">Solid</button></div>
+        <p class="note">Gradient: the whole bar is one colour, picked from a smooth blend through the zone colours at the tip's position, so it drifts from blue through green to yellow and red as the value climbs. Segments colours each block by its own zone. Solid snaps the whole bar to the zone the value is in.</p></div>
+      <div class="group"><h2>Presets</h2><div class="toggles" id="presets"></div></div>
+      <div class="group"><h2>Colours</h2><div class="colors" id="colors"></div></div>
+      <p class="note">Everything here becomes a field in the gauge's config JSON. The firmware applies them as LVGL styles, so no rebuild is needed to change them.</p>
+    </div>
+
+    <div class="tab" id="tab-data" hidden>
+      <div class="group"><h2>Source</h2><div class="seg" id="dataSeg"><button data-v="engine" aria-pressed="true">Engine sim</button><button data-v="manual">Manual</button></div></div>
+      <div class="group" id="sliders"></div>
+      <div class="group"><h2>Faults</h2><div class="toggles">
+        <button id="tglWarn" class="warn" aria-pressed="false">Low oil pressure</button>
+        <button id="tglStale" aria-pressed="false">Data stale</button>
+        <button id="tglDead" aria-pressed="false">Signal lost</button></div></div>
+    </div>
+
+    <div class="tab" id="tab-phone" hidden>
+      <div class="phone"><iframe id="phoneFrame" title="Phone setup page" data-src="phone.html"></iframe></div>
+      <p class="note">The setup page the gauge will serve over its own Wi-Fi, linked live to this gauge. Change anything here and the gauge beside it follows; the Live tab shows the gauge's values.</p>
+    </div>
+    <div class="tab" id="tab-alarms" hidden>
+      <div class="group"><h2>Speaker</h2>
+        <div class="row"><label for="alVol">Volume</label><input id="alVol" type="range" min="0" max="100" value="60"><span class="val" id="alVolVal">60%</span></div>
+        <div class="row"><label for="alRepeat">Bad repeats</label><select id="alRepeat"><option value="0">once</option><option value="5">every 5 s</option><option value="10" selected>every 10 s</option><option value="30">every 30 s</option></select><span class="val"></span></div>
+        <div class="toggles"><button id="tglWarnSnd" aria-pressed="true">Warn alarms</button><button id="tglBadSnd" aria-pressed="true">Bad alarms</button><button id="tglMute" aria-pressed="false">Mute all</button></div></div>
+      <div class="group"><h2>Audition</h2><div class="toggles" id="audition"></div></div>
+      <div class="group"><h2>Tone per channel and level</h2>
+        <div class="ahead"><span>channel</span><span>warn</span><span>bad</span></div>
+        <div id="alarmRows"></div>
+        <p class="note">An alarm fires once on entering a zone, and bad zones can repeat while the value stays there. Channels on screen sound their tone; the cell shows the state. Every other channel with a tone set is watched silently and raises a three second banner naming it and its value. On the board this plays through the ES8311 codec and the onboard amp.</p></div>
+    </div>
+  </aside>
+</div>
+<script>
+// ---------------------------------------------------------------- channels
+// Every MS2/Extra dash-broadcast field plus two derived values. Base units are
+// imperial; `kind` selects the unit switch. Zones: [from, to, level] in base
+// units; anything not covered is 'good'. Levels: cold, good, warn, bad.
+const CH = [
+  { id:'RPM',    name:'RPM',      kind:'none',  units:'rpm', min:0,    max:8000, dp:0, zones:[[6500,7200,'warn'],[7200,9000,'bad']] },
+  { id:'BOOST',  name:'BOOST',    kind:'press', units:'psi', min:-15,  max:20,   dp:1, zones:[[-30,0,'cold'],[12,16,'warn'],[16,40,'bad']], derived:true },
+  { id:'MAP',    name:'MAP',      kind:'none',  units:'kPa', min:0,    max:250,  dp:0, zones:[[185,210,'warn'],[210,400,'bad']] },
+  { id:'CLT',    name:'COOLANT',  kind:'temp',  units:'°F',  min:100,  max:260,  dp:0, zones:[[0,160,'cold'],[215,230,'warn'],[230,400,'bad']] },
+  { id:'OILP',   name:'OIL PRES', kind:'press', units:'psi', min:0,    max:100,  dp:0, zones:[[0,10,'bad'],[10,20,'warn'],[80,200,'warn']] },
+  { id:'OILT',   name:'OIL TEMP', kind:'temp',  units:'°F',  min:100,  max:300,  dp:0, zones:[[0,140,'cold'],[240,260,'warn'],[260,500,'bad']] },
+  { id:'AFR',    name:'AFR',      kind:'none',  units:'afr', min:10,   max:20,   dp:1, zones:[[0,11,'bad'],[11,12,'warn'],[15.5,17,'warn'],[17,30,'bad']] },
+  { id:'AFRTGT', name:'AFR TGT',  kind:'none',  units:'afr', min:10,   max:20,   dp:1, zones:[] },
+  { id:'EGOCOR', name:'EGO COR',  kind:'none',  units:'%',   min:50,   max:150,  dp:0, zones:[[0,85,'warn'],[115,200,'warn']] },
+  { id:'MAT',    name:'INTAKE',   kind:'temp',  units:'°F',  min:0,    max:200,  dp:0, zones:[[120,150,'warn'],[150,400,'bad']] },
+  { id:'EGT',    name:'EGT',      kind:'temp',  units:'°F',  min:400,  max:1800, dp:0, zones:[[1500,1650,'warn'],[1650,3000,'bad']] },
+  { id:'TPS',    name:'THROTTLE', kind:'none',  units:'%',   min:0,    max:100,  dp:0, zones:[] },
+  { id:'ADV',    name:'TIMING',   kind:'none',  units:'°',   min:-10,  max:50,   dp:1, zones:[] },
+  { id:'PW1',    name:'PULSE W',  kind:'none',  units:'ms',  min:0,    max:25,   dp:2, zones:[] },
+  { id:'DUTY',   name:'INJ DUTY', kind:'none',  units:'%',   min:0,    max:100,  dp:0, zones:[[80,90,'warn'],[90,200,'bad']], derived:true },
+  { id:'BATT',   name:'BATTERY',  kind:'none',  units:'V',   min:8,    max:16,   dp:1, zones:[[0,11.5,'bad'],[11.5,12.5,'warn'],[15,15.5,'warn'],[15.5,30,'bad']] },
+  { id:'KNOCK',  name:'KNOCK',    kind:'none',  units:'°',   min:0,    max:10,   dp:1, zones:[[0.1,2,'warn'],[2,100,'bad']] },
+  { id:'VSS',    name:'SPEED',    kind:'speed', units:'mph', min:0,    max:160,  dp:0, zones:[] },
+  { id:'TCRET',  name:'TC RETARD',kind:'none',  units:'°',   min:0,    max:20,   dp:1, zones:[[0.1,100,'warn']] },
+  { id:'LAUNCH', name:'LAUNCH',   kind:'none',  units:'°',   min:-20,  max:20,   dp:1, zones:[] },
+];
+const byId = Object.fromEntries(CH.map(c => [c.id, c]));
+
+// ---------------------------------------------------------------- units
+const units = { temp: 'F', press: 'psi', speed: 'mph' };
+function conv(c, v) {
+  if (c.kind === 'temp'  && units.temp  === 'C')   return (v - 32) * 5 / 9;
+  if (c.kind === 'press' && units.press === 'bar') return v * 0.0689476;
+  if (c.kind === 'speed' && units.speed === 'kmh') return v * 1.609344;
+  return v;
+}
+function unitLabel(c) {
+  if (c.kind === 'temp')  return units.temp === 'C' ? '°C' : '°F';
+  if (c.kind === 'press') return units.press;
+  if (c.kind === 'speed') return units.speed === 'kmh' ? 'km/h' : 'mph';
+  return c.units;
+}
+function dpOf(c) { return (c.kind === 'press' && units.press === 'bar') ? 2 : c.dp; }
+// Units shown on the face: blank when they just repeat the channel name (RPM, AFR).
+function unitsFor(c) { if (c.show_units === false) return ''; const u = unitLabel(c); return u.toLowerCase() === c.name.toLowerCase() ? '' : u; }
+// "lo/hi", or just the one that is switched on; empty when nothing to show.
+function minmaxText(c, g) { const lo = c.show_min !== false && g.loFrac !== null, hi = c.show_max !== false && g.pkFrac !== null; if (g.dead) return ''; return lo && hi ? g.loStr + '/' + g.pkStr : lo ? g.loStr : hi ? g.pkStr : ''; }
+function zoneOf(c, v) { for (const [a, b, l] of c.zones) if (v >= a && v < b) return l; return 'good'; }
+
+// ---------------------------------------------------------------- state
+const state = {
+  layout: 1, style: 'ring', fill: 'gradient', data: 'engine',
+  cells: ['BOOST', 'OILP', 'CLT', 'AFR', 'BATT', 'OILT', 'RPM'],
+  focus: 0, focusUntil: 0, brightness: 0.8, valueSize: 80, digitWeight: 300, digitScale: 1, labelScale: 1, cellScale: 1, unitsScale: 1, minmaxScale: 1, barScale: 1,
+  bezel: true, shift: false, sweep: false, sweepT: 0, glow: true, bands: true,
+  forceWarn: false, stale: false, dead: false,
+  menu: null, manual: {}, values: {}, peaks: {}, lows: {}, lastUpdate: 0,
+};
+CH.forEach(c => { state.values[c.id] = NaN; state.peaks[c.id] = -Infinity; state.lows[c.id] = Infinity; state.manual[c.id] = c.id === 'BOOST' ? 8 : (c.min + c.max) / 2; });
+function resetMinMax(id) { const ids = id ? [id] : CH.map(c => c.id); for (const k of ids) { const v = state.values[k]; state.peaks[k] = isNaN(v) ? -Infinity : v; state.lows[k] = isNaN(v) ? Infinity : v; } }
+
+// ---------------------------------------------------------------- engine sim
+// Turbo NB: boost builds above 2500 rpm with throttle. 30 s idle-pull-settle.
+function engine(t) {
+  const ph = (t % 30) / 30;
+  const pull = ph < 0.6 ? ph / 0.6 : (1 - ph) / 0.4;
+  const rpm = 900 + 5600 * pull + 60 * Math.sin(t * 9);
+  const tps = ph < 0.6 ? 100 * ph / 0.6 : 0;
+  const spool = Math.max(0, Math.min(1, (rpm - 2500) / 2000));
+  const boost = tps / 100 * spool * 13 + 0.4 * Math.sin(t * 5) * spool;
+  const map = boost > 0.3 ? 101.3 + boost * 6.895 : 35 + 66 * tps / 100;
+  const clt = 170 + 30 * (1 - Math.exp(-t / 120));
+  const pw = 1.8 + 12 * map / 200;
+  return {
+    RPM: rpm, BOOST: boost > 0.3 ? boost : -(101.3 - map) / 6.895, MAP: map, TPS: tps, CLT: clt,
+    MAT: 95 + 25 * spool + 5 * Math.sin(t * 0.1), ADV: 24 - 14 * spool + 4 * Math.sin(t), PW1: pw,
+    DUTY: pw * rpm / 1200, AFRTGT: 14.7 - 3.2 * spool * tps / 100,
+    AFR: 14.7 - 3.2 * spool * tps / 100 + 0.25 * Math.sin(t * 3), EGOCOR: 100 + 3 * Math.sin(t * 1.3),
+    EGT: 800 + 800 * tps / 100 * (0.5 + 0.5 * spool), BATT: 13.8 + 0.3 * Math.sin(t * 0.5),
+    OILP: 15 + 55 * rpm / 6500, OILT: clt + 20, KNOCK: 0, VSS: 2.237 * 30 * tps / 100,
+    TCRET: 0, LAUNCH: 0,
+  };
+}
+function updateValues(now) {
+  if (state.dead) return;
+  if (state.stale && now - state.lastUpdate < 20000) return;
+  const src = state.data === 'engine' ? engine(now / 1000) : state.manual;
+  for (const c of CH) {
+    let v = src[c.id]; if (v === undefined) v = state.manual[c.id];
+    if (state.forceWarn && c.id === 'OILP') v = 6;
+    state.values[c.id] = v;
+    if (v > state.peaks[c.id]) state.peaks[c.id] = v;
+    if (v < state.lows[c.id]) state.lows[c.id] = v;
+  }
+  state.lastUpdate = now;
+}
+function freshness(now) {
+  if (state.dead || state.lastUpdate === 0) return 'dead';
+  const age = now - state.lastUpdate;
+  return age > 3000 ? 'dead' : age > 500 ? 'stale' : 'fresh';
+}
+function fmt(v, dp) { return (isNaN(v) || !isFinite(v)) ? '---' : v.toFixed(dp); }
+
+// ---------------------------------------------------------------- theme
+const THEME_KEYS = [
+  ['bg', 'Background'], ['digits', 'Digits'], ['label', 'Labels'], ['units', 'Units, peaks'],
+  ['track', 'Track, static bars'], ['tick', 'Ticks, scale numbers'], ['neutral', 'Neutral bar'],
+  ['good', 'Good zone'], ['warn', 'Warning zone'], ['bad', 'Bad zone'], ['cold', 'Cold zone'], ['stale', 'Stale data'],
+];
+const PRESETS = {
+  Ice:   { bg:'#000000', digits:'#f4f6f8', label:'#8a93a0', units:'#6b737f', track:'#1b1f26', tick:'#5a6270', neutral:'#38bdf8', good:'#34d399', warn:'#fbbf24', bad:'#ff3b30', cold:'#60a5fa', stale:'#4b5058' },
+  Ember: { bg:'#000000', digits:'#fff3e0', label:'#9c8a78', units:'#75655a', track:'#221a14', tick:'#6a5a4c', neutral:'#ff8a00', good:'#9ae66e', warn:'#ffd166', bad:'#ff2d55', cold:'#7fb3ff', stale:'#4f463f' },
+  Mono:  { bg:'#000000', digits:'#ffffff', label:'#7a7a7a', units:'#5c5c5c', track:'#1c1c1c', tick:'#505050', neutral:'#ffffff', good:'#cfd6d0', warn:'#ffd36b', bad:'#ff5c5c', cold:'#9cc9ff', stale:'#454545' },
+  Miata: { bg:'#000000', digits:'#ffffff', label:'#8a7f80', units:'#6a6162', track:'#201617', tick:'#5e5052', neutral:'#e0202a', good:'#35d07f', warn:'#ffb020', bad:'#ff2b2b', cold:'#6ca8ff', stale:'#4a4042' },
+};
+let T = { ...PRESETS.Ice };
+try { const s = JSON.parse(localStorage.getItem('nb1.theme') || 'null'); if (s && s.bg) T = { ...T, ...s }; } catch (e) {}
+function zoneColor(level) { return T[level] || T.neutral; }
+function hexA(hex, a) { const n = parseInt(hex.slice(1), 16); return `rgba(${n >> 16 & 255},${n >> 8 & 255},${n & 255},${a})`; }
+
+// ---------------------------------------------------------------- drawing primitives
+const cv = document.getElementById('disp');
+const ctx = cv.getContext('2d');
+const W = 466, C = 233;
+const d2r = d => d * Math.PI / 180;
+const gaugeFont = () => getComputedStyle(document.documentElement).getPropertyValue('--font-gauge');
+function text(s, x, y, px, color, w = 500, align = 'center', spacing = 0) {
+  ctx.font = `${w} ${px}px ${gaugeFont()}`; ctx.fillStyle = color; ctx.textAlign = align; ctx.textBaseline = 'middle';
+  if ('letterSpacing' in ctx) ctx.letterSpacing = spacing + 'px';
+  ctx.fillText(s, x, y);
+  if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
+}
+function label(s, x, y, px, color) { text(s, x, y, px, color, 600, 'center', px * 0.18); }
+function arc(cx, cy, r, w, a0, a1, color, cap = 'round') {
+  ctx.beginPath(); ctx.lineWidth = w; ctx.lineCap = cap; ctx.strokeStyle = color;
+  ctx.arc(cx, cy, r, d2r(a0), d2r(a1)); ctx.stroke();
+}
+function glowArc(cx, cy, r, w, a0, a1, color) {
+  if (!state.glow) return;
+  ctx.save(); ctx.shadowColor = color; ctx.shadowBlur = w * 1.6; arc(cx, cy, r, w, a0, a1, hexA(color, 0.55)); ctx.restore();
+}
+// Resolve what a cell should show: value in display units, colours, flash.
+function resolve(c, now, fresh) {
+  const v = state.values[c.id], pk = state.peaks[c.id], lo = state.lows[c.id];
+  const level = fresh === 'fresh' ? zoneOf(c, v) : 'stale';
+  const fracNow = Math.max(0, Math.min(1, (v - c.min) / (c.max - c.min)));
+  const bar = fresh !== 'fresh' ? T.stale : !c.zones.length ? T.neutral
+            : state.fill === 'gradient' ? tipColor(c, fracNow) : zoneColor(level);
+  const flash = level === 'bad' && Math.floor(now / 400) % 2 === 0;
+  const digits = fresh === 'fresh' ? (flash ? T.bad : T.digits) : T.stale;
+  const dp = dpOf(c);
+  return { v: conv(c, v), pk: conv(c, pk), min: conv(c, c.min), max: conv(c, c.max), dp,
+           str: fresh === 'dead' ? '---' : fmt(conv(c, v), dp), pkStr: fmt(conv(c, pk), dp), loStr: fmt(conv(c, lo), dp),
+           loFrac: isFinite(lo) && c.show_min !== false ? Math.max(0, Math.min(1, (lo - c.min) / (c.max - c.min))) : null,
+           frac: fresh === 'dead' ? 0 : Math.max(0, Math.min(1, (v - c.min) / (c.max - c.min))),
+           pkFrac: isFinite(pk) && c.show_max !== false ? Math.max(0, Math.min(1, (pk - c.min) / (c.max - c.min))) : null,
+           level, bar, digits, flash, dead: fresh === 'dead', dim: fresh !== 'fresh' };
+}
+// Colour of the bar at a fraction of the range, and gradient stops through
+// every zone (stop at each region's midpoint so colours blend across edges).
+function colorAtFrac(c, f) {
+  if (!c.zones.length) return T.neutral;
+  return zoneColor(zoneOf(c, c.min + f * (c.max - c.min)));
+}
+function zoneStops(c) {
+  if (!c.zones.length) return [[0.5, T.neutral]];
+  const edges = new Set([0, 1]);
+  for (const [a, b] of c.zones) { const f0 = (a - c.min) / (c.max - c.min), f1 = (b - c.min) / (c.max - c.min); if (f0 > 0 && f0 < 1) edges.add(f0); if (f1 > 0 && f1 < 1) edges.add(f1); }
+  const e = [...edges].sort((x, y) => x - y), stops = [];
+  for (let i = 0; i + 1 < e.length; i++) { const mid = (e[i] + e[i + 1]) / 2; stops.push([mid, colorAtFrac(c, mid)]); }
+  return stops;
+}
+// Gradient mode: the whole bar is one colour, sampled from an invisible
+// gradient through the zone colours at the tip's position.
+function lerpHex(a, b, t) {
+  const A = parseInt(a.slice(1), 16), B = parseInt(b.slice(1), 16), ch = s => (A >> s & 255) + ((B >> s & 255) - (A >> s & 255)) * t;
+  return `rgb(${Math.round(ch(16))},${Math.round(ch(8))},${Math.round(ch(0))})`;
+}
+function tipColor(c, f) {
+  const stops = zoneStops(c);
+  if (f <= stops[0][0]) return stops[0][1];
+  for (let i = 0; i + 1 < stops.length; i++) {
+    const [f0, c0] = stops[i], [f1, c1] = stops[i + 1];
+    if (f <= f1) return lerpHex(c0, c1, (f - f0) / (f1 - f0));
+  }
+  return stops[stops.length - 1][1];
+}
+function zoneBands(c) {  // [[frac0, frac1, color]] for zones that are not 'good'
+  return c.zones.map(([a, b, l]) => [Math.max(0, (a - c.min) / (c.max - c.min)), Math.min(1, (b - c.min) / (c.max - c.min)), zoneColor(l)]).filter(z => z[1] > z[0]);
+}
+</script>
+<script>
+// ---------------------------------------------------------------- styles
+// Each style draws at any radius R so the same code serves the full face and
+// the small cells. `s` = R / 229 scales type.
+
+function styleRing(cx, cy, R, c, g, opts) {
+  const s = R / 229, full = opts.full;
+  const span = full ? 270 : 240, a0 = full ? 135 : 150;
+  const w = Math.max(3, R * 0.072 * state.barScale), r = R - w / 2 - 2;
+  // bipolar channels (boost, timing) grow from zero, not from min
+  const z = (c.min < 0 && c.max > 0) ? -c.min / (c.max - c.min) : 0;
+  const fLo = Math.min(z, g.frac), fHi = Math.max(z, g.frac), lit = !g.dead && g.frac !== z;
+  if (state.fill === 'segments') {
+    // every block in its own zone colour; unlit blocks keep a faint tint
+    const n = full ? 54 : 24, gapDeg = full ? 1.4 : 2.2, step = span / n;
+    for (let i = 0; i < n; i++) {
+      const f = (i + 0.5) / n, on = lit && f >= fLo && f <= fHi;
+      const col = on ? (g.dim ? T.stale : colorAtFrac(c, f)) : (state.bands && c.zones.length && zoneOf(c, c.min + f * (c.max - c.min)) !== 'good' ? hexA(colorAtFrac(c, f), 0.28) : T.track);
+      arc(cx, cy, r, w, a0 + i * step + gapDeg / 2, a0 + (i + 1) * step - gapDeg / 2, col, 'butt');
+    }
+  } else {
+    arc(cx, cy, r, w, a0, a0 + span, T.track);
+    if (state.bands) for (const [f0, f1, col] of zoneBands(c)) arc(cx, cy, r, w, a0 + span * f0, a0 + span * f1, hexA(col, 0.28), 'butt');
+    if (lit) {
+      const lo = a0 + span * fLo, hi = a0 + span * fHi;
+      glowArc(cx, cy, r, w, lo, hi, g.bar);
+      arc(cx, cy, r, w, lo, hi, g.bar);
+      const a = d2r(a0 + span * g.frac); ctx.beginPath(); ctx.fillStyle = '#fff'; ctx.globalAlpha = 0.85;
+      ctx.arc(cx + r * Math.cos(a), cy + r * Math.sin(a), w * 0.22, 0, Math.PI * 2); ctx.fill(); ctx.globalAlpha = 1;
+    }
+  }
+  // peak marker: a thin tick outside the ring
+  // min and max markers: thin ticks just outside the ring
+  for (const fr of [g.loFrac, g.pkFrac]) {
+    if (fr === null || g.dead) continue;
+    const a = d2r(a0 + span * fr), r0 = r + w / 2 + 2 * s, r1 = r0 + 7 * s;
+    ctx.beginPath(); ctx.lineWidth = Math.max(1.5, 2.5 * s); ctx.strokeStyle = g.dim ? T.stale : T.digits;
+    ctx.moveTo(cx + r0 * Math.cos(a), cy + r0 * Math.sin(a)); ctx.lineTo(cx + r1 * Math.cos(a), cy + r1 * Math.sin(a)); ctx.stroke();
+  }
+  // min / max at the ends of the arc (full face only)
+  if (full) {
+    const ri = r - w - 14 * s;
+    [[a0, g.min], [a0 + span, g.max]].forEach(([a, v]) => text(fmt(v, 0), cx + ri * Math.cos(d2r(a)), cy + ri * Math.sin(d2r(a)), 13 * s, T.tick, 500));
+  }
+  label(c.name, cx, cy - R * 0.5, (full ? 18 : 14) * (full ? s : R / 90) * state.labelScale, g.dim ? T.stale : T.label);
+  text(g.str, cx, cy + R * 0.02, fitPx(g.str, (full ? state.valueSize : Math.max(22, R * 0.36)) * state.digitScale, R * 1.45), g.digits, state.digitWeight);
+  text(unitsFor(c), cx, cy + R * (full ? 0.3 : 0.34), (full ? 18 : 11) * (full ? s : R / 90) * state.unitsScale, T.units, 400);
+  if (!full && !g.dead) { const mm = minmaxText(c, g); if (mm) text(mm, cx, cy + R * 0.58, 9 * R / 90 * state.minmaxScale, T.units, 500, 'center', 0.5); };
+  if (full) { const mm = minmaxText(c, g); if (mm) text(mm, cx, cy + R * 0.86, 13 * s * state.minmaxScale, T.units, 500, 'center', 1.5); }
+}
+
+function styleDial(cx, cy, R, c, g, opts) {
+  const s = R / 229, full = opts.full;
+  const span = 270, a0 = 135, n = full ? 50 : 20;
+  // zone bands just inside the rim
+  const bw = Math.max(2, R * 0.032 * state.barScale);
+  arc(cx, cy, R - 2, 1.5, a0, a0 + span, T.track, 'butt');
+  if (state.bands) for (const [f0, f1, col] of zoneBands(c)) arc(cx, cy, R - 4 - bw / 2, bw, a0 + span * f0, a0 + span * f1, hexA(col, 0.9), 'butt');
+  // ticks
+  for (let i = 0; i <= n; i++) {
+    const a = d2r(a0 + span * i / n), major = i % (full ? 5 : 4) === 0;
+    const r1 = R - 6 - bw - 2, r0 = r1 - (major ? R * 0.1 : R * 0.05);
+    ctx.beginPath(); ctx.lineWidth = major ? Math.max(1.5, 2.2 * s) : 1; ctx.strokeStyle = major ? T.digits : T.tick;
+    ctx.moveTo(cx + r0 * Math.cos(a), cy + r0 * Math.sin(a)); ctx.lineTo(cx + r1 * Math.cos(a), cy + r1 * Math.sin(a)); ctx.stroke();
+    if (major && (full || R > 70)) {
+      const v = g.min + (g.max - g.min) * i / n;
+      const lab = Math.abs(g.max) >= 1000 ? (v / 1000).toFixed(0) : fmt(v, 0);
+      text(lab, cx + (r0 - R * 0.09) * Math.cos(a), cy + (r0 - R * 0.09) * Math.sin(a), (full ? 18 : 10) * (full ? s : R / 90) * state.labelScale, T.tick, 500);
+    }
+  }
+  label(c.name, cx, cy - R * 0.4, (full ? 18 : 13) * (full ? s : R / 90) * state.labelScale, g.dim ? T.stale : T.label);
+  text(g.str, cx, cy + R * 0.5, fitPx(g.str, (full ? Math.round(state.valueSize * 0.6) : Math.max(18, R * 0.3)) * state.digitScale, R * 1.1), g.digits, state.digitWeight);
+  if (full) text(unitsFor(c), cx, cy + R * 0.5 + state.valueSize * 0.45, 16 * s * state.unitsScale, T.units, 400);
+  if (!full && !g.dead) { const mm = minmaxText(c, g); if (mm) text(mm, cx, cy + R * 0.74, 9 * R / 90 * state.minmaxScale, T.units, 500, 'center', 0.5); };
+  if (full) { const mm = minmaxText(c, g); if (mm) text(mm, cx, cy + R * 0.88, 12 * s * state.minmaxScale, T.units, 500, 'center', 1.5); }
+  // min and max markers on the rim
+  for (const fr of [g.loFrac, g.pkFrac]) {
+    if (fr === null || g.dead) continue;
+    const a = d2r(a0 + span * fr), rr = R - 1;
+    ctx.beginPath(); ctx.fillStyle = g.dim ? T.stale : T.digits;
+    ctx.moveTo(cx + rr * Math.cos(a), cy + rr * Math.sin(a));
+    ctx.lineTo(cx + (rr - 7 * s) * Math.cos(a + 0.04), cy + (rr - 7 * s) * Math.sin(a + 0.04));
+    ctx.lineTo(cx + (rr - 7 * s) * Math.cos(a - 0.04), cy + (rr - 7 * s) * Math.sin(a - 0.04));
+    ctx.closePath(); ctx.fill();
+  }
+  // needle: tapered, glowing, colour = zone
+  const a = d2r(a0 + span * g.frac), L = R - 12 - bw - R * 0.1, hub = Math.max(5, R * 0.06);
+  ctx.save(); ctx.translate(cx, cy); ctx.rotate(a);
+  if (state.glow) { ctx.shadowColor = g.bar; ctx.shadowBlur = 10 * s; }
+  ctx.fillStyle = g.bar; ctx.beginPath(); ctx.moveTo(-hub * 1.3, -hub * 0.45); ctx.lineTo(L, -1.2 * s); ctx.lineTo(L, 1.2 * s); ctx.lineTo(-hub * 1.3, hub * 0.45); ctx.closePath(); ctx.fill();
+  ctx.restore();
+  ctx.beginPath(); ctx.fillStyle = T.bg; ctx.arc(cx, cy, hub, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.lineWidth = Math.max(1.5, 2.5 * s); ctx.strokeStyle = g.bar; ctx.arc(cx, cy, hub, 0, Math.PI * 2); ctx.stroke();
+}
+
+function styleNumeric(cx, cy, R, c, g, opts) {
+  // Digits as large as the cell allows; the number itself carries the zone
+  // colour (gradient tip, segment or solid per the fill mode). No bar.
+  const s = R / 229, full = opts.full;
+  const labPx = (full ? 20 : 13) * (full ? s : R / 90) * state.labelScale;
+  const uniPx = (full ? 20 : 11) * (full ? s : R / 90) * state.unitsScale;
+  label(c.name, cx, cy - R * (full ? 0.5 : 0.56), labPx, g.dim ? T.stale : T.label);
+  // no clamping by design: the user sizes it, even past the edge
+  const px = (full ? Math.max(state.valueSize, 150) : R * 0.9) * state.digitScale;
+  const col = g.dim ? T.stale : (g.flash ? T.bad : (c.zones.length ? g.bar : T.digits));
+  text(g.str, cx, cy + R * (full ? 0.02 : 0.06), px, col, state.digitWeight);
+  text(unitsFor(c), cx, cy + R * (full ? 0.36 : 0.62), uniPx, T.units, 400);
+  if (!full && !g.dead) { const mm = minmaxText(c, g); if (mm) text(mm, cx, cy + R * 0.84, 9 * R / 90 * state.minmaxScale, T.units, 500, 'center', 0.5); };
+  if (full) { const mm = minmaxText(c, g); if (mm) text(mm, cx, cy + R * 0.62, 13 * s * state.minmaxScale, T.units, 500, 'center', 1.5); }
+}
+const STYLES = { ring: styleRing, dial: styleDial, numeric: styleNumeric };
+
+// ---------------------------------------------------------------- layouts
+// Ring layouts: a centre cell plus n cells on a regular polygon, one at the top.
+function polygon(n, R, r, rc) {
+  const out = [[233, 233, rc]];
+  for (let i = 0; i < n; i++) { const a = d2r(-90 + 360 * i / n); out.push([Math.round(233 + R * Math.cos(a)), Math.round(233 + R * Math.sin(a)), r]); }
+  return out;
+}
+const LAYOUTS = {
+  3: [[233, 136, 90], [138, 306, 90], [328, 306, 90]],
+  4: [[138, 138, 88], [328, 138, 88], [138, 328, 88], [328, 328, 88]],
+  6: polygon(5, 160, 66, 78),   // pentagon
+  7: polygon(6, 162, 64, 76),   // hexagon
+};
+function focusRing(cx, cy, r) {
+  ctx.beginPath(); ctx.lineWidth = 1.5; ctx.strokeStyle = hexA(T.digits, 0.7); ctx.setLineDash([3, 6]); ctx.arc(cx, cy, r + 6, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
+}
+function drawGauge(now, fresh) {
+  const draw = STYLES[state.style];
+  if (state.layout === 1) { const c = byId[state.cells[0]]; draw(C, C, 229, c, resolve(c, now, fresh), { full: true }); return; }
+  LAYOUTS[state.layout].forEach(([x, y, r], i) => {
+    const c = byId[state.cells[i]], rr = cellRadius(i, r);
+    draw(x, y, rr, c, resolve(c, now, fresh), { full: false });
+    if (state.focus === i && !state.menu && now < state.focusUntil) focusRing(x, y, rr);
+  });
+}
+// Outer cells grow with the cell scale; the centre cell of the 6 and 7 layouts stays.
+function cellRadius(i, r) { return (i === 0 && state.layout >= 6) ? r : Math.round(r * state.cellScale); }
+</script>
+<style>
+.zrow { display: grid; grid-template-columns: 76px 1fr 1fr 26px; gap: 6px; align-items: center; }
+.zrow input[type=number], .zrange input[type=number] { width: 100%; background: #0f1115; color: var(--fg); border: 1px solid var(--line); border-radius: 7px; padding: 5px 7px; font: 500 12px var(--font-mono); }
+.zrow select { padding: 5px 6px; font-size: 12px; }
+.zrow button, .zadd { background: #0f1115; color: var(--muted); border: 1px solid var(--line); border-radius: 7px; cursor: pointer; font: 500 12px var(--font-ui); padding: 5px 0; }
+.zadd { padding: 6px 10px; align-self: flex-start; }
+.zrange { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px; align-items: center; font-size: 12px; color: var(--muted); }
+.zhead { font: 500 11px var(--font-mono); color: var(--muted); display: grid; grid-template-columns: 76px 1fr 1fr 26px; gap: 6px; }
+.ahead, .arow { display: grid; grid-template-columns: 86px 1fr 1fr; gap: 6px; align-items: center; }
+.ahead { font: 500 11px var(--font-mono); color: var(--muted); }
+.arow span { font: 500 11px var(--font-mono); color: var(--fg); }
+.arow select { padding: 4px 6px; font-size: 12px; }
+#alarmRows { display: flex; flex-direction: column; gap: 4px; max-height: 360px; overflow-y: auto; padding-right: 2px; }
+</style>
+<script>
+// ---------------------------------------------------------------- menu (roller)
+// Mirrors the on-device menu tree in the firmware. Levels and their parents:
+//   root > channel | layout | theme (> style preview) | alarms (> tones > level) | bright
+const ROOT = ['Channel', 'Layout', 'Screens', 'Theme', 'Alarms', 'Brightness', 'Reset min/max', 'Exit'];
+state.extra = { theme_presets: [], screens: [] };   // user presets and saved screens, as the phone page stores them
+function allPresets() { const out = Object.entries(PRESETS).map(([name, rgb]) => ({ name, rgb })); return out.concat(state.extra.theme_presets || []); }
+function presetNameOf(rgb) { const p = allPresets().find(p => THEME_KEYS.every(([k]) => (p.rgb[k] || '').toLowerCase() === (rgb[k] || '').toLowerCase())); return p ? p.name : 'Custom'; }
+const STYLE_IDS = ['ring', 'dial', 'numeric'], STYLE_NAMES = ['Ring', 'Dial', 'Numeric'];
+const FILL_IDS = ['gradient', 'segments', 'solid'], BRIGHT = [20, 40, 60, 80, 100], LAYOUT_IDS = [1, 3, 4, 6, 7];
+const VOLS = [0, 20, 40, 60, 80, 100], REPEATS = [0, 5, 10, 30];
+const toneIds = () => Object.keys(TONES);   // TONES is defined further down; read it lazily
+const PARENT = { style: 'theme', altone: 'alarms', altlvl: 'altone' };
+const alarmCh = () => CH.filter(c => c.zones.length);
+const cap = s => s[0].toUpperCase() + s.slice(1);
+function menuOptions() {
+  const m = state.menu;
+  switch (m.level) {
+    case 'root': return ROOT;
+    case 'channel': return CH.map(c => c.name);
+    case 'layout': return LAYOUT_IDS.map(n => n === 1 ? '1 cell' : n + ' cells');
+    case 'screens': return (state.extra.screens || []).map(s => s.name).concat(['Save as Screen ' + ((state.extra.screens || []).length + 1), 'Back']);
+    case 'theme': return ['Preset: ' + presetNameOf(T), 'Bar fill: ' + cap(state.fill), 'Style: ' + STYLE_NAMES[STYLE_IDS.indexOf(state.style)], 'Back'];
+    case 'style': return STYLE_NAMES;
+    case 'alarms': return ['Volume: ' + Math.round(ALARM.volume * 100) + '%', 'Warn alarms: ' + (ALARM.warnOn ? 'On' : 'Off'), 'Bad alarms: ' + (ALARM.badOn ? 'On' : 'Off'), 'Bad repeat: ' + (ALARM.repeat ? ALARM.repeat + ' s' : 'Once'), 'Channel tones', 'Back'];
+    case 'altone': return alarmCh().map(c => c.name);
+    case 'altlvl': { const t = ALARM.tones[m.ch]; return ['Warn: ' + t.warn, 'Bad: ' + t.bad, 'Back']; }
+    case 'bright': return BRIGHT.map(b => b + '%');
+  }
+}
+function menuTitle() {
+  const m = state.menu;
+  return { root: 'MENU', channel: 'CELL ' + (state.focus + 1), layout: 'LAYOUT', screens: 'SCREENS', theme: 'THEME', style: 'STYLE', alarms: 'ALARMS', altone: 'TONES', altlvl: (byId[m.ch] || {}).name, bright: 'BRIGHTNESS' }[m.level];
+}
+function menuOpen(level, extra) {
+  let sel = 0;
+  if (level === 'channel') sel = CH.findIndex(c => c.id === state.cells[state.focus]);
+  if (level === 'layout') sel = LAYOUT_IDS.indexOf(state.layout);
+  if (level === 'style') sel = STYLE_IDS.indexOf(state.style);
+  if (level === 'bright') { sel = BRIGHT.indexOf(Math.round(state.brightness * 100)); if (sel < 0) sel = 3; }
+  state.menu = { level, sel, ...(extra || {}) };
+}
+function cycle(list, cur) { return list[(list.indexOf(cur) + 1) % list.length]; }
+function menuSelect() {
+  const m = state.menu, i = m.sel;
+  switch (m.level) {
+    case 'root': [() => menuOpen('channel'), () => menuOpen('layout'), () => menuOpen('screens'), () => menuOpen('theme'), () => menuOpen('alarms'), () => menuOpen('bright'),
+                  () => { resetMinMax(); state.menu = null; }, () => state.menu = null][i](); break;
+    case 'channel': state.cells[state.focus] = CH[i].id; state.menu = null; break;
+    case 'layout': setLayout(LAYOUT_IDS[i]); state.menu = null; break;
+    case 'screens': {
+      const scr = state.extra.screens || (state.extra.screens = []);
+      if (i < scr.length) { applyCfg({ layout: scr[i].layout, cells: scr[i].cells, theme: scr[i].theme, channels: {} }); state.menu = null; }
+      else if (i === scr.length) { scr.push({ name: 'Screen ' + (scr.length + 1), layout: state.layout, cells: state.cells.slice(), theme: getCfg().theme }); menuOpen('screens'); }
+      else state.menu = null;
+      break;
+    }
+    case 'theme': {
+      const all = allPresets(), cur = all.findIndex(p => p.name === presetNameOf(T));
+      if (i === 0) { T = { ...all[(cur + 1) % all.length].rgb }; save(); buildTheme(); }
+      else if (i === 1) state.fill = cycle(FILL_IDS, state.fill);
+      else if (i === 2) menuOpen('style');
+      else menuOpen('root');
+      break;
+    }
+    case 'style': state.style = STYLE_IDS[i]; menuOpen('theme'); state.menu.sel = 2; break;
+    case 'alarms':
+      if (i === 0) { ALARM.volume = cycle(VOLS, Math.round(ALARM.volume * 100)) / 100; playTone('chirp'); }
+      else if (i === 1) ALARM.warnOn = !ALARM.warnOn;
+      else if (i === 2) ALARM.badOn = !ALARM.badOn;
+      else if (i === 3) ALARM.repeat = cycle(REPEATS, ALARM.repeat);
+      else if (i === 4) menuOpen('altone');
+      else menuOpen('root');
+      saveAlarms(); buildAlarms(); break;
+    case 'altone': menuOpen('altlvl', { ch: alarmCh()[i].id }); break;
+    case 'altlvl': {
+      const t = ALARM.tones[m.ch];
+      if (i === 0) { t.warn = cycle(toneIds(), t.warn); playTone(t.warn); }
+      else if (i === 1) { t.bad = cycle(toneIds(), t.bad); playTone(t.bad); }
+      else menuOpen('altone');
+      saveAlarms(); buildAlarms(); break;
+    }
+    case 'bright': state.brightness = BRIGHT[i] / 100; state.menu = null; break;
+  }
+  syncControls();
+}
+function drawMenu() {
+  const opts = menuOptions(), m = state.menu;
+  if (m.level === 'style') {
+    // Full-screen sample of each style in the current theme; rotate to browse, click to keep.
+    const c = byId[state.cells[state.focus]], g = resolve(c, performance.now(), 'fresh');
+    ctx.fillStyle = T.bg; ctx.fillRect(0, 0, W, W);
+    const saved = state.style; state.style = STYLE_IDS[m.sel];
+    STYLES[state.style](C, C, 229, c, g, { full: true });
+    state.style = saved;
+    ctx.fillStyle = hexA(T.bg, 0.75); ctx.beginPath(); ctx.roundRect(C - 90, 18, 180, 34, 17); ctx.fill();
+    ctx.strokeStyle = T.neutral; ctx.lineWidth = 1.5; ctx.stroke();
+    label('<  ' + STYLE_NAMES[m.sel].toUpperCase() + '  ' + (m.sel + 1) + '/' + STYLE_NAMES.length + '  >', C, 35, 13, T.digits);
+    return;
+  }
+  ctx.fillStyle = hexA(T.bg, 0.94); ctx.fillRect(0, 0, W, W);
+  label(menuTitle(), C, C - 150, 16, T.label);
+  ctx.fillStyle = hexA(T.neutral, 0.18); ctx.beginPath(); ctx.roundRect(C - 160, C - 32, 320, 64, 14); ctx.fill();
+  ctx.strokeStyle = T.neutral; ctx.lineWidth = 1.5; ctx.stroke();
+  for (let k = -2; k <= 2; k++) {
+    const i = m.sel + k; if (i < 0 || i >= opts.length) continue;
+    const sel = k === 0;
+    text(opts[i], C, C + k * 66, sel ? 30 : 24, sel ? T.digits : (Math.abs(k) === 2 ? T.stale : T.label), sel ? 600 : 400);
+  }
+  text((m.sel + 1) + ' / ' + opts.length, C, C + 170, 13, T.stale, 400);
+}
+
+// ---------------------------------------------------------------- encoder
+function encRotate(dir) {
+  if (state.menu) { const n = menuOptions().length; state.menu.sel = (state.menu.sel + dir + n) % n; return; }
+  state.focus = (state.focus + dir + state.layout) % state.layout; state.focusUntil = performance.now() + 3000; syncControls();
+}
+function encClick() {
+  if (state.menu) { menuSelect(); return; }
+  resetMinMax(state.cells[state.focus]); state.focusUntil = performance.now() + 3000;
+}
+
+// ---------------------------------------------------------------- touch
+// Tap a cell = select (tap again = reset min/max), hold = menu, swipe = rotate.
+// In the menu: tap the middle row = choose, tap above/below or swipe = scroll,
+// hold = back. The style picker swipes sideways. Wheel = rotate everywhere.
+const cvEl = document.getElementById('disp');
+let tp = null, tpHold = 0;
+function canvasPt(e) { const r = cvEl.getBoundingClientRect(); return { x: (e.clientX - r.left) * W / r.width, y: (e.clientY - r.top) * W / r.height }; }
+function cellAt(p) {
+  if (state.layout === 1) return 0;
+  let best = -1, bd = 1e9;
+  LAYOUTS[state.layout].forEach(([x, y, r], i) => { const d = Math.hypot(p.x - x, p.y - y); if (d < cellRadius(i, r) + 10 && d < bd) { bd = d; best = i; } });
+  return best;
+}
+function tapAt(p) {
+  if (state.menu) {
+    if (state.menu.level === 'style') { if (p.x < W / 3) encRotate(-1); else if (p.x > W * 2 / 3) encRotate(1); else encClick(); return; }
+    const dy = p.y - C;
+    if (Math.abs(dy) < 34) encClick(); else encRotate(dy > 0 ? 1 : -1);
+    return;
+  }
+  const i = cellAt(p); if (i < 0) return;
+  if (i === state.focus && performance.now() < state.focusUntil) encClick();
+  else { state.focus = i; state.focusUntil = performance.now() + 3000; syncControls(); }
+}
+cvEl.addEventListener('pointerdown', e => { e.preventDefault(); cvEl.setPointerCapture(e.pointerId); tp = { ...canvasPt(e), moved: false, steps: 0 }; clearTimeout(tpHold); tpHold = setTimeout(() => { if (tp) { encLong(); tp = null; } }, 600); });
+cvEl.addEventListener('pointermove', e => {
+  if (!tp) return;
+  const p = canvasPt(e), dx = p.x - tp.x, dy = p.y - tp.y;
+  if (Math.hypot(dx, dy) > 12 && !tp.moved) { tp.moved = true; clearTimeout(tpHold); }
+  const vertical = state.menu && state.menu.level !== 'style';
+  const steps = Math.trunc((vertical ? dy : dx) / 40);
+  while (tp.steps < steps) { encRotate(+1); tp.steps++; }
+  while (tp.steps > steps) { encRotate(-1); tp.steps--; }
+});
+cvEl.addEventListener('pointerup', e => { if (!tp) return; clearTimeout(tpHold); if (!tp.moved) tapAt(canvasPt(e)); tp = null; });
+cvEl.addEventListener('pointercancel', () => { clearTimeout(tpHold); tp = null; });
+cvEl.addEventListener('wheel', e => { e.preventDefault(); encRotate(e.deltaY > 0 ? 1 : -1); }, { passive: false });
+cvEl.style.touchAction = 'none';
+function encLong() {
+  if (!state.menu) { menuOpen('root'); return; }
+  const lvl = state.menu.level;
+  if (lvl === 'root') state.menu = null;
+  else if (PARENT[lvl]) menuOpen(PARENT[lvl], lvl === 'altlvl' ? {} : undefined);
+  else menuOpen('root');
+}
+function setLayout(n) { state.layout = n; if (state.focus >= n) state.focus = 0; syncControls(); }
+
+// ---------------------------------------------------------------- controls
+const $ = s => document.querySelector(s);
+const save = () => { try { localStorage.setItem('nb1.theme', JSON.stringify(T)); localStorage.setItem('nb1.zones', JSON.stringify(Object.fromEntries(CH.map(c => [c.id, { zones: c.zones, min: c.min, max: c.max }])))); } catch (e) {} };
+try { const z = JSON.parse(localStorage.getItem('nb1.zones') || 'null'); if (z) for (const c of CH) if (z[c.id]) Object.assign(c, z[c.id]); } catch (e) {}
+
+for (const b of document.querySelectorAll('.tabs button')) b.addEventListener('click', () => {
+  for (const x of document.querySelectorAll('.tabs button')) x.setAttribute('aria-selected', String(x === b));
+  for (const t of document.querySelectorAll('.tab')) t.hidden = t.id !== 'tab-' + b.dataset.tab;
+});
+function seg(el, get, set) {
+  el.addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; set(b.dataset.v); syncControls(); });
+  return () => { for (const b of el.querySelectorAll('button')) b.setAttribute('aria-pressed', String(b.dataset.v === String(get()))); };
+}
+const segs = [
+  seg($('#layoutSeg'), () => state.layout, v => setLayout(+v)),
+  seg($('#styleSeg'),  () => state.style,  v => state.style = v),
+  seg($('#fillSeg'),   () => state.fill,   v => state.fill = v),
+  seg($('#dataSeg'),   () => state.data,   v => state.data = v),
+  seg($('#tempSeg'),   () => units.temp,   v => units.temp = v),
+  seg($('#pressSeg'),  () => units.press,  v => units.press = v),
+  seg($('#speedSeg'),  () => units.speed,  v => units.speed = v),
+];
+function toggle(id, get, set) { const b = $(id); b.addEventListener('click', () => { set(!get()); syncControls(); }); return () => b.setAttribute('aria-pressed', String(get())); }
+const toggles = [
+  toggle('#tglWarn',  () => state.forceWarn, v => state.forceWarn = v),
+  toggle('#tglStale', () => state.stale, v => { state.stale = v; if (!v) state.lastUpdate = performance.now(); }),
+  toggle('#tglDead',  () => state.dead,  v => { state.dead = v; if (!v) state.lastUpdate = performance.now(); }),
+  toggle('#tglBezel', () => state.bezel, v => state.bezel = v),
+  toggle('#tglShift', () => state.shift, v => state.shift = v),
+  toggle('#tglSweep', () => state.sweep, v => { state.sweep = v; state.sweepT = performance.now(); }),
+  toggle('#tglGlow',  () => state.glow,  v => state.glow = v),
+  toggle('#tglBands', () => state.bands, v => state.bands = v),
+];
+$('#bright').addEventListener('input', e => { state.brightness = e.target.value / 100; syncControls(); });
+$('#valueSize').addEventListener('change', e => state.valueSize = +e.target.value);
+$('#digitScale').addEventListener('input', e => { state.digitScale = e.target.value / 100; $('#digitScaleVal').textContent = e.target.value + '%'; });
+$('#labelScale').addEventListener('input', e => { state.labelScale = e.target.value / 100; $('#labelScaleVal').textContent = e.target.value + '%'; });
+$('#cellScale').addEventListener('input', e => { state.cellScale = e.target.value / 100; $('#cellScaleVal').textContent = e.target.value + '%'; });
+$('#unitsScale').addEventListener('input', e => { state.unitsScale = e.target.value / 100; $('#unitsScaleVal').textContent = e.target.value + '%'; });
+$('#minmaxScale').addEventListener('input', e => { state.minmaxScale = e.target.value / 100; $('#minmaxScaleVal').textContent = e.target.value + '%'; });
+$('#barScale').addEventListener('input', e => { state.barScale = e.target.value / 100; $('#barScaleVal').textContent = e.target.value + '%'; });
+$('#digitWeight').addEventListener('change', e => state.digitWeight = +e.target.value);
+
+function buildCells() {
+  const box = $('#cells'); box.innerHTML = '';
+  for (let i = 0; i < state.layout; i++) {
+    const d = document.createElement('div'); d.className = 'cell';
+    const lab = document.createElement('span'); lab.textContent = (i === 0 && state.layout >= 6 ? 'centre' : 'cell ' + (i + 1)) + (i === state.focus ? ' · focused' : '');
+    const sel = document.createElement('select'); sel.id = 'cellsel' + i;
+    for (const c of CH) { const o = document.createElement('option'); o.value = c.id; o.textContent = c.name + ' (' + unitLabel(c) + ')'; sel.appendChild(o); }
+    sel.value = state.cells[i]; sel.addEventListener('change', () => { state.cells[i] = sel.value; state.focus = i; syncControls(); });
+    sel.addEventListener('focus', () => { if (state.focus !== i) { state.focus = i; buildZones(); } });
+    d.append(lab, sel); box.appendChild(d);
+  }
+}
+// Zone editor for the focused cell's channel, in the current display units.
+const unconv = (c, v) => { if (c.kind === 'temp' && units.temp === 'C') return v * 9 / 5 + 32; if (c.kind === 'press' && units.press === 'bar') return v / 0.0689476; if (c.kind === 'speed' && units.speed === 'kmh') return v / 1.609344; return v; };
+let zonesFor = null;
+function buildZones() {
+  const c = byId[state.cells[state.focus]], box = $('#zoneInfo'); zonesFor = c.id; box.innerHTML = '';
+  const u = unitLabel(c), dp = dpOf(c), r = v => +conv(c, v).toFixed(dp);
+  const head = document.createElement('div'); head.className = 'zhead'; head.innerHTML = `<b style="color:var(--fg)">${c.name}</b><span>from ${u}</span><span>to ${u}</span><span></span>`; box.appendChild(head);
+  const range = document.createElement('div'); range.className = 'zrange';
+  range.innerHTML = `<span>gauge range</span><input type="number" id="zmin" value="${r(c.min)}" aria-label="Range minimum"><input type="number" id="zmax" value="${r(c.max)}" aria-label="Range maximum">`;
+  box.appendChild(range);
+  range.querySelector('#zmin').addEventListener('change', e => { c.min = unconv(c, +e.target.value); save(); });
+  range.querySelector('#zmax').addEventListener('change', e => { c.max = unconv(c, +e.target.value); save(); });
+  c.zones.forEach((z, i) => {
+    const row = document.createElement('div'); row.className = 'zrow';
+    row.innerHTML = `<select aria-label="Zone level"><option value="cold">cold</option><option value="good">good</option><option value="warn">warn</option><option value="bad">bad</option></select>
+      <input type="number" step="any" value="${r(z[0])}" aria-label="Zone from"><input type="number" step="any" value="${r(z[1])}" aria-label="Zone to"><button title="Remove zone">×</button>`;
+    const [sel, from, to, del] = row.children; sel.value = z[2];
+    sel.addEventListener('change', () => { z[2] = sel.value; save(); });
+    from.addEventListener('change', () => { z[0] = unconv(c, +from.value); save(); });
+    to.addEventListener('change', () => { z[1] = unconv(c, +to.value); save(); });
+    del.addEventListener('click', () => { c.zones.splice(i, 1); save(); buildZones(); });
+    box.appendChild(row);
+  });
+  const add = document.createElement('button'); add.className = 'zadd'; add.textContent = '+ Add zone';
+  add.addEventListener('click', () => { c.zones.push([c.max * 0.9, c.max, 'warn']); save(); buildZones(); }); box.appendChild(add);
+  const sorted = [...c.zones].sort((a, b) => a[0] - b[0]);
+  const note = document.createElement('p'); note.className = 'note';
+  note.textContent = sorted.length ? 'Anything outside these ranges is good. The bar, needle and segments take the colour of the zone the value sits in; a bad zone also flashes the digits.' : 'No zones: this channel is informational and always draws in the neutral colour.';
+  box.appendChild(note);
+}
+function buildSliders() {
+  const box = $('#sliders'); box.innerHTML = '<h2>Manual values</h2>';
+  for (const id of ['RPM', 'BOOST', 'CLT', 'OILP', 'OILT', 'AFR', 'BATT', 'MAT', 'KNOCK', 'DUTY']) {
+    const c = byId[id], row = document.createElement('div'); row.className = 'row';
+    row.innerHTML = `<label for="sl${id}">${c.name}</label><input id="sl${id}" type="range" min="${c.min}" max="${c.max}" step="${c.dp ? 0.1 : 1}" value="${state.manual[id]}"><span class="val" id="sv${id}"></span>`;
+    box.appendChild(row);
+    const inp = row.querySelector('input'), out = row.querySelector('.val');
+    const show = () => out.textContent = fmt(conv(c, +inp.value), dpOf(c)) + ' ' + unitLabel(c);
+    inp.addEventListener('input', () => { state.manual[id] = +inp.value; state.data = 'manual'; syncControls(); show(); }); show();
+  }
+}
+function buildTheme() {
+  const pr = $('#presets'); pr.innerHTML = '';
+  for (const name of Object.keys(PRESETS)) { const b = document.createElement('button'); b.textContent = name; b.addEventListener('click', () => { T = { ...PRESETS[name] }; save(); buildTheme(); }); pr.appendChild(b); }
+  const box = $('#colors'); box.innerHTML = '';
+  for (const [k, lab] of THEME_KEYS) {
+    const l = document.createElement('label'); l.innerHTML = `<input type="color" id="col-${k}" value="${T[k]}"><span>${lab}</span><code>${T[k]}</code>`;
+    l.querySelector('input').addEventListener('input', e => { T[k] = e.target.value; l.querySelector('code').textContent = T[k]; save(); });
+    box.appendChild(l);
+  }
+}
+function syncControls() {
+  segs.forEach(f => f()); toggles.forEach(f => f());
+  $('#bright').value = Math.round(state.brightness * 100); $('#brightVal').textContent = Math.round(state.brightness * 100) + '%';
+  $('#pod').classList.toggle('nobezel', !state.bezel); $('#bezel').hidden = !state.bezel;
+  buildCells();
+  if (zonesFor !== state.cells[state.focus] || document.activeElement?.closest('#zoneInfo') === null) buildZones();
+}
+$('#encL').addEventListener('click', () => encRotate(-1));
+$('#encR').addEventListener('click', () => encRotate(+1));
+$('#encLong').addEventListener('click', encLong);
+let pushAt = 0, pushTimer = 0;
+$('#encPush').addEventListener('pointerdown', () => { pushAt = performance.now(); pushTimer = setTimeout(() => { encLong(); pushAt = 0; }, 600); });
+$('#encPush').addEventListener('pointerup', () => { clearTimeout(pushTimer); if (pushAt && performance.now() - pushAt < 600) encClick(); pushAt = 0; });
+$('#encPush').addEventListener('pointerleave', () => { clearTimeout(pushTimer); pushAt = 0; });
+document.addEventListener('keydown', e => {
+  if (['INPUT', 'SELECT', 'BUTTON'].includes(e.target.tagName) && e.key !== 'Escape') return;
+  if (e.key === 'ArrowLeft') encRotate(-1); else if (e.key === 'ArrowRight') encRotate(+1);
+  else if (e.key === 'Enter') encClick(); else if (e.key === 'Escape' || e.key === ' ') { e.preventDefault(); encLong(); }
+});
+
+// ---------------------------------------------------------------- alarms
+// Config mirrors what the firmware will keep per channel: a tone id per level.
+const TONES = {
+  off:    null,
+  chirp:  [[1200, 'sine', 0, 80]],
+  double: [[1000, 'sine', 0, 70], [1000, 'sine', 160, 70]],
+  buzz:   [[180, 'square', 0, 260]],
+  rising: [[600, 'sine', 0, 260, 1500]],
+  siren:  [[900, 'sine', 0, 120], [1300, 'sine', 130, 120], [900, 'sine', 260, 120], [1300, 'sine', 390, 120]],
+};
+const ALARM_DEFAULT_WARN = { OILP:'chirp', CLT:'chirp', OILT:'chirp', BATT:'chirp', KNOCK:'chirp', DUTY:'chirp', AFR:'chirp', MAT:'chirp', EGT:'chirp', RPM:'chirp', BOOST:'chirp', MAP:'chirp', TCRET:'chirp', EGOCOR:'off' };
+const ALARM_DEFAULT_BAD  = { OILP:'siren', CLT:'double', OILT:'double', BATT:'double', KNOCK:'siren', DUTY:'double', AFR:'double', MAT:'double', EGT:'siren', RPM:'buzz', BOOST:'double', MAP:'double' };
+const ALARM = { volume: 0.6, warnOn: true, badOn: true, mute: false, repeat: 10, tones: {} };
+for (const c of CH) ALARM.tones[c.id] = { warn: ALARM_DEFAULT_WARN[c.id] || 'off', bad: ALARM_DEFAULT_BAD[c.id] || 'off' };
+try { const a = JSON.parse(localStorage.getItem('nb1.alarms') || 'null'); if (a && a.tones) { Object.assign(ALARM, a); for (const c of CH) if (!ALARM.tones[c.id]) ALARM.tones[c.id] = { warn: 'off', bad: 'off' }; } } catch (e) {}
+const saveAlarms = () => { try { localStorage.setItem('nb1.alarms', JSON.stringify(ALARM)); } catch (e) {} };
+
+let audio = null;
+function playTone(id) {
+  const seq = TONES[id]; if (!seq || ALARM.mute || ALARM.volume <= 0) return;
+  try {
+    if (!audio) audio = new (window.AudioContext || window.webkitAudioContext)();
+    if (audio.state === 'suspended') audio.resume();
+    const t0 = audio.currentTime, vol = ALARM.volume * ALARM.volume * 0.5;
+    for (const [f, type, at, dur, f1] of seq) {
+      const o = audio.createOscillator(), g = audio.createGain();
+      o.type = type; o.frequency.setValueAtTime(f, t0 + at / 1000);
+      if (f1) o.frequency.linearRampToValueAtTime(f1, t0 + (at + dur) / 1000);
+      g.gain.setValueAtTime(0, t0 + at / 1000);
+      g.gain.linearRampToValueAtTime(vol, t0 + (at + 8) / 1000);
+      g.gain.setValueAtTime(vol, t0 + (at + dur - 15) / 1000);
+      g.gain.linearRampToValueAtTime(0, t0 + (at + dur) / 1000);
+      o.connect(g).connect(audio.destination); o.start(t0 + at / 1000); o.stop(t0 + (at + dur) / 1000 + 0.01);
+    }
+  } catch (e) {}
+}
+const SEV = { good: 0, cold: 0, stale: 0, warn: 1, bad: 2 };
+const alarmState = {};   // id -> { level, lastFire }
+let toast = null;        // { text, color, until }
+function alarmsTick(now, fresh) {
+  if (fresh !== 'fresh') return;
+  for (const c of CH) {
+    const level = zoneOf(c, state.values[c.id]), prev = alarmState[c.id] || { level: 'good', lastFire: 0 };
+    const sev = SEV[level], psev = SEV[prev.level];
+    let fire = false;
+    if (sev > psev) fire = true;                                                        // entered a worse zone
+    else if (sev === 2 && ALARM.repeat && now - prev.lastFire > ALARM.repeat * 1000) fire = true;  // bad repeats
+    if (fire) {
+      const enabled = (level === 'warn' && ALARM.warnOn) || (level === 'bad' && ALARM.badOn);
+      const tone = ALARM.tones[c.id][level];
+      if (enabled && tone && tone !== 'off') {
+        const onScreen = state.cells.slice(0, state.layout).includes(c.id);
+        // On-screen channels sound the alarm; the cell itself shows the state.
+        // Off-screen channels never sound, they raise a banner instead.
+        if (onScreen) playTone(tone);
+        else toast = { text: c.name + '  ' + fmt(conv(c, state.values[c.id]), dpOf(c)) + ' ' + unitLabel(c), color: zoneColor(level), until: now + 3000 };
+      }
+      prev.lastFire = now;
+    }
+    prev.level = level; alarmState[c.id] = prev;
+  }
+}
+function drawToast(now) {
+  if (!toast || now > toast.until) return;
+  const y = 400, w = 300, h = 40;
+  ctx.fillStyle = hexA(T.bg, 0.94); ctx.beginPath(); ctx.roundRect(C - w / 2, y - h / 2, w, h, h / 2); ctx.fill();
+  ctx.fillStyle = hexA(toast.color, 0.18); ctx.fill();
+  ctx.strokeStyle = toast.color; ctx.lineWidth = 2; ctx.stroke();
+  ctx.beginPath(); ctx.fillStyle = toast.color; ctx.arc(C - w / 2 + 22, y, 6, 0, Math.PI * 2); ctx.fill();
+  text(toast.text, C + 10, y, 16, T.digits, 600, 'center', 1);
+}
+function buildAlarms() {
+  $('#alVol').value = Math.round(ALARM.volume * 100); $('#alVolVal').textContent = Math.round(ALARM.volume * 100) + '%';
+  $('#alRepeat').value = String(ALARM.repeat);
+  $('#tglWarnSnd').setAttribute('aria-pressed', String(ALARM.warnOn));
+  $('#tglBadSnd').setAttribute('aria-pressed', String(ALARM.badOn));
+  $('#tglMute').setAttribute('aria-pressed', String(ALARM.mute));
+  const au = $('#audition'); au.innerHTML = '';
+  for (const id of Object.keys(TONES)) { if (id === 'off') continue; const b = document.createElement('button'); b.textContent = id; b.addEventListener('click', () => playTone(id)); au.appendChild(b); }
+  const rows = $('#alarmRows'); rows.innerHTML = '';
+  for (const c of CH) {
+    if (!c.zones.length) continue;
+    const r = document.createElement('div'); r.className = 'arow';
+    const opts = Object.keys(TONES).map(t => `<option value="${t}">${t}</option>`).join('');
+    r.innerHTML = `<span>${c.name}</span><select aria-label="${c.name} warn tone">${opts}</select><select aria-label="${c.name} bad tone">${opts}</select>`;
+    const [, sw, sb] = r.children; sw.value = ALARM.tones[c.id].warn; sb.value = ALARM.tones[c.id].bad;
+    sw.addEventListener('change', () => { ALARM.tones[c.id].warn = sw.value; saveAlarms(); playTone(sw.value); });
+    sb.addEventListener('change', () => { ALARM.tones[c.id].bad = sb.value; saveAlarms(); playTone(sb.value); });
+    rows.appendChild(r);
+  }
+}
+$('#alVol').addEventListener('input', e => { ALARM.volume = e.target.value / 100; $('#alVolVal').textContent = e.target.value + '%'; saveAlarms(); });
+$('#alVol').addEventListener('change', () => playTone('chirp'));
+$('#alRepeat').addEventListener('change', e => { ALARM.repeat = +e.target.value; saveAlarms(); });
+$('#tglWarnSnd').addEventListener('click', () => { ALARM.warnOn = !ALARM.warnOn; saveAlarms(); buildAlarms(); });
+$('#tglBadSnd').addEventListener('click', () => { ALARM.badOn = !ALARM.badOn; saveAlarms(); buildAlarms(); });
+$('#tglMute').addEventListener('click', () => { ALARM.mute = !ALARM.mute; saveAlarms(); buildAlarms(); });
+
+// ---------------------------------------------------------------- render loop
+let frames = 0, fpsAt = performance.now();
+function render(now) {
+  updateValues(now);
+  const fresh = freshness(now);
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.fillStyle = T.bg; ctx.fillRect(0, 0, W, W);
+  cv.style.background = T.bg;
+  if (state.shift) { const k = Math.floor(now / 10000); ctx.translate(((k % 3) - 1) * 2, ((Math.floor(k / 3) % 3) - 1) * 2); }
+  if (state.sweep) {
+    const t = (now - state.sweepT) / 1600;
+    if (t < 1) { const s = t < 0.5 ? t * 2 : 2 - t * 2; for (const c of CH) state.values[c.id] = c.min + (c.max - c.min) * s; }
+    else { state.sweep = false; syncControls(); }
+  }
+  alarmsTick(now, fresh);
+  drawGauge(now, fresh);
+  drawToast(now);
+  if (state.menu) drawMenu();
+  if (now < identifyUntil && Math.floor(now / 150) % 2 === 0) { ctx.fillStyle = 'rgba(255,255,255,0.85)'; ctx.fillRect(0, 0, W, W); }
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  if (state.brightness < 1) { ctx.fillStyle = `rgba(0,0,0,${(1 - state.brightness) * 0.85})`; ctx.fillRect(0, 0, W, W); }
+  if (++frames === 30) { const t = performance.now(); $('#fps').textContent = Math.round(30000 / (t - fpsAt)) + ' fps'; fpsAt = t; frames = 0; }
+  requestAnimationFrame(render);
+}
+buildSliders(); buildTheme(); buildAlarms(); syncControls();
+// ---------------------------------------------------------------- phone link
+// The embedded setup page talks to this page over postMessage using the same
+// calls it will make to the gauge's /api. Config in, live values out.
+const LEVELS = ['cold', 'good', 'warn', 'bad'];
+function getCfg() {
+  const presetName = Object.keys(PRESETS).find(k => JSON.stringify(PRESETS[k]) === JSON.stringify(T)) || 'Custom';
+  const cfg = {
+    layout: state.layout, cells: state.cells.slice(), brightness: Math.round(state.brightness * 100),
+    sim: !state.dead, source: state.source || 'ms',
+    units: { temp_c: units.temp === 'C', press_bar: units.press === 'bar', speed_kmh: units.speed === 'kmh' },
+    theme: { preset: presetName, style: state.style, fill: state.fill, bands: state.bands, digit_scale: state.digitScale, label_scale: state.labelScale, cell_scale: state.cellScale, units_scale: state.unitsScale, minmax_scale: state.minmaxScale, bar_scale: state.barScale, rgb: { ...T } },
+    alarms: { volume: Math.round(ALARM.volume * 100), warn_on: ALARM.warnOn, bad_on: ALARM.badOn, mute: ALARM.mute, repeat_s: ALARM.repeat, tone_warn: {}, tone_bad: {} },
+    channels: {}, wifi: { ssid: 'NB1-Gauge-3F2A', password: 'miata2000', timeout_min: 0, on: true },
+    theme_presets: state.extra.theme_presets || [], screens: state.extra.screens || [],
+  };
+  for (const c of CH) { cfg.channels[c.id] = { min: c.min, max: c.max, zones: c.zones.map(z => [...z]), show_units: c.show_units !== false, show_min: c.show_min !== false, show_max: c.show_max !== false }; cfg.alarms.tone_warn[c.id] = ALARM.tones[c.id].warn; cfg.alarms.tone_bad[c.id] = ALARM.tones[c.id].bad; }
+  return cfg;
+}
+function applyCfg(cfg) {
+  if (!cfg || !cfg.channels) return;
+  if (Array.isArray(cfg.theme_presets)) state.extra.theme_presets = cfg.theme_presets;
+  if (Array.isArray(cfg.screens)) state.extra.screens = cfg.screens;
+  if (LAYOUT_IDS.includes(cfg.layout)) state.layout = cfg.layout;
+  if (Array.isArray(cfg.cells)) cfg.cells.forEach((id, i) => { if (byId[id] && i < 7) state.cells[i] = id; });
+  if (state.focus >= state.layout) state.focus = 0;
+  if (typeof cfg.brightness === 'number') state.brightness = Math.max(0.1, Math.min(1, cfg.brightness / 100));
+  // In the preview there is no bus, so "sim off" means the gauge sees nothing.
+  if (typeof cfg.sim === 'boolean') { const dead = !cfg.sim; if (dead !== state.dead) { state.dead = dead; if (!dead) state.lastUpdate = performance.now(); } }
+  if (cfg.source === 'ms' || cfg.source === 'obd') state.source = cfg.source;
+  if (cfg.units) { units.temp = cfg.units.temp_c ? 'C' : 'F'; units.press = cfg.units.press_bar ? 'bar' : 'psi'; units.speed = cfg.units.speed_kmh ? 'kmh' : 'mph'; }
+  const t = cfg.theme || {};
+  if (STYLE_IDS.includes(t.style)) state.style = t.style;
+  if (FILL_IDS.includes(t.fill)) state.fill = t.fill;
+  if (typeof t.bands === 'boolean') state.bands = t.bands;
+  if (t.digit_scale) state.digitScale = t.digit_scale;
+  if (t.label_scale) state.labelScale = t.label_scale;
+  if (t.cell_scale) { state.cellScale = t.cell_scale; $('#cellScale').value = Math.round(state.cellScale * 100); $('#cellScaleVal').textContent = Math.round(state.cellScale * 100) + '%'; }
+  if (t.units_scale) state.unitsScale = t.units_scale;
+  if (t.minmax_scale) state.minmaxScale = t.minmax_scale;
+  if (t.bar_scale) state.barScale = t.bar_scale;
+  if (t.rgb) { for (const [k] of THEME_KEYS) if (t.rgb[k]) T[k] = t.rgb[k]; }
+  for (const c of CH) {
+    const cc = cfg.channels[c.id]; if (!cc) continue;
+    if (typeof cc.min === 'number') c.min = cc.min; if (typeof cc.max === 'number') c.max = cc.max;
+    if (typeof cc.show_units === 'boolean') c.show_units = cc.show_units;
+    if (typeof cc.show_min === 'boolean') c.show_min = cc.show_min;
+    if (typeof cc.show_max === 'boolean') c.show_max = cc.show_max;
+    if (Array.isArray(cc.zones)) c.zones = cc.zones.filter(z => Array.isArray(z) && z.length === 3 && LEVELS.includes(z[2])).map(z => [+z[0], +z[1], z[2]]);
+  }
+  const a = cfg.alarms || {};
+  if (typeof a.volume === 'number') ALARM.volume = a.volume / 100;
+  if (typeof a.warn_on === 'boolean') ALARM.warnOn = a.warn_on;
+  if (typeof a.bad_on === 'boolean') ALARM.badOn = a.bad_on;
+  if (typeof a.mute === 'boolean') ALARM.mute = a.mute;
+  if (typeof a.repeat_s === 'number') ALARM.repeat = a.repeat_s;
+  for (const c of CH) { if (a.tone_warn && a.tone_warn[c.id] in TONES) ALARM.tones[c.id].warn = a.tone_warn[c.id]; if (a.tone_bad && a.tone_bad[c.id] in TONES) ALARM.tones[c.id].bad = a.tone_bad[c.id]; }
+  save(); saveAlarms(); buildTheme(); buildAlarms(); syncControls(); $('#digitScale').value = Math.round(state.digitScale * 100); $('#labelScale').value = Math.round(state.labelScale * 100);
+  $('#digitScaleVal').textContent = Math.round(state.digitScale * 100) + '%'; $('#labelScaleVal').textContent = Math.round(state.labelScale * 100) + '%';
+}
+let identifyUntil = 0;
+function doAction(b) {
+  if (!b) return;
+  if (b.name === 'reset-peaks') resetMinMax();
+  else if (b.name === 'test-alarm') playTone(b.tone || 'chirp');
+  else if (b.name === 'identify') identifyUntil = performance.now() + 1200;
+}
+window.addEventListener('message', e => {
+  const m = e.data; if (!m || !m.nb1 || !m.id) return;
+  let result = { ok: true };
+  if (m.type === 'getConfig') result = getCfg();
+  else if (m.type === 'putConfig') applyCfg(m.body);
+  else if (m.type === 'getState') result = { values: { ...state.values }, screen: state.cells.slice(0, state.layout) };
+  else if (m.type === 'action') doAction(m.body);
+  if (e.source) e.source.postMessage({ nb1: true, id: m.id, result }, '*');
+});
+document.querySelector('.tabs button[data-tab="phone"]').addEventListener('click', () => { const f = $('#phoneFrame'); if (!f.src) f.src = f.dataset.src; });
+document.fonts.ready.then(() => requestAnimationFrame(render));
+</script>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape" width="46.0mm" height="46.0mm" viewBox="0 0 46.0 46.0">
+<title>nb1_carrier - drills, bottom view (mirrored)</title>
+<g id="drill_0.9" inkscape:groupmode="layer" inkscape:label="Drill 0.9mm" fill="none" stroke="#000" stroke-width="0.1">
+<circle cx="27.000" cy="8.500" r="0.450"/><circle cx="25.000" cy="8.500" r="0.450"/><circle cx="23.000" cy="8.500" r="0.450"/><circle cx="21.000" cy="8.500" r="0.450"/><circle cx="19.000" cy="8.500" r="0.450"/><circle cx="40.500" cy="28.000" r="0.450"/><circle cx="40.500" cy="26.000" r="0.450"/><circle cx="40.500" cy="24.000" r="0.450"/><circle cx="40.500" cy="22.000" r="0.450"/>
+</g>
+<g id="drill_1.0" inkscape:groupmode="layer" inkscape:label="Drill 1.0mm" fill="none" stroke="#000" stroke-width="0.1">
+<circle cx="31.890" cy="41.680" r="0.500"/><circle cx="29.350" cy="41.680" r="0.500"/><circle cx="26.810" cy="41.680" r="0.500"/><circle cx="24.270" cy="41.680" r="0.500"/><circle cx="21.730" cy="41.680" r="0.500"/><circle cx="19.190" cy="41.680" r="0.500"/><circle cx="16.650" cy="41.680" r="0.500"/><circle cx="14.110" cy="41.680" r="0.500"/><circle cx="29.350" cy="29.500" r="0.500"/><circle cx="26.810" cy="29.500" r="0.500"/><circle cx="24.270" cy="29.500" r="0.500"/><circle cx="21.730" cy="29.500" r="0.500"/><circle cx="19.190" cy="29.500" r="0.500"/><circle cx="16.650" cy="29.500" r="0.500"/><circle cx="39.500" cy="15.540" r="0.500"/><circle cx="39.500" cy="13.000" r="0.500"/><circle cx="39.500" cy="10.460" r="0.500"/><circle cx="26.010" cy="33.000" r="0.500"/><circle cx="18.390" cy="33.000" r="0.500"/><circle cx="12.540" cy="11.500" r="0.500"/><circle cx="7.460" cy="11.500" r="0.500"/><circle cx="15.580" cy="16.500" r="0.500"/><circle cx="5.420" cy="16.500" r="0.500"/><circle cx="20.270" cy="13.500" r="0.500"/><circle cx="17.730" cy="13.500" r="0.500"/><circle cx="9.540" cy="26.500" r="0.500"/><circle cx="7.000" cy="26.500" r="0.500"/><circle cx="4.460" cy="26.500" r="0.500"/><circle cx="10.270" cy="30.500" r="0.500"/><circle cx="7.730" cy="30.500" r="0.500"/><circle cx="35.500" cy="17.310" r="0.500"/><circle cx="35.500" cy="9.690" r="0.500"/><circle cx="32.770" cy="17.310" r="0.500"/><circle cx="30.230" cy="17.310" r="0.500"/><circle cx="30.230" cy="9.690" r="0.500"/><circle cx="32.770" cy="9.690" r="0.500"/><circle cx="25.000" cy="11.000" r="0.500"/><circle cx="11.900" cy="34.000" r="0.500"/><circle cx="28.500" cy="35.000" r="0.500"/><circle cx="37.150" cy="27.900" r="0.500"/><circle cx="34.650" cy="21.900" r="0.500"/><circle cx="29.150" cy="23.900" r="0.500"/><circle cx="35.150" cy="32.650" r="0.500"/><circle cx="30.650" cy="21.150" r="0.500"/><circle cx="20.900" cy="14.400" r="0.500"/>
+</g>
+<g id="drill_1.2" inkscape:groupmode="layer" inkscape:label="Drill 1.2mm" fill="none" stroke="#000" stroke-width="0.1">
+<circle cx="14.080" cy="22.000" r="0.600"/><circle cx="3.920" cy="22.000" r="0.600"/>
+</g>
+<g id="drill_2.2" inkscape:groupmode="layer" inkscape:label="Drill 2.2mm" fill="none" stroke="#000" stroke-width="0.1">
+<circle cx="36.750" cy="37.700" r="1.100"/><circle cx="9.250" cy="37.700" r="1.100"/><circle cx="23.000" cy="2.500" r="1.100"/>
+</g>
+</svg>

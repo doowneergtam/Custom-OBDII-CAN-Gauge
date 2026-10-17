@@ -1,0 +1,3 @@
+﻿cycles=5803 cmds=17081 reboots=0 issues=0
+final: up=16273 internal=127731 min=39828 largest=31744 psram=8308844 psram_min=8289356 wifi=1 clients=0 can_rx=0 can_match=0 obd_req=0 layout=1 style=0 sim=1 src=0
+

@@ -1,0 +1,27 @@
+menu "NB1 Gauge"
+
+    config NB1_SIM_DATA
+        bool "Drive channels with synthetic data (bench, no ECU)"
+        default y
+        help
+            Runs a task that sweeps RPM and friends so the UI can be exercised
+            without a CAN bus. Turn off once a MegaSquirt or the bench
+            simulator is connected; otherwise both sources fight.
+
+    config NB1_ENCODER
+        bool "Rotary encoder on GPIO18/17/16 (rev B carrier)"
+        default n
+        help
+            Rev C carriers have no encoder: GPIO17/18 are the analog sensor
+            inputs and the knob driver's pull-ups would load them. Touch
+            covers everything the knob did.
+
+    config NB1_CAN_LISTEN_ONLY
+        bool "CAN listen-only (never ACK frames)"
+        default n
+        help
+            Safe when sniffing a bus with other listeners. On the private
+            two-node gauge/ECU bus this must be OFF, or the MS2 sees no ACK
+            and goes error-passive.
+
+endmenu
