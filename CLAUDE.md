@@ -87,7 +87,14 @@ on by default. Soak-tested via the serial console (see Bench tooling). Implement
   channels AUX1/AUX2 (`g_aux`, config block `aux`, phone page Channels tab "Input 1/2" cards,
   console `aux`). Disabled inputs are hidden from pickers (`ch_def_t.enabled`). The encoder is
   behind `CONFIG_NB1_ENCODER` (default off) because its pull-ups would load the inputs.
-  Built, not yet flashed or tested on hardware.
+  Flashed 2026-10-17 from the prebuilt bundle (boots clean, inputs off by default); not yet tested with a sender.
+
+- Stock style and preset (2026-10-23): `STYLE_STOCK` in `face_styles.inc` draws the factory NB1 cluster
+  (chrome bezel, rim ticks at "nice" major/minor steps with the numerals inside, thin needle in the neutral
+  colour on a big hub, zones as blocks in the tick ring like the orange redline, value in an odometer window).
+  Preset "Stock" is the cream face with black type. Pick both (Theme > preset Stock, Style > Stock) for the
+  factory look. Mirrored in `pod-preview.html` (`styleStock`) and the phone page (`STYLES`, mini preview).
+  Written on a PC without ESP-IDF: not yet built or flashed.
 
 Not yet in firmware: stock-ECU path,
 headlight/ambient dimming input (EXIO0 or I2C lux sensor via the custom PCB).
@@ -105,7 +112,7 @@ Wi-Fi: on at boot by default; `tools/serial_peek.py COM9 N [--noreset]` reads th
 
 ## Working agreement (updated 2026-10-12)
 
-- Hardware stage reached 2026-10-12: the Waveshare board is on COM9 (Espressif native USB, VID 303A PID 1001). Build with `idf.py build`, flash with `idf.py -p COM9 flash`, peek at the log with `python tools/serial_peek.py COM9 12`. Still confirm the port shows that VID/PID before flashing.
+- Hardware stage reached 2026-10-12: the Waveshare board is on COM9 (Espressif native USB, VID 303A PID 1001); on the second PC (no ESP-IDF, no Python) it is COM22 and `firmware/flash/flash.ps1` flashes the prebuilt bundle with the Arduino-bundled esptool. Build with `idf.py build`, flash with `idf.py -p COM9 flash`, peek at the log with `python tools/serial_peek.py COM9 12`. Still confirm the port shows that VID/PID before flashing.
 - The GUI spec lives in `design/pod-preview/pod-preview.html` (with the phone page embedded); keep it and the firmware in step.
 
 ## Bench tooling (2026-10-12)

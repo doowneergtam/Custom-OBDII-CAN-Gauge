@@ -158,7 +158,16 @@ const CH = [
   { id:'VSS',    name:'SPEED',    kind:'speed', units:'mph', min:0,    max:160,  dp:0, zones:[] },
   { id:'TCRET',  name:'TC RTD',   kind:'none',  units:'°',   min:0,    max:20,   dp:1, zones:[[0.1,1e9,'warn']] },
   { id:'LAUNCH', name:'LAUNCH',   kind:'none',  units:'°',   min:-20,  max:20,   dp:1, zones:[] },
+  { id:'AUX1',   name:'AUX 1',    kind:'none',  units:'V',   min:0,    max:5,    dp:2, zones:[], aux: 1 },
+  { id:'AUX2',   name:'AUX 2',    kind:'none',  units:'V',   min:0,    max:5,    dp:2, zones:[], aux: 2 },
 ];
+const AUX_DEFAULT = () => ({ enabled: false, resistive: false, label: 'AUX', units: 'V', decimals: 2, pts: [[0, 0], [5, 5]] });
+// Analog input names and units live in cfg.aux; mirror them into the channel table so every tab shows them.
+function syncAux() {
+  if (!cfg.aux) cfg.aux = { 1: AUX_DEFAULT(), 2: AUX_DEFAULT() };
+  for (const c of CH) if (c.aux) { const a = cfg.aux[c.aux] || (cfg.aux[c.aux] = AUX_DEFAULT()); if (!a.label) a.label = 'AUX ' + c.aux; c.name = a.label; c.units = a.units || ''; c.dp = +a.decimals || 0; c.enabled = !!a.enabled; }
+}
+const chVisible = c => !c.aux || c.enabled;
 const byId = Object.fromEntries(CH.map(c => [c.id, c]));
 const THEME_KEYS = [['bg','Background'],['digits','Digits'],['label','Labels'],['units','Units, peaks'],['track','Track'],['tick','Ticks, scale'],['neutral','Neutral bar'],['good','Good zone'],['warn','Warning zone'],['bad','Bad zone'],['cold','Cold zone'],['stale','Stale data']];
 const PRESETS = {
@@ -166,10 +175,11 @@ const PRESETS = {
   Ember: { bg:'#000000', digits:'#fff3e0', label:'#9c8a78', units:'#75655a', track:'#221a14', tick:'#6a5a4c', neutral:'#ff8a00', good:'#9ae66e', warn:'#ffd166', bad:'#ff2d55', cold:'#7fb3ff', stale:'#4f463f' },
   Mono:  { bg:'#000000', digits:'#ffffff', label:'#7a7a7a', units:'#5c5c5c', track:'#1c1c1c', tick:'#505050', neutral:'#ffffff', good:'#cfd6d0', warn:'#ffd36b', bad:'#ff5c5c', cold:'#9cc9ff', stale:'#454545' },
   Miata: { bg:'#000000', digits:'#ffffff', label:'#8a7f80', units:'#6a6162', track:'#201617', tick:'#5e5052', neutral:'#e0202a', good:'#35d07f', warn:'#ffb020', bad:'#ff2b2b', cold:'#6ca8ff', stale:'#4a4042' },
+  Stock: { bg:'#ece7d4', digits:'#14161a', label:'#1e2024', units:'#4a4c50', track:'#c7cbd0', tick:'#1a1c20', neutral:'#ea3640', good:'#2f9e5b', warn:'#f2a21c', bad:'#f0701e', cold:'#3b7dd8', stale:'#9a9a90' },
 };
 const TONES = ['off', 'chirp', 'double', 'buzz', 'rising', 'siren'];
 const LAYOUTS = [1, 3, 4, 6, 7];
-const STYLES = ['ring', 'dial', 'numeric'], FILLS = ['gradient', 'segments', 'solid'];
+const STYLES = ['ring', 'dial', 'numeric', 'stock'], FILLS = ['gradient', 'segments', 'solid'];
 
 function defaultConfig() {
   const cfg = {
@@ -181,6 +191,7 @@ function defaultConfig() {
     wifi: { ssid: 'NB1-Gauge-3F2A', password: 'miata2000', timeout_min: 0, on: true },
     theme_presets: [],   // user colour presets: { name, rgb }
     screens: [],         // saved screens: { name, layout, cells, theme }
+    aux: { 1: Object.assign(AUX_DEFAULT(), { label: 'AUX 1' }), 2: Object.assign(AUX_DEFAULT(), { label: 'AUX 2' }) },
   };
   for (const c of CH) {
     cfg.channels[c.id] = { min: c.min, max: c.max, zones: c.zones.map(z => [...z]), show_units: true, show_min: true, show_max: true };
@@ -310,7 +321,7 @@ const cap = s => s[0].toUpperCase() + s.slice(1);
 function renderLive() {
   const grid = h('div', { class: 'live' });
   const onScreen = new Set(cfg.cells.slice(0, cfg.layout));
-  for (const c of CH) {
+  for (const c of CH.filter(chVisible)) {
     const v = live[c.id], z = v === undefined ? 'good' : zoneOf(c.id, v);
     const t = h('div', { class: 'tile' + (onScreen.has(c.id) ? ' onscreen' : ''), id: 'tile-' + c.id },
       h('div', { class: 'n' }, c.name), h('div', { class: 'v' }, fmt(conv(c, v), dpOf(c))), h('div', { class: 'u' }, unitLabel(c)), h('div', { class: 'mm' }, mmText(c)));
@@ -330,7 +341,7 @@ function resetMM() { for (const k in mm) delete mm[k]; trackMM(); if (tab === 'l
 function mmText(c) { const m = mm[c.id]; return m && isFinite(m.lo) ? fmt(conv(c, m.lo), dpOf(c)) + '/' + fmt(conv(c, m.hi), dpOf(c)) : ''; }
 function updateLive() {
   trackMM();
-  for (const c of CH) {
+  for (const c of CH.filter(chVisible)) {
     const t = document.getElementById('tile-' + c.id); if (!t) continue;
     const v = live[c.id];
     t.querySelector('.v').textContent = fmt(conv(c, v), dpOf(c));
@@ -353,7 +364,7 @@ function renderScreen() {
   const cells = h('div', { class: 'cells' });
   for (let i = 0; i < cfg.layout; i++) {
     cells.append(row(i === 0 && cfg.layout >= 6 ? 'Centre' : 'Cell ' + (i + 1), null,
-      sel(CH.map(c => c.id), CH.map(c => c.name + ' (' + unitLabel(c) + ')'), () => cfg.cells[i], v => { cfg.cells[i] = v; save(); })));
+      sel(CH.filter(chVisible).map(c => c.id), CH.filter(chVisible).map(c => c.name + ' (' + unitLabel(c) + ')'), () => cfg.cells[i], v => { cfg.cells[i] = v; save(); })));
   }
   // Saved screens: layout + cells + the whole theme, named, loadable from here or the gauge menu.
   cfg.screens = cfg.screens || [];
@@ -415,8 +426,37 @@ function renderChannel(c) {
   return d;
 }
 let openCh = null;
+function renderInputs() {
+  syncAux();
+  const raw = live.__aux || [];
+  const one = n => {
+    const a = cfg.aux[n], r = raw[n - 1] || {};
+    const pts = h('div', {});
+    const head = h('div', { class: 'zhead' }, h('span', {}, a.resistive ? 'ohms' : 'volts'), h('span', {}, 'reads as'), h('span'), h('span'));
+    pts.append(head);
+    a.pts.forEach((p, i) => pts.append(h('div', { class: 'zrow' },
+      h('input', { type: 'number', step: 'any', value: p[0], 'aria-label': 'Input', onchange: e => { p[0] = +e.target.value; a.pts.sort((u, v) => u[0] - v[0]); save(); render(); } }),
+      h('input', { type: 'number', step: 'any', value: p[1], 'aria-label': 'Value', onchange: e => { p[1] = +e.target.value; save(); render(); } }),
+      h('span'),
+      h('button', { type: 'button', 'aria-label': 'Remove point', onclick: () => { if (a.pts.length > 2) { a.pts.splice(i, 1); save(); render(); } } }, '×'))));
+    const rawTxt = r.volts === undefined ? 'no reading' : (a.resistive && r.ohms !== undefined ? r.ohms + ' Ω (' + r.volts.toFixed(3) + ' V at the node)' : r.volts.toFixed(3) + ' V at the sensor');
+    return card('Input ' + n + (a.enabled ? '' : ' (off)'),
+      row('Enabled', 'Shows up in the channel list, cells and alarms', sw(() => !!a.enabled, v => { a.enabled = v; syncAux(); save(); render(); })),
+      row('Label', 'Name on the gauge, up to 8 characters', h('input', { type: 'text', value: a.label, maxlength: 8, 'aria-label': 'Label', onchange: e => { a.label = e.target.value.toUpperCase().slice(0, 8); syncAux(); save(); render(); } })),
+      row('Units', null, h('input', { type: 'text', value: a.units, maxlength: 7, 'aria-label': 'Units', onchange: e => { a.units = e.target.value.slice(0, 7); syncAux(); save(); render(); } })),
+      row('Decimals', null, sel(['0', '1', '2', '3'], null, () => String(a.decimals), v => { a.decimals = +v; syncAux(); save(); render(); })),
+      row('Sender type', 'Resistive needs the solder jumper on the carrier bridged', seg(['v', 'r'], ['0-5 V', 'Resistive'], () => a.resistive ? 'r' : 'v', v => { a.resistive = v === 'r'; save(); render(); })),
+      h('p', { class: 'note', id: 'auxraw' + n }, 'Live: ' + rawTxt),
+      h('div', { class: 'sub' }, 'Scaling points, straight lines between them, flat beyond the ends'),
+      pts,
+      h('div', { class: 'btnrow' }, h('button', { class: 'btn', onclick: () => { const last = a.pts[a.pts.length - 1]; if (a.pts.length < 8) { a.pts.push([last[0] + 1, last[1]]); save(); render(); } } }, '+ Add point')),
+      h('p', { class: 'note' }, a.resistive ? 'Enter the sender\'s ohms at known values from its data sheet, two or more points. The gauge works the ohms out from the node voltage.' : 'Enter the sensor volts at known values, for example 0.5 V = 0 psi and 4.5 V = 100 psi.'));
+  };
+  return [one(1), one(2), h('p', { class: 'note' }, 'Range, zones and alarm tones for each input are in its entry in the Channels tab once it is enabled.')];
+}
 function renderChannels() {
-  return [card('Channels', h('div', { class: 'chlist' }, ...CH.map(renderChannel)),
+  syncAux();
+  return [...renderInputs(), card('Channels', h('div', { class: 'chlist' }, ...CH.filter(chVisible).map(renderChannel)),
     h('p', { class: 'note' }, 'Ranges and zones are in your chosen units. Zones drive bar colour, flashing, and alarms on every cell showing the channel.'))];
 }
 
@@ -464,6 +504,26 @@ function miniGauge() {
     text('BOOST', 10 * ls, t.label, C - 44, 600); text('9.4', 24 * ds, t.digits, C + 56, 300);
     const a = d2r(a0 + sp * f), L = R - 26; x.save(); x.translate(C, C); x.rotate(a); x.fillStyle = bar; x.beginPath(); x.moveTo(-9, -3); x.lineTo(L, -0.8); x.lineTo(L, 0.8); x.lineTo(-9, 3); x.closePath(); x.fill(); x.restore();
     x.beginPath(); x.fillStyle = t.bg; x.arc(C, C, 7, 0, 7); x.fill(); x.beginPath(); x.lineWidth = 1.5; x.strokeStyle = bar; x.arc(C, C, 7, 0, 7); x.stroke();
+  } else if (th.style === 'stock') {
+    // stock: chrome bezel, ticks on the rim with numerals inside, zone blocks in the tick ring, thin neutral needle on a dark hub
+    const a0 = 135, sp = 270, bz = 5, rt1 = R - bz - 1, lmaj = R * 0.085, lmin = R * 0.045;
+    arc(R - bz / 2, bz, 0, 360, t.track, false); arc(R - 1.75, 2, 195, 345, lerpHex(t.track, '#ffffff', 0.67), false); arc(R - 1.75, 2, 15, 165, lerpHex(t.track, '#000000', 0.35), false); arc(R - bz - 0.5, 1, 0, 360, lerpHex(t.track, '#000000', 0.55), false);
+    const M = [1, 2, 2.5, 5], D = [5, 4, 5, 5]; let step = span / 10, minors = 5;
+    outer: for (let e = -2; e <= 6; e++) for (let i = 0; i < 4; i++) if (span <= 10.001 * M[i] * 10 ** e) { step = M[i] * 10 ** e; minors = D[i]; break outer; }
+    const ms = step / minors, j0 = Math.ceil(cc.min / ms - 1e-3), j1 = Math.min(Math.floor(cc.max / ms + 1e-3), j0 + 160);
+    if (th.bands) for (let j = j0; j < j1; j++) { const v0 = j * ms, v1 = (j + 1) * ms, zl = zoneOf(id, (v0 + v1) / 2); if (zl !== 'good') arc(rt1 - lmaj / 2, lmaj, a0 + sp * frac(v0) + 0.5, a0 + sp * frac(v1) - 0.5, zc(zl), false); }
+    for (let j = j0; j <= j1; j++) {
+      const v = j * ms, major = ((j % minors) + minors) % minors === 0; if (!major && th.bands && zoneOf(id, v) !== 'good') continue;
+      const a = d2r(a0 + sp * frac(v)), ca = Math.cos(a), sa = Math.sin(a), r0 = rt1 - (major ? lmaj : lmin);
+      x.beginPath(); x.lineCap = 'butt'; x.lineWidth = major ? 2.5 : 1; x.strokeStyle = major ? t.digits : t.tick; x.moveTo(C + r0 * ca, C + r0 * sa); x.lineTo(C + rt1 * ca, C + rt1 * sa); x.stroke();
+      if (major) { x.font = `600 ${11 * ls}px ${gf}`; x.fillStyle = t.digits; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(String(v), C + (r0 - 11) * ca, C + (r0 - 11) * sa); }
+    }
+    text('BOOST', 10 * ls, t.label, C + R * 0.30, 600); text(unitLabel(byId.BOOST), 8, t.units, C + R * 0.42, 400, mf);
+    x.fillStyle = lerpHex(t.bg, t.tick, 0.11); x.beginPath(); x.roundRect(C - R * 0.23, C + R * 0.535, R * 0.46, R * 0.17, 4); x.fill();
+    text('9.4', 15 * ds, t.digits, C + R * 0.62, 500);
+    const a = d2r(a0 + sp * f), L = rt1 - lmaj - 3, hub = R * 0.13;
+    x.save(); x.translate(C, C); x.rotate(a); x.fillStyle = t.neutral; x.beginPath(); x.moveTo(0, -1.8); x.lineTo(L, 0); x.lineTo(0, 1.8); x.closePath(); x.fill(); x.restore();
+    x.beginPath(); x.fillStyle = t.tick; x.arc(C, C, hub, 0, 7); x.fill(); x.beginPath(); x.lineWidth = 1; x.strokeStyle = lerpHex(t.tick, '#ffffff', 0.27); x.arc(C, C, hub - 0.5, 0, 7); x.stroke();
   } else {
     // numeric: digits as large as the face allows, coloured by zone, no bar
     text('BOOST', 11 * ls, t.label, C - 62, 600);
@@ -574,7 +634,7 @@ function render() {
 }
 for (const b of document.querySelectorAll('.tabs button')) b.addEventListener('click', () => { tab = b.dataset.tab; render(); window.scrollTo(0, 0); });
 async function poll() {
-  try { const s = await api.getState(); live = s.values || {}; if (tab === 'live') updateLive(); } catch (e) {}
+  try { const s = await api.getState(); live = s.values || {}; live.__aux = s.aux_raw || []; if (tab === 'live') updateLive(); if (tab === 'channels') for (const n of [1, 2]) { const el = document.getElementById('auxraw' + n), r = live.__aux[n - 1] || {}, a = cfg.aux[n]; if (el) el.textContent = 'Live: ' + (r.volts === undefined ? 'no reading' : (a.resistive && r.ohms !== undefined ? r.ohms + ' Ω (' + r.volts.toFixed(3) + ' V at the node)' : r.volts.toFixed(3) + ' V at the sensor')); } } catch (e) {}
   setTimeout(poll, 250);
 }
 function save(msg) {
@@ -586,7 +646,7 @@ function save(msg) {
     toast(msg || (embedded ? 'Applied to gauge' : 'Saved to gauge'));
   }, 400);
 }
-connect().then(() => { try { const t = location.hash.slice(1); if (RENDER[t]) tab = t; } catch (e) {} lastCfgJson = JSON.stringify(cfg); render(); poll(); syncFromGauge(); });
+connect().then(() => { syncAux(); try { const t = location.hash.slice(1); if (RENDER[t]) tab = t; } catch (e) {} lastCfgJson = JSON.stringify(cfg); render(); poll(); syncFromGauge(); });
 // Debug handle (also handy from the gauge preview's console).
 window.nb1 = { get cfg() { return cfg; }, set cfg(v) { cfg = v; }, get live() { return live; }, save, render, get embedded() { return embedded; } };
 </script>

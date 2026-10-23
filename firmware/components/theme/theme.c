@@ -10,12 +10,13 @@ static const preset_t PRESETS[] = {
     { "Ember", { 0x000000, 0xFFF3E0, 0x9C8A78, 0x75655A, 0x221A14, 0x6A5A4C, 0xFF8A00, 0x9AE66E, 0xFFD166, 0xFF2D55, 0x7FB3FF, 0x4F463F } },
     { "Mono",  { 0x000000, 0xFFFFFF, 0x7A7A7A, 0x5C5C5C, 0x1C1C1C, 0x505050, 0xFFFFFF, 0xCFD6D0, 0xFFD36B, 0xFF5C5C, 0x9CC9FF, 0x454545 } },
     { "Miata", { 0x000000, 0xFFFFFF, 0x8A7F80, 0x6A6162, 0x201617, 0x5E5052, 0xE0202A, 0x35D07F, 0xFFB020, 0xFF2B2B, 0x6CA8FF, 0x4A4042 } },
+    { "Stock", { 0xECE7D4, 0x14161A, 0x1E2024, 0x4A4C50, 0xC7CBD0, 0x1A1C20, 0xEA3640, 0x2F9E5B, 0xF2A21C, 0xF0701E, 0x3B7DD8, 0x9A9A90 } },   // factory NB1 cluster: cream face, black type, chrome bezel, red needle, orange redline
 };
 static const char *COLOR_NAMES[TC_COUNT] = {
     "Background", "Digits", "Labels", "Units", "Track", "Ticks",
     "Neutral", "Good", "Warn", "Bad", "Cold", "Stale",
 };
-static const char *STYLE_NAMES[STYLE_COUNT] = { "Ring", "Dial", "Numeric" };
+static const char *STYLE_NAMES[STYLE_COUNT] = { "Ring", "Dial", "Numeric", "Stock" };
 static const char *FILL_NAMES[FILL_COUNT]   = { "Gradient", "Segments", "Solid" };
 
 int         theme_preset_count(void)        { return sizeof PRESETS / sizeof PRESETS[0]; }

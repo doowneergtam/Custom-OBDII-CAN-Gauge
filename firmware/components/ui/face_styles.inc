@@ -1,4 +1,4 @@
-// Included at the end of face.c: dial and numeric styles plus the object
+// Included at the end of face.c: dial, stock and numeric styles plus the object
 // plumbing. Split only to keep each file a readable size; shares statics.
 
 // ---------------------------------------------------------------- dial
@@ -51,6 +51,110 @@ static void style_dial(lv_layer_t *l, face_t *f, res_t *r)
     }
 }
 
+// ---------------------------------------------------------------- stock
+// Factory NB1 cluster look: cream face, chrome bezel, black ticks on the rim
+// with the numerals inside them, a thin red needle on a big dark hub, and the
+// zones as blocks in the tick ring (the orange redline). Slots: BG face,
+// DIGITS numerals and major ticks, TICK minor ticks and hub, TRACK bezel,
+// NEUTRAL needle, LABEL name, UNITS units, zone colours for the rim blocks.
+// Mirrors styleStock() in design/pod-preview/pod-preview.html.
+
+// Smallest "nice" major step that gives at most 10 majors over the range, and
+// the minor divisions it carries (stock tach: 1000 x 5, speedo: 20 x 4).
+static float nice_step(float range, int *minors)
+{
+    static const float M[] = { 1, 2, 2.5f, 5 };
+    static const int   D[] = { 5, 4, 5, 5 };
+    for (int e = -2; e <= 6; e++) {
+        float p = powf(10.0f, (float)e);
+        for (int i = 0; i < 4; i++) if (range <= (10.0f + 1e-3f) * M[i] * p) { *minors = D[i]; return M[i] * p; }
+    }
+    *minors = 5;
+    return range / 10;
+}
+
+static void style_stock(lv_layer_t *l, face_t *f, res_t *r)
+{
+    const ch_def_t *d = r->d;
+    int32_t cx = f->cx, cy = f->cy, R = f->R;
+    float s = R / 229.0f;
+    bool full = f->full;
+    const float span = 270, a0 = 135;
+    lv_color_t ink = theme_color(TC_DIGITS), tick = theme_color(TC_TICK), chrome = theme_color(TC_TRACK);
+
+    // bezel: a flat ring, a highlight on top and a shadow below read as chrome
+    int32_t bz = (int32_t)fmaxf(3, R * 0.045f), hw = (int32_t)fmaxf(1, bz * 0.4f);
+    draw_arc(l, cx, cy, R, bz, 0, 360, chrome, LV_OPA_COVER, false);
+    draw_arc(l, cx, cy, (int32_t)(R - bz * 0.15f), hw, 195, 345, lv_color_mix(lv_color_white(), chrome, 170), LV_OPA_COVER, false);
+    draw_arc(l, cx, cy, (int32_t)(R - bz * 0.15f), hw, 15, 165, lv_color_mix(lv_color_black(), chrome, 90), LV_OPA_COVER, false);
+    draw_arc(l, cx, cy, R - bz, (int32_t)fmaxf(1, 1.5f * s), 0, 360, lv_color_mix(lv_color_black(), chrome, 140), LV_OPA_COVER, false);
+
+    // scale in display units: majors at nice multiples, minors between them
+    float dmin = channels_to_display(d, d->min), dmax = channels_to_display(d, d->max);
+    if (dmax < dmin) { float t = dmin; dmin = dmax; dmax = t; }
+    if (dmax - dmin < 1e-6f) dmax = dmin + 1;
+    int minors; float step = nice_step(dmax - dmin, &minors), ms = step / minors;
+    uint8_t dec = fabsf(step - roundf(step)) < 1e-3f ? 0 : fabsf(step * 10 - roundf(step * 10)) < 1e-3f ? 1 : 2;
+    bool thousands = fabsf(dmax) >= 1000;
+    float rt1 = R - bz - 2 * s, lmaj = R * 0.085f, lmin = R * 0.045f;
+    int j0 = (int)ceilf(dmin / ms - 1e-3f), j1 = (int)floorf(dmax / ms + 1e-3f);
+    if (j1 - j0 > 160) j1 = j0 + 160;
+
+    // zone blocks in the tick ring, one per minor division, a hairline of face between them
+    if (g_theme.bands && d->zone_count) {
+        for (int j = j0; j < j1; j++) {
+            float v0 = j * ms, v1 = (j + 1) * ms;
+            ch_zone_level_t z = channels_zone_of(d, channels_from_display(d, (v0 + v1) * 0.5f));
+            if (z == CH_ZONE_GOOD) continue;
+            draw_arc(l, cx, cy, (int32_t)rt1, (int32_t)lmaj, a0 + span * (v0 - dmin) / (dmax - dmin) + 0.5f,
+                     a0 + span * (v1 - dmin) / (dmax - dmin) - 0.5f, theme_zone_color(z), LV_OPA_COVER, false);
+        }
+    }
+    // ticks: thick majors in ink, hairline minors; minors inside a zone block are left out
+    for (int j = j0; j <= j1; j++) {
+        float v = j * ms, fr = (v - dmin) / (dmax - dmin);
+        bool major = ((j % minors) + minors) % minors == 0;
+        if (!major && g_theme.bands && d->zone_count && channels_zone_of(d, channels_from_display(d, v)) != CH_ZONE_GOOD) continue;
+        float a = (a0 + span * fr) * PI_F / 180.0f, ca = cosf(a), sa = sinf(a), r0 = rt1 - (major ? lmaj : lmin);
+        draw_line(l, cx + r0 * ca, cy + r0 * sa, cx + rt1 * ca, cy + rt1 * sa,
+                  major ? (int32_t)fmaxf(2, R * 0.022f) : (int32_t)fmaxf(1, R * 0.008f), major ? ink : tick, false);
+        if (major && (full || R > 70)) {
+            char b[16];
+            if (thousands) snprintf(b, sizeof b, step >= 1000 ? "%.0f" : "%.1f", (double)(v / 1000)); else fmt_val(b, sizeof b, v, dec);
+            float rn = r0 - R * 0.105f;
+            draw_text(l, b, lfont(full ? 40 : 13 * R / 90.0f), ink, cx + (int32_t)(rn * ca), cy + (int32_t)(rn * sa), 0, LV_TEXT_ALIGN_CENTER);
+        }
+    }
+
+    // name and units under the hub ("x1000 rpm"), the value in an odometer-style
+    // window at the bottom, min/max under that
+    int lab = full ? 20 : (int)(11 * R / 90.0f);
+    draw_text(l, d->name, lfont(lab), r->dim ? theme_color(TC_STALE) : theme_color(TC_LABEL), cx, cy + (int32_t)(R * 0.30f), lab / 5, LV_TEXT_ALIGN_CENTER);
+    char ub[32]; const char *u = units_for(d);
+    if (thousands) snprintf(ub, sizeof ub, "x1000%s%s", u[0] ? " " : "", u); else snprintf(ub, sizeof ub, "%s", u);
+    if (ub[0]) draw_text(l, ub, ufont(full ? 16 : 9 * R / 90.0f), theme_color(TC_UNITS), cx, cy + (int32_t)(R * 0.42f), 0, LV_TEXT_ALIGN_CENTER);
+    int32_t ww = (int32_t)(R * 0.46f), wh = (int32_t)(R * 0.17f), wy = cy + (int32_t)(R * 0.62f);
+    draw_rect(l, cx - ww / 2, wy - wh / 2, ww, wh, wh / 4, lv_color_mix(tick, theme_color(TC_BG), 28), LV_OPA_COVER);
+    draw_text(l, r->str, dfont(full ? 30 : fmaxf(12, 13 * R / 90.0f)), r->digits, cx, wy, 0, LV_TEXT_ALIGN_CENTER);
+    { char b[40]; if (minmax_text(r, b, sizeof b)) draw_text(l, b, mfont(full ? 13 * s : 9 * R / 90.0f), theme_color(TC_UNITS), cx, cy + (int32_t)(R * 0.80f), full ? 1 : 0, LV_TEXT_ALIGN_CENTER); }
+
+    // needle: thin, in the neutral colour whatever the zone, on a big dark hub
+    float a = (a0 + span * r->frac) * PI_F / 180.0f, ca = cosf(a), sa = sinf(a);
+    float L = rt1 - lmaj - R * 0.03f, hub = fmaxf(6, R * 0.13f), nw = fmaxf(1.5f, R * 0.016f);
+    lv_color_t nc = r->dim ? theme_color(TC_STALE) : theme_color(TC_NEUTRAL);
+    draw_tri(l, cx - sa * nw, cy + ca * nw, cx + sa * nw, cy - ca * nw, cx + L * ca, cy + L * sa, nc);
+    draw_line(l, cx, cy, cx + (L - 2 * s) * ca, cy + (L - 2 * s) * sa, (int32_t)fmaxf(2, 2.4f * s), nc, true);
+    draw_disc(l, cx, cy, (int32_t)hub, tick, LV_OPA_COVER);
+    draw_arc(l, cx, cy, (int32_t)hub, (int32_t)fmaxf(1, 2 * s), 0, 360, lv_color_mix(lv_color_white(), tick, 70), LV_OPA_COVER, false);
+    // min and max markers just inside the bezel
+    for (int k = 0; k < 2; k++) {
+        if (k == 0 ? !r->has_lo : !r->has_pk) continue;
+        float am = (a0 + span * (k == 0 ? r->lofrac : r->pkfrac)) * PI_F / 180.0f, rr = R - bz - 1, ri = rr - 7 * s;
+        draw_tri(l, cx + rr * cosf(am), cy + rr * sinf(am), cx + ri * cosf(am + 0.05f), cy + ri * sinf(am + 0.05f),
+                 cx + ri * cosf(am - 0.05f), cy + ri * sinf(am - 0.05f), nc);
+    }
+}
+
 // ---------------------------------------------------------------- numeric
 // Digits as large as the cell allows, coloured by zone. No bar.
 static void style_numeric(lv_layer_t *l, face_t *f, res_t *r)
@@ -89,6 +193,7 @@ static void draw_cb(lv_event_t *e)
     switch (style) {
     case STYLE_DIAL:    style_dial(l, f, &r); break;
     case STYLE_NUMERIC: style_numeric(l, f, &r); break;
+    case STYLE_STOCK:   style_stock(l, f, &r); break;
     default:            style_ring(l, f, &r); break;
     }
     if (f->focused) draw_arc(l, f->cx, f->cy, f->R + 6, 2, 0, 360, theme_color(TC_DIGITS), 150, false);

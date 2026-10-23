@@ -11,7 +11,7 @@
 extern "C" {
 #endif
 
-typedef enum { STYLE_RING = 0, STYLE_DIAL, STYLE_NUMERIC, STYLE_COUNT } gauge_style_t;
+typedef enum { STYLE_RING = 0, STYLE_DIAL, STYLE_NUMERIC, STYLE_STOCK, STYLE_COUNT } gauge_style_t;
 typedef enum { FILL_GRADIENT = 0, FILL_SEGMENTS, FILL_SOLID, FILL_COUNT } bar_fill_t;
 
 // Colour slots, in the order the config file and the menu list them.

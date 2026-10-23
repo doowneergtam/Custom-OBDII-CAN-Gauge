@@ -108,7 +108,7 @@ select { width: 100%; background: #0f1115; color: var(--fg); border: 1px solid v
       <div class="group"><h2>Layout</h2>
         <div class="seg" id="layoutSeg"><button data-v="1" aria-pressed="true">1</button><button data-v="3">3</button><button data-v="4">4</button><button data-v="6">6</button><button data-v="7">7</button></div></div>
       <div class="group"><h2>Style, all layouts</h2>
-        <div class="seg" id="styleSeg"><button data-v="ring" aria-pressed="true">Ring</button><button data-v="dial">Dial</button><button data-v="numeric">Numeric</button></div></div>
+        <div class="seg" id="styleSeg"><button data-v="ring" aria-pressed="true">Ring</button><button data-v="dial">Dial</button><button data-v="numeric">Numeric</button><button data-v="stock">Stock</button></div></div>
       <div class="group"><h2>Display</h2>
         <div class="row"><label for="bright">Brightness</label><input id="bright" type="range" min="10" max="100" value="80"><span class="val" id="brightVal">80%</span></div>
         <div class="row"><label for="valueSize">Digits</label><select id="valueSize"><option value="48">48 px, built-in font</option><option value="64">64 px</option><option value="80" selected>80 px</option><option value="96">96 px</option></select><span class="val"></span></div>
@@ -288,6 +288,7 @@ const PRESETS = {
   Ember: { bg:'#000000', digits:'#fff3e0', label:'#9c8a78', units:'#75655a', track:'#221a14', tick:'#6a5a4c', neutral:'#ff8a00', good:'#9ae66e', warn:'#ffd166', bad:'#ff2d55', cold:'#7fb3ff', stale:'#4f463f' },
   Mono:  { bg:'#000000', digits:'#ffffff', label:'#7a7a7a', units:'#5c5c5c', track:'#1c1c1c', tick:'#505050', neutral:'#ffffff', good:'#cfd6d0', warn:'#ffd36b', bad:'#ff5c5c', cold:'#9cc9ff', stale:'#454545' },
   Miata: { bg:'#000000', digits:'#ffffff', label:'#8a7f80', units:'#6a6162', track:'#201617', tick:'#5e5052', neutral:'#e0202a', good:'#35d07f', warn:'#ffb020', bad:'#ff2b2b', cold:'#6ca8ff', stale:'#4a4042' },
+  Stock: { bg:'#ece7d4', digits:'#14161a', label:'#1e2024', units:'#4a4c50', track:'#c7cbd0', tick:'#1a1c20', neutral:'#ea3640', good:'#2f9e5b', warn:'#f2a21c', bad:'#f0701e', cold:'#3b7dd8', stale:'#9a9a90' },
 };
 let T = { ...PRESETS.Ice };
 try { const s = JSON.parse(localStorage.getItem('nb1.theme') || 'null'); if (s && s.bg) T = { ...T, ...s }; } catch (e) {}
@@ -307,6 +308,7 @@ function text(s, x, y, px, color, w = 500, align = 'center', spacing = 0) {
   if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
 }
 function label(s, x, y, px, color) { text(s, x, y, px, color, 600, 'center', px * 0.18); }
+function fitPx(s, px, maxW) { return px; }   // no clamping by design, like fit_digits() in the firmware: the user sizes the digits, even past the edge
 function arc(cx, cy, r, w, a0, a1, color, cap = 'round') {
   ctx.beginPath(); ctx.lineWidth = w; ctx.lineCap = cap; ctx.strokeStyle = color;
   ctx.arc(cx, cy, r, d2r(a0), d2r(a1)); ctx.stroke();
@@ -475,7 +477,73 @@ function styleNumeric(cx, cy, R, c, g, opts) {
   if (!full && !g.dead) { const mm = minmaxText(c, g); if (mm) text(mm, cx, cy + R * 0.84, 9 * R / 90 * state.minmaxScale, T.units, 500, 'center', 0.5); };
   if (full) { const mm = minmaxText(c, g); if (mm) text(mm, cx, cy + R * 0.62, 13 * s * state.minmaxScale, T.units, 500, 'center', 1.5); }
 }
-const STYLES = { ring: styleRing, dial: styleDial, numeric: styleNumeric };
+// Stock: the factory NB1 cluster. Cream face, chrome bezel, black ticks on the
+// rim with the numerals inside, a thin red needle on a big dark hub, and the
+// zones as blocks in the tick ring (the orange redline). Mirrors style_stock()
+// in firmware/components/ui/face_styles.inc; pick the Stock preset with it.
+function niceStep(range) {   // smallest nice major step with at most 10 majors, and its minor divisions
+  const M = [1, 2, 2.5, 5], D = [5, 4, 5, 5];
+  for (let e = -2; e <= 6; e++) { const p = 10 ** e; for (let i = 0; i < 4; i++) if (range <= 10.001 * M[i] * p) return [M[i] * p, D[i]]; }
+  return [range / 10, 5];
+}
+function styleStock(cx, cy, R, c, g, opts) {
+  const s = R / 229, full = opts.full, span = 270, a0 = 135;
+  const ink = T.digits, tick = T.tick, chrome = T.track;
+  // bezel: flat ring, highlight on top, shadow below
+  const bz = Math.max(3, R * 0.045), hw = Math.max(1, bz * 0.4);
+  arc(cx, cy, R - bz / 2, bz, 0, 360, chrome, 'butt');
+  arc(cx, cy, R - bz * 0.15 - hw / 2, hw, 195, 345, lerpHex(chrome, '#ffffff', 170 / 255), 'butt');
+  arc(cx, cy, R - bz * 0.15 - hw / 2, hw, 15, 165, lerpHex(chrome, '#000000', 90 / 255), 'butt');
+  arc(cx, cy, R - bz - 0.75 * s, 1.5 * s, 0, 360, lerpHex(chrome, '#000000', 140 / 255), 'butt');
+  // scale in display units: majors at nice multiples, minors between them
+  const d0 = conv(c, c.min), d1 = conv(c, c.max), dmin = Math.min(d0, d1); let dmax = Math.max(d0, d1); if (dmax - dmin < 1e-6) dmax = dmin + 1;
+  const [step, minors] = niceStep(dmax - dmin), ms = step / minors;
+  const dec = Math.abs(step - Math.round(step)) < 1e-3 ? 0 : Math.abs(step * 10 - Math.round(step * 10)) < 1e-3 ? 1 : 2;
+  const thousands = Math.abs(dmax) >= 1000;
+  const rt1 = R - bz - 2 * s, lmaj = R * 0.085, lmin = R * 0.045;
+  const j0 = Math.ceil(dmin / ms - 1e-3), j1 = Math.min(Math.floor(dmax / ms + 1e-3), j0 + 160);
+  const fr = v => (v - dmin) / (dmax - dmin), zoneAt = v => zoneOf(c, unconv(c, v));
+  // zone blocks in the tick ring, one per minor division, a hairline of face between them
+  if (state.bands && c.zones.length) for (let j = j0; j < j1; j++) {
+    const v0 = j * ms, v1 = (j + 1) * ms, z = zoneAt((v0 + v1) / 2);
+    if (z !== 'good') arc(cx, cy, rt1 - lmaj / 2, lmaj, a0 + span * fr(v0) + 0.5, a0 + span * fr(v1) - 0.5, zoneColor(z), 'butt');
+  }
+  // ticks: thick majors in ink, hairline minors; minors inside a zone block are left out
+  for (let j = j0; j <= j1; j++) {
+    const v = j * ms, major = ((j % minors) + minors) % minors === 0;
+    if (!major && state.bands && c.zones.length && zoneAt(v) !== 'good') continue;
+    const a = d2r(a0 + span * fr(v)), ca = Math.cos(a), sa = Math.sin(a), r0 = rt1 - (major ? lmaj : lmin);
+    ctx.beginPath(); ctx.lineCap = 'butt'; ctx.lineWidth = major ? Math.max(2, R * 0.022) : Math.max(1, R * 0.008); ctx.strokeStyle = major ? ink : tick;
+    ctx.moveTo(cx + r0 * ca, cy + r0 * sa); ctx.lineTo(cx + rt1 * ca, cy + rt1 * sa); ctx.stroke();
+    if (major && (full || R > 70)) {
+      const lab = thousands ? (v / 1000).toFixed(step >= 1000 ? 0 : 1) : fmt(v, dec), rn = r0 - R * 0.105;
+      text(lab, cx + rn * ca, cy + rn * sa, (full ? 40 : 13 * R / 90) * state.labelScale, ink, 600);
+    }
+  }
+  // name and units under the hub ("x1000 rpm"), value in an odometer window, min/max below it
+  label(c.name, cx, cy + R * 0.30, (full ? 20 : 11 * R / 90) * state.labelScale, g.dim ? T.stale : T.label);
+  const u = unitsFor(c), ub = thousands ? 'x1000' + (u ? ' ' + u : '') : u;
+  if (ub) text(ub, cx, cy + R * 0.42, (full ? 16 : 9 * R / 90) * state.unitsScale, T.units, 400);
+  const ww = R * 0.46, wh = R * 0.17, wy = cy + R * 0.62;
+  ctx.fillStyle = lerpHex(T.bg, tick, 28 / 255); ctx.beginPath(); ctx.roundRect(cx - ww / 2, wy - wh / 2, ww, wh, wh / 4); ctx.fill();
+  text(g.str, cx, wy, (full ? 30 : Math.max(12, 13 * R / 90)) * state.digitScale, g.digits, state.digitWeight);
+  const mm = minmaxText(c, g); if (mm) text(mm, cx, cy + R * 0.80, (full ? 13 * s : 9 * R / 90) * state.minmaxScale, T.units, 500, 'center', full ? 1.5 : 0.5);
+  // needle: thin, neutral colour whatever the zone, on a big dark hub
+  const a = d2r(a0 + span * g.frac), ca = Math.cos(a), sa = Math.sin(a), L = rt1 - lmaj - R * 0.03, hub = Math.max(6, R * 0.13), nw = Math.max(1.5, R * 0.016);
+  const nc = g.dim ? T.stale : T.neutral;
+  ctx.fillStyle = nc; ctx.beginPath(); ctx.moveTo(cx - sa * nw, cy + ca * nw); ctx.lineTo(cx + sa * nw, cy - ca * nw); ctx.lineTo(cx + L * ca, cy + L * sa); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); ctx.lineCap = 'round'; ctx.lineWidth = Math.max(2, 2.4 * s); ctx.strokeStyle = nc; ctx.moveTo(cx, cy); ctx.lineTo(cx + (L - 2 * s) * ca, cy + (L - 2 * s) * sa); ctx.stroke();
+  ctx.beginPath(); ctx.fillStyle = tick; ctx.arc(cx, cy, hub, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.lineWidth = Math.max(1, 2 * s); ctx.strokeStyle = lerpHex(tick, '#ffffff', 70 / 255); ctx.arc(cx, cy, hub - s, 0, Math.PI * 2); ctx.stroke();
+  // min and max markers just inside the bezel
+  for (const frm of [g.loFrac, g.pkFrac]) {
+    if (frm === null || g.dead) continue;
+    const am = d2r(a0 + span * frm), rr = R - bz - 1, ri = rr - 7 * s;
+    ctx.beginPath(); ctx.fillStyle = nc; ctx.moveTo(cx + rr * Math.cos(am), cy + rr * Math.sin(am));
+    ctx.lineTo(cx + ri * Math.cos(am + 0.05), cy + ri * Math.sin(am + 0.05)); ctx.lineTo(cx + ri * Math.cos(am - 0.05), cy + ri * Math.sin(am - 0.05)); ctx.closePath(); ctx.fill();
+  }
+}
+const STYLES = { ring: styleRing, dial: styleDial, numeric: styleNumeric, stock: styleStock };
 
 // ---------------------------------------------------------------- layouts
 // Ring layouts: a centre cell plus n cells on a regular polygon, one at the top.
@@ -527,7 +595,7 @@ const ROOT = ['Channel', 'Layout', 'Screens', 'Theme', 'Alarms', 'Brightness', '
 state.extra = { theme_presets: [], screens: [] };   // user presets and saved screens, as the phone page stores them
 function allPresets() { const out = Object.entries(PRESETS).map(([name, rgb]) => ({ name, rgb })); return out.concat(state.extra.theme_presets || []); }
 function presetNameOf(rgb) { const p = allPresets().find(p => THEME_KEYS.every(([k]) => (p.rgb[k] || '').toLowerCase() === (rgb[k] || '').toLowerCase())); return p ? p.name : 'Custom'; }
-const STYLE_IDS = ['ring', 'dial', 'numeric'], STYLE_NAMES = ['Ring', 'Dial', 'Numeric'];
+const STYLE_IDS = ['ring', 'dial', 'numeric', 'stock'], STYLE_NAMES = ['Ring', 'Dial', 'Numeric', 'Stock'];
 const FILL_IDS = ['gradient', 'segments', 'solid'], BRIGHT = [20, 40, 60, 80, 100], LAYOUT_IDS = [1, 3, 4, 6, 7];
 const VOLS = [0, 20, 40, 60, 80, 100], REPEATS = [0, 5, 10, 30];
 const toneIds = () => Object.keys(TONES);   // TONES is defined further down; read it lazily
