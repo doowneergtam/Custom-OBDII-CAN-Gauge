@@ -147,6 +147,7 @@ static const lv_font_t *dfont(float px) { return fonts_digits((int)(px * g_theme
 static const lv_font_t *lfont(float px) { return font_px((int)(px * g_theme.label_scale)); }
 static const lv_font_t *ufont(float px) { return font_px((int)(px * g_theme.units_scale)); }
 static const lv_font_t *mfont(float px) { return font_px((int)(px * g_theme.minmax_scale)); }
+static const lv_font_t *nfont(float px) { return fonts_numerals((int)(px * g_theme.label_scale)); }   // Stock numerals and labels: bold italic when the TTF is compiled in
 // Digit font at the requested size, stepped down until the string fits max_w.
 static const lv_font_t *fit_digits(const char *s, float px, int32_t max_w)
 {

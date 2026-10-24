@@ -506,8 +506,8 @@ function miniGauge() {
     x.beginPath(); x.fillStyle = t.bg; x.arc(C, C, 7, 0, 7); x.fill(); x.beginPath(); x.lineWidth = 1.5; x.strokeStyle = bar; x.arc(C, C, 7, 0, 7); x.stroke();
   } else if (th.style === 'stock') {
     // stock: chrome bezel, ticks on the rim with numerals inside, zone blocks in the tick ring, thin neutral needle on a dark hub
-    const a0 = 135, sp = 270, bz = 5, rt1 = R - bz - 1, lmaj = R * 0.085, lmin = R * 0.045;
-    arc(R - bz / 2, bz, 0, 360, t.track, false); arc(R - 1.75, 2, 195, 345, lerpHex(t.track, '#ffffff', 0.67), false); arc(R - 1.75, 2, 15, 165, lerpHex(t.track, '#000000', 0.35), false); arc(R - bz - 0.5, 1, 0, 360, lerpHex(t.track, '#000000', 0.55), false);
+    const a0 = 135, sp = 270, bz = 5, rt1 = R - bz - 1, lmaj = R * 0.085, lmin = R * 0.045, sf = '"Liberation Sans", Arimo, Arial, sans-serif';
+    arc(R - bz / 2, bz, 0, 360, t.track, false); arc(R - 1.75, 2, 200, 340, lerpHex(t.track, '#ffffff', 0.35), false); arc(R - 1.75, 2, 20, 160, lerpHex(t.track, '#ffffff', 0.18), false); arc(R - bz - 0.5, 1, 0, 360, lerpHex(t.track, '#000000', 0.43), false);
     const M = [1, 2, 2.5, 5], D = [5, 4, 5, 5]; let step = span / 10, minors = 5;
     outer: for (let e = -2; e <= 6; e++) for (let i = 0; i < 4; i++) if (span <= 10.001 * M[i] * 10 ** e) { step = M[i] * 10 ** e; minors = D[i]; break outer; }
     const ms = step / minors, j0 = Math.ceil(cc.min / ms - 1e-3), j1 = Math.min(Math.floor(cc.max / ms + 1e-3), j0 + 160);
@@ -516,9 +516,9 @@ function miniGauge() {
       const v = j * ms, major = ((j % minors) + minors) % minors === 0; if (!major && th.bands && zoneOf(id, v) !== 'good') continue;
       const a = d2r(a0 + sp * frac(v)), ca = Math.cos(a), sa = Math.sin(a), r0 = rt1 - (major ? lmaj : lmin);
       x.beginPath(); x.lineCap = 'butt'; x.lineWidth = major ? 2.5 : 1; x.strokeStyle = major ? t.digits : t.tick; x.moveTo(C + r0 * ca, C + r0 * sa); x.lineTo(C + rt1 * ca, C + rt1 * sa); x.stroke();
-      if (major) { x.font = `600 ${11 * ls}px ${gf}`; x.fillStyle = t.digits; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(String(v), C + (r0 - 11) * ca, C + (r0 - 11) * sa); }
+      if (major) { x.font = `italic 700 ${11 * ls}px ${sf}`; x.fillStyle = t.digits; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText(String(v), C + (r0 - 11) * ca, C + (r0 - 11) * sa); }
     }
-    text('BOOST', 10 * ls, t.label, C + R * 0.30, 600); text(unitLabel(byId.BOOST), 8, t.units, C + R * 0.42, 400, mf);
+    text('BOOST', 10 * ls, t.label, C + R * 0.30, 'italic 700', sf); text(unitLabel(byId.BOOST), 8, t.units, C + R * 0.42, 'italic 700', sf);
     x.fillStyle = lerpHex(t.bg, t.tick, 0.11); x.beginPath(); x.roundRect(C - R * 0.23, C + R * 0.535, R * 0.46, R * 0.17, 4); x.fill();
     text('9.4', 15 * ds, t.digits, C + R * 0.62, 500);
     const a = d2r(a0 + sp * f), L = rt1 - lmaj - 3, hub = R * 0.13;
@@ -558,7 +558,7 @@ function renderTheme() {
   for (const [k, lab] of THEME_KEYS) colors.append(h('label', {}, h('input', { type: 'color', value: t.rgb[k], 'aria-label': lab, oninput: e => { t.rgb[k] = e.target.value; t.preset = 'Custom'; save(); refreshMini(); } }), h('span', {}, lab, h('code', {}, t.rgb[k]))));
   return [card('Preview', Object.assign(miniGauge(), { id: 'mini' }), h('p', { class: 'note' }, 'Boost at 9.4 psi, drawn the way the gauge will draw it.')),
           card('Presets', presets, cfg.theme_presets.length ? mine : null, h('div', { class: 'row' }, pName, pSave)),
-          card('Style', seg(STYLES, STYLES.map(cap), () => t.style, v => { t.style = v; save(); }),
+          card('Style', seg(STYLES, STYLES.map(cap), () => t.style, v => { t.style = v; if (v === 'stock') { t.preset = 'Stock'; t.rgb = { ...PRESETS.Stock }; } save(); }),
             row('Bar fill', 'Gradient: one colour sampled from a blend through the zones at the tip. Segments: each block its own zone. Solid: the zone the tip is in.', null),
             seg(FILLS, FILLS.map(cap), () => t.fill, v => { t.fill = v; save(); }),
             row('Zone bands on track', 'Faint colour where each zone starts', sw(() => t.bands, v => { t.bands = v; save(); refreshMini(); }))),

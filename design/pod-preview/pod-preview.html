@@ -308,6 +308,13 @@ function text(s, x, y, px, color, w = 500, align = 'center', spacing = 0) {
   if ('letterSpacing' in ctx) ctx.letterSpacing = '0px';
 }
 function label(s, x, y, px, color) { text(s, x, y, px, color, 600, 'center', px * 0.18); }
+// Stock style type: the factory cluster's bold italic grotesque. The gauge embeds
+// Liberation Sans Bold Italic; the browser gets the same family or Arial.
+const stockFont = '"Liberation Sans", Arimo, Arial, Helvetica, sans-serif';
+function stockText(s, x, y, px, color, align = 'center') {
+  ctx.font = `italic 700 ${px}px ${stockFont}`; ctx.fillStyle = color; ctx.textAlign = align; ctx.textBaseline = 'middle';
+  ctx.fillText(s, x, y);
+}
 function fitPx(s, px, maxW) { return px; }   // no clamping by design, like fit_digits() in the firmware: the user sizes the digits, even past the edge
 function arc(cx, cy, r, w, a0, a1, color, cap = 'round') {
   ctx.beginPath(); ctx.lineWidth = w; ctx.lineCap = cap; ctx.strokeStyle = color;
@@ -492,9 +499,9 @@ function styleStock(cx, cy, R, c, g, opts) {
   // bezel: flat ring, highlight on top, shadow below
   const bz = Math.max(3, R * 0.045), hw = Math.max(1, bz * 0.4);
   arc(cx, cy, R - bz / 2, bz, 0, 360, chrome, 'butt');
-  arc(cx, cy, R - bz * 0.15 - hw / 2, hw, 195, 345, lerpHex(chrome, '#ffffff', 170 / 255), 'butt');
-  arc(cx, cy, R - bz * 0.15 - hw / 2, hw, 15, 165, lerpHex(chrome, '#000000', 90 / 255), 'butt');
-  arc(cx, cy, R - bz - 0.75 * s, 1.5 * s, 0, 360, lerpHex(chrome, '#000000', 140 / 255), 'butt');
+  arc(cx, cy, R - bz * 0.15 - hw / 2, hw, 200, 340, lerpHex(chrome, '#ffffff', 90 / 255), 'butt');
+  arc(cx, cy, R - bz * 0.15 - hw / 2, hw, 20, 160, lerpHex(chrome, '#ffffff', 45 / 255), 'butt');
+  arc(cx, cy, R - bz - 0.75 * s, 1.5 * s, 0, 360, lerpHex(chrome, '#000000', 110 / 255), 'butt');
   // scale in display units: majors at nice multiples, minors between them
   const d0 = conv(c, c.min), d1 = conv(c, c.max), dmin = Math.min(d0, d1); let dmax = Math.max(d0, d1); if (dmax - dmin < 1e-6) dmax = dmin + 1;
   const [step, minors] = niceStep(dmax - dmin), ms = step / minors;
@@ -517,13 +524,13 @@ function styleStock(cx, cy, R, c, g, opts) {
     ctx.moveTo(cx + r0 * ca, cy + r0 * sa); ctx.lineTo(cx + rt1 * ca, cy + rt1 * sa); ctx.stroke();
     if (major && (full || R > 70)) {
       const lab = thousands ? (v / 1000).toFixed(step >= 1000 ? 0 : 1) : fmt(v, dec), rn = r0 - R * 0.105;
-      text(lab, cx + rn * ca, cy + rn * sa, (full ? 40 : 13 * R / 90) * state.labelScale, ink, 600);
+      stockText(lab, cx + rn * ca, cy + rn * sa, (full ? 40 : 13 * R / 90) * state.labelScale, ink);
     }
   }
   // name and units under the hub ("x1000 rpm"), value in an odometer window, min/max below it
-  label(c.name, cx, cy + R * 0.30, (full ? 20 : 11 * R / 90) * state.labelScale, g.dim ? T.stale : T.label);
+  stockText(c.name, cx, cy + R * 0.30, (full ? 20 : 11 * R / 90) * state.labelScale, g.dim ? T.stale : T.label);
   const u = unitsFor(c), ub = thousands ? 'x1000' + (u ? ' ' + u : '') : u;
-  if (ub) text(ub, cx, cy + R * 0.42, (full ? 16 : 9 * R / 90) * state.unitsScale, T.units, 400);
+  if (ub) stockText(ub, cx, cy + R * 0.42, (full ? 16 : 9 * R / 90) * state.labelScale, T.units);
   const ww = R * 0.46, wh = R * 0.17, wy = cy + R * 0.62;
   ctx.fillStyle = lerpHex(T.bg, tick, 28 / 255); ctx.beginPath(); ctx.roundRect(cx - ww / 2, wy - wh / 2, ww, wh, wh / 4); ctx.fill();
   text(g.str, cx, wy, (full ? 30 : Math.max(12, 13 * R / 90)) * state.digitScale, g.digits, state.digitWeight);
@@ -652,7 +659,7 @@ function menuSelect() {
       else menuOpen('root');
       break;
     }
-    case 'style': state.style = STYLE_IDS[i]; menuOpen('theme'); state.menu.sel = 2; break;
+    case 'style': state.style = STYLE_IDS[i]; if (state.style === 'stock') { T = { ...PRESETS.Stock }; save(); buildTheme(); } menuOpen('theme'); state.menu.sel = 2; break;
     case 'alarms':
       if (i === 0) { ALARM.volume = cycle(VOLS, Math.round(ALARM.volume * 100)) / 100; playTone('chirp'); }
       else if (i === 1) ALARM.warnOn = !ALARM.warnOn;
@@ -676,15 +683,15 @@ function menuSelect() {
 function drawMenu() {
   const opts = menuOptions(), m = state.menu;
   if (m.level === 'style') {
-    // Full-screen sample of each style in the current theme; rotate to browse, click to keep.
+    // Full-screen sample of each style; Stock shows in its own colours, as the gauge does. Rotate to browse, click to keep.
+    const saved = state.style, savedT = T; state.style = STYLE_IDS[m.sel]; if (state.style === 'stock') T = { ...PRESETS.Stock };
     const c = byId[state.cells[state.focus]], g = resolve(c, performance.now(), 'fresh');
     ctx.fillStyle = T.bg; ctx.fillRect(0, 0, W, W);
-    const saved = state.style; state.style = STYLE_IDS[m.sel];
     STYLES[state.style](C, C, 229, c, g, { full: true });
-    state.style = saved;
     ctx.fillStyle = hexA(T.bg, 0.75); ctx.beginPath(); ctx.roundRect(C - 90, 18, 180, 34, 17); ctx.fill();
     ctx.strokeStyle = T.neutral; ctx.lineWidth = 1.5; ctx.stroke();
     label('<  ' + STYLE_NAMES[m.sel].toUpperCase() + '  ' + (m.sel + 1) + '/' + STYLE_NAMES.length + '  >', C, 35, 13, T.digits);
+    state.style = saved; T = savedT;
     return;
   }
   ctx.fillStyle = hexA(T.bg, 0.94); ctx.fillRect(0, 0, W, W);
@@ -771,7 +778,7 @@ function seg(el, get, set) {
 }
 const segs = [
   seg($('#layoutSeg'), () => state.layout, v => setLayout(+v)),
-  seg($('#styleSeg'),  () => state.style,  v => state.style = v),
+  seg($('#styleSeg'),  () => state.style,  v => { state.style = v; if (v === 'stock') { T = { ...PRESETS.Stock }; save(); buildTheme(); } }),
   seg($('#fillSeg'),   () => state.fill,   v => state.fill = v),
   seg($('#dataSeg'),   () => state.data,   v => state.data = v),
   seg($('#tempSeg'),   () => units.temp,   v => units.temp = v),

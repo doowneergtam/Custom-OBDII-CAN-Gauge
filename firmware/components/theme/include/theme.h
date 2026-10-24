@@ -40,6 +40,7 @@ extern theme_t g_theme;
 int          theme_preset_count(void);
 const char  *theme_preset_name(int i);
 void         theme_apply_preset(int i);
+int          theme_preset_find(const char *name);   // built-in preset index by name, -1 if none
 const char  *theme_color_name(theme_color_t c);
 const char  *theme_style_name(gauge_style_t s);
 const char  *theme_fill_name(bar_fill_t f);

@@ -94,7 +94,10 @@ on by default. Soak-tested via the serial console (see Bench tooling). Implement
   colour on a big hub, zones as blocks in the tick ring like the orange redline, value in an odometer window).
   Preset "Stock" is the cream face with black type. Pick both (Theme > preset Stock, Style > Stock) for the
   factory look. Mirrored in `pod-preview.html` (`styleStock`) and the phone page (`STYLES`, mini preview).
-  Written on a PC without ESP-IDF: not yet built or flashed.
+  Built and flashed on the main PC 2026-10-23. Choosing Stock in the style picker applies the Stock preset (the picker
+  previews it in those colours; stepping off or backing out restores). Numerals and labels go through
+  `fonts_numerals()`: LiberationSans-BoldItalic.ttf (OFL, in `components/fonts` with its licence) via TinyTTF, bitmap
+  Montserrat otherwise. The bezel is a soft sheen only, no dark half.
 
 Not yet in firmware: stock-ECU path,
 headlight/ambient dimming input (EXIO0 or I2C lux sensor via the custom PCB).

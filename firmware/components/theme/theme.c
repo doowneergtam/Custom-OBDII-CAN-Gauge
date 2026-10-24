@@ -1,5 +1,6 @@
 #include "theme.h"
 #include <string.h>
+#include <strings.h>
 
 theme_t g_theme;
 
@@ -30,6 +31,12 @@ void theme_apply_preset(int i)
     if (i < 0 || i >= theme_preset_count()) return;
     memcpy(g_theme.rgb, PRESETS[i].rgb, sizeof g_theme.rgb);
     g_theme.preset = (int8_t)i;
+}
+
+int theme_preset_find(const char *name)
+{
+    for (int i = 0; i < theme_preset_count(); i++) if (strcasecmp(PRESETS[i].name, name) == 0) return i;
+    return -1;
 }
 
 lv_color_t theme_color(theme_color_t c) { return lv_color_hex(g_theme.rgb[c < TC_COUNT ? c : 0]); }

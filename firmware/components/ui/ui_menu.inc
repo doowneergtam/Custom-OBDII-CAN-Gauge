@@ -1,6 +1,40 @@
 // Included at the end of ui.c: menu actions, style picker, roller, init.
 
 // ---------------------------------------------------------------- style picker
+// Browsing onto Stock shows it in its own colours (the factory cream face), so
+// the sample is the real thing; stepping off or backing out restores the colours
+// that were there, and choosing Stock keeps them. Stock is needle-only by design.
+static uint32_t s_pick_rgb[TC_COUNT];
+static int8_t   s_pick_preset;
+static bool     s_pick_swapped;
+
+static void preview_restyle_pill(void)
+{
+    if (!s_pill) return;
+    lv_obj_set_style_bg_color(s_pill, theme_color(TC_BG), 0);
+    lv_obj_set_style_border_color(s_pill, theme_color(TC_NEUTRAL), 0);
+    lv_obj_set_style_text_color(lv_obj_get_child(s_pill, 0), theme_color(TC_DIGITS), 0);
+}
+static void preview_swap_in(void)
+{
+    int stock = theme_preset_find("Stock");
+    if (s_pick_swapped || stock < 0) return;
+    memcpy(s_pick_rgb, g_theme.rgb, sizeof s_pick_rgb);
+    s_pick_preset = g_theme.preset;
+    theme_apply_preset(stock);
+    s_pick_swapped = true;
+    apply_theme();
+    preview_restyle_pill();
+}
+static void preview_swap_out(void)
+{
+    if (!s_pick_swapped) return;
+    memcpy(g_theme.rgb, s_pick_rgb, sizeof g_theme.rgb);
+    g_theme.preset = s_pick_preset;
+    s_pick_swapped = false;
+    apply_theme();
+    preview_restyle_pill();
+}
 static void preview_update_pill(void)
 {
     char b[32];
@@ -12,12 +46,14 @@ static void preview_step(int dir)
 {
     if (!s_preview) return;
     s_style_sel = (s_style_sel + dir + STYLE_COUNT) % STYLE_COUNT;
+    if (s_style_sel == STYLE_STOCK) preview_swap_in(); else preview_swap_out();
     face_set_style(s_preview, s_style_sel);
     preview_update_pill();
 }
 static void preview_select(void)
 {
     g_theme.style = (gauge_style_t)s_style_sel;
+    if (s_pick_swapped) { s_pick_swapped = false; s_user_preset = -1; }   // Stock chosen: its colours stay
     config_mark_dirty();
     menu_open(M_THEME);
 }
@@ -31,7 +67,7 @@ static void preview_event_cb(lv_event_t *e)
     } else if (code == LV_EVENT_SHORT_CLICKED) {
         preview_select();
     } else if (code == LV_EVENT_LONG_PRESSED) {
-        menu_open(M_THEME);
+        preview_swap_out(); menu_open(M_THEME);
     }
 }
 
@@ -55,6 +91,7 @@ static void preview_open(void)
     lv_obj_set_style_text_font(lbl, &lv_font_montserrat_14, 0);
     lv_obj_set_style_text_color(lbl, theme_color(TC_DIGITS), 0);
     lv_obj_center(lbl);
+    if (s_style_sel == STYLE_STOCK) preview_swap_in();
     preview_update_pill();
 
     if (s_group) { lv_group_remove_all_objs(s_group); lv_group_add_obj(s_group, s_preview); lv_group_focus_obj(s_preview); }

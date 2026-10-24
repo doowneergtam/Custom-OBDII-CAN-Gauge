@@ -82,12 +82,12 @@ static void style_stock(lv_layer_t *l, face_t *f, res_t *r)
     const float span = 270, a0 = 135;
     lv_color_t ink = theme_color(TC_DIGITS), tick = theme_color(TC_TICK), chrome = theme_color(TC_TRACK);
 
-    // bezel: a flat ring, a highlight on top and a shadow below read as chrome
+    // bezel: a flat ring with a soft sheen on top and a fainter one below reads as chrome without a dark half
     int32_t bz = (int32_t)fmaxf(3, R * 0.045f), hw = (int32_t)fmaxf(1, bz * 0.4f);
     draw_arc(l, cx, cy, R, bz, 0, 360, chrome, LV_OPA_COVER, false);
-    draw_arc(l, cx, cy, (int32_t)(R - bz * 0.15f), hw, 195, 345, lv_color_mix(lv_color_white(), chrome, 170), LV_OPA_COVER, false);
-    draw_arc(l, cx, cy, (int32_t)(R - bz * 0.15f), hw, 15, 165, lv_color_mix(lv_color_black(), chrome, 90), LV_OPA_COVER, false);
-    draw_arc(l, cx, cy, R - bz, (int32_t)fmaxf(1, 1.5f * s), 0, 360, lv_color_mix(lv_color_black(), chrome, 140), LV_OPA_COVER, false);
+    draw_arc(l, cx, cy, (int32_t)(R - bz * 0.15f), hw, 200, 340, lv_color_mix(lv_color_white(), chrome, 90), LV_OPA_COVER, false);
+    draw_arc(l, cx, cy, (int32_t)(R - bz * 0.15f), hw, 20, 160, lv_color_mix(lv_color_white(), chrome, 45), LV_OPA_COVER, false);
+    draw_arc(l, cx, cy, R - bz, (int32_t)fmaxf(1, 1.5f * s), 0, 360, lv_color_mix(lv_color_black(), chrome, 110), LV_OPA_COVER, false);
 
     // scale in display units: majors at nice multiples, minors between them
     float dmin = channels_to_display(d, d->min), dmax = channels_to_display(d, d->max);
@@ -122,17 +122,17 @@ static void style_stock(lv_layer_t *l, face_t *f, res_t *r)
             char b[16];
             if (thousands) snprintf(b, sizeof b, step >= 1000 ? "%.0f" : "%.1f", (double)(v / 1000)); else fmt_val(b, sizeof b, v, dec);
             float rn = r0 - R * 0.105f;
-            draw_text(l, b, lfont(full ? 40 : 13 * R / 90.0f), ink, cx + (int32_t)(rn * ca), cy + (int32_t)(rn * sa), 0, LV_TEXT_ALIGN_CENTER);
+            draw_text(l, b, nfont(full ? 40 : 13 * R / 90.0f), ink, cx + (int32_t)(rn * ca), cy + (int32_t)(rn * sa), 0, LV_TEXT_ALIGN_CENTER);
         }
     }
 
     // name and units under the hub ("x1000 rpm"), the value in an odometer-style
     // window at the bottom, min/max under that
     int lab = full ? 20 : (int)(11 * R / 90.0f);
-    draw_text(l, d->name, lfont(lab), r->dim ? theme_color(TC_STALE) : theme_color(TC_LABEL), cx, cy + (int32_t)(R * 0.30f), lab / 5, LV_TEXT_ALIGN_CENTER);
+    draw_text(l, d->name, nfont(lab), r->dim ? theme_color(TC_STALE) : theme_color(TC_LABEL), cx, cy + (int32_t)(R * 0.30f), 1, LV_TEXT_ALIGN_CENTER);
     char ub[32]; const char *u = units_for(d);
     if (thousands) snprintf(ub, sizeof ub, "x1000%s%s", u[0] ? " " : "", u); else snprintf(ub, sizeof ub, "%s", u);
-    if (ub[0]) draw_text(l, ub, ufont(full ? 16 : 9 * R / 90.0f), theme_color(TC_UNITS), cx, cy + (int32_t)(R * 0.42f), 0, LV_TEXT_ALIGN_CENTER);
+    if (ub[0]) draw_text(l, ub, nfont(full ? 16 : 9 * R / 90.0f), theme_color(TC_UNITS), cx, cy + (int32_t)(R * 0.42f), 0, LV_TEXT_ALIGN_CENTER);
     int32_t ww = (int32_t)(R * 0.46f), wh = (int32_t)(R * 0.17f), wy = cy + (int32_t)(R * 0.62f);
     draw_rect(l, cx - ww / 2, wy - wh / 2, ww, wh, wh / 4, lv_color_mix(tick, theme_color(TC_BG), 28), LV_OPA_COVER);
     draw_text(l, r->str, dfont(full ? 30 : fmaxf(12, 13 * R / 90.0f)), r->digits, cx, wy, 0, LV_TEXT_ALIGN_CENTER);
