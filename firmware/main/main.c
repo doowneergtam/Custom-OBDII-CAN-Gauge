@@ -109,7 +109,7 @@ void app_main(void)
     src_can_set_feed(!g_ui_cfg.sim);
 
 #if CONFIG_NB1_SIM_DATA
-    xTaskCreate(sim_task, "sim", 4096, NULL, 3, NULL);
+    xTaskCreate(sim_task, "sim", 4096, NULL, 6, NULL);   // above httpd and LVGL so a config write never starves the feed
 #endif
     gauge_console_start();
 }

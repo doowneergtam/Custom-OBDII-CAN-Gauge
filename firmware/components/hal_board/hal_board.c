@@ -53,7 +53,13 @@ static esp_err_t display_start_internal_buffers(void)
             .enable_ppa_accel = false,
             .require_double_buffer = true,
         },
+        // Tear-effect sync: the CO5300's TE line is on GPIO13. The adapter times each
+        // flush into the panel's vertical blanking from the TE edge, which removes the
+        // horizontal tear across the digits that free-running stripe flushes produced.
+        // TE sync needs a full 434 KB frame buffer, which does not fit internal RAM next to
+        // Wi-Fi (the adapter aborted at boot). Stays off until a PSRAM frame buffer is proven.
         .tear_avoid_mode = ESP_LV_ADAPTER_TEAR_AVOID_MODE_NONE,
+        .te_sync = { .gpio_num = -1 },
     };
     s_disp = esp_lv_adapter_register_display(&disp_cfg);
     ESP_RETURN_ON_FALSE(s_disp, ESP_FAIL, TAG, "register display");

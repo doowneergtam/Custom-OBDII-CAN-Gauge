@@ -20,6 +20,10 @@ typedef struct {
     bool     focused;
     int      style_override;     // -1 = theme
     int64_t  now_us;
+    // what the last redraw showed, so a tick that changes nothing redraws nothing
+    float    last_frac, last_value, last_peak, last_floor;
+    int      last_fresh, last_flash, last_focus;
+    int64_t  last_full_us;
 } face_t;
 
 // Resolved per-draw state for a channel.

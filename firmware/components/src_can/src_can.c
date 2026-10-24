@@ -163,7 +163,7 @@ esp_err_t src_can_start(const src_can_config_t *cfg)
     return ESP_OK;
 }
 
-void src_can_set_mode(src_can_mode_t mode) { s_mode = mode; ESP_LOGI(TAG, "mode %s", mode == SRC_CAN_MODE_OBD ? "OBD-II" : "MegaSquirt"); }
+void src_can_set_mode(src_can_mode_t mode) { if (s_mode != mode) ESP_LOGI(TAG, "mode %s", mode == SRC_CAN_MODE_OBD ? "OBD-II" : "MegaSquirt"); s_mode = mode; }
 void src_can_set_feed(bool enabled)        { s_feed = enabled; }
 
 void src_can_stats(src_can_stats_t *out)

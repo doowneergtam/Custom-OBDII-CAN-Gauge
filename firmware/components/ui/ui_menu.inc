@@ -249,14 +249,21 @@ static void menu_close(void)
 // ---------------------------------------------------------------- reload / identify
 void ui_reload(void)
 {
+    // Rebuild the face objects only when their geometry changed; a colour or
+    // scale change just needs a redraw, and a rebuild stalls the data feed.
+    static uint8_t last_layout = 0, last_cells[UI_CELLS_MAX]; static float last_zoom = -1, last_cs = -1;
+    bool geom = last_layout != g_ui_cfg.layout || last_zoom != g_ui_cfg.zoom || last_cs != g_theme.cell_scale
+                || memcmp(last_cells, g_ui_cfg.cells, sizeof last_cells) != 0;
     if (!hal_board_lock(2000)) return;
     apply_theme();
-    build_faces();
+    if (geom) { build_faces(); last_layout = g_ui_cfg.layout; last_zoom = g_ui_cfg.zoom; last_cs = g_theme.cell_scale; memcpy(last_cells, g_ui_cfg.cells, sizeof last_cells); }
+    else for (int i = 0; i < s_nfaces; i++) lv_obj_invalidate(s_faces[i]);
     hal_board_set_brightness(g_ui_cfg.brightness);
     if (s_level != M_CLOSED) { for (int i = 0; i < s_nfaces; i++) lv_obj_set_hidden(s_faces[i], true); }
     hal_board_unlock();
     src_can_set_feed(!g_ui_cfg.sim);
     src_can_set_mode(g_ui_cfg.source == SRC_OBD ? SRC_CAN_MODE_OBD : SRC_CAN_MODE_MS);
+    ESP_LOGI(TAG, "reload%s", geom ? ", faces rebuilt" : "");
 }
 
 static void flash_timer_cb(lv_timer_t *t)

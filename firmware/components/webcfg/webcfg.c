@@ -104,6 +104,7 @@ static esp_err_t h_put_config(httpd_req_t *req)
     buf[len] = 0;
     esp_err_t err = config_apply_json(buf);
     free(buf);
+    ESP_LOGI(TAG, "config PUT %d bytes%s", (int)len, err == ESP_OK ? "" : " (invalid)");
     if (err != ESP_OK) { httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "invalid config"); return ESP_FAIL; }
     config_mark_dirty();
     if (s_hooks.reload) s_hooks.reload();
