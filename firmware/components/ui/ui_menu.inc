@@ -3,37 +3,29 @@
 // ---------------------------------------------------------------- style picker
 // Browsing onto Stock shows it in its own colours (the factory cream face), so
 // the sample is the real thing; stepping off or backing out restores the colours
-// that were there, and choosing Stock keeps them. Stock is needle-only by design.
+// that were there, and choosing Stock keeps them. Both Stock styles are needle-only by design.
 static uint32_t s_pick_rgb[TC_COUNT];
 static int8_t   s_pick_preset;
-static bool     s_pick_swapped;
+static bool     s_pick_swapped, s_pick_bands;
 
-static void preview_restyle_pill(void)
-{
-    if (!s_pill) return;
-    lv_obj_set_style_bg_color(s_pill, theme_color(TC_BG), 0);
-    lv_obj_set_style_border_color(s_pill, theme_color(TC_NEUTRAL), 0);
-    lv_obj_set_style_text_color(lv_obj_get_child(s_pill, 0), theme_color(TC_DIGITS), 0);
-}
 static void preview_swap_in(void)
 {
     int stock = theme_preset_find("Stock");
     if (s_pick_swapped || stock < 0) return;
     memcpy(s_pick_rgb, g_theme.rgb, sizeof s_pick_rgb);
-    s_pick_preset = g_theme.preset;
+    s_pick_preset = g_theme.preset; s_pick_bands = g_theme.bands;
     theme_apply_preset(stock);
+    g_theme.bands = false;   // the factory faces are black and white: no zone colour until asked for
     s_pick_swapped = true;
     apply_theme();
-    preview_restyle_pill();
 }
 static void preview_swap_out(void)
 {
     if (!s_pick_swapped) return;
     memcpy(g_theme.rgb, s_pick_rgb, sizeof g_theme.rgb);
-    g_theme.preset = s_pick_preset;
+    g_theme.preset = s_pick_preset; g_theme.bands = s_pick_bands;
     s_pick_swapped = false;
     apply_theme();
-    preview_restyle_pill();
 }
 static void preview_update_pill(void)
 {
@@ -46,7 +38,7 @@ static void preview_step(int dir)
 {
     if (!s_preview) return;
     s_style_sel = (s_style_sel + dir + STYLE_COUNT) % STYLE_COUNT;
-    if (s_style_sel == STYLE_STOCK) preview_swap_in(); else preview_swap_out();
+    if (s_style_sel == STYLE_STOCK || s_style_sel == STYLE_STOCK2) preview_swap_in(); else preview_swap_out();
     face_set_style(s_preview, s_style_sel);
     preview_update_pill();
 }
@@ -83,15 +75,13 @@ static void preview_open(void)
     lv_obj_set_size(s_pill, 180, 34);
     lv_obj_set_pos(s_pill, C - 90, 18);
     lv_obj_set_style_radius(s_pill, 17, 0);
-    lv_obj_set_style_bg_color(s_pill, theme_color(TC_BG), 0);
     lv_obj_set_style_bg_opa(s_pill, 190, 0);
-    lv_obj_set_style_border_color(s_pill, theme_color(TC_NEUTRAL), 0);
     lv_obj_set_style_border_width(s_pill, 2, 0);
     lv_obj_t *lbl = lv_label_create(s_pill);
     lv_obj_set_style_text_font(lbl, &lv_font_montserrat_14, 0);
-    lv_obj_set_style_text_color(lbl, theme_color(TC_DIGITS), 0);
     lv_obj_center(lbl);
-    if (s_style_sel == STYLE_STOCK) preview_swap_in();
+    ui_restyle();
+    if (s_style_sel == STYLE_STOCK || s_style_sel == STYLE_STOCK2) preview_swap_in();
     preview_update_pill();
 
     if (s_group) { lv_group_remove_all_objs(s_group); lv_group_add_obj(s_group, s_preview); lv_group_focus_obj(s_preview); }
@@ -206,29 +196,24 @@ static void menu_build(void)
     s_title = lv_label_create(s_scr);
     lv_obj_set_style_text_font(s_title, &lv_font_montserrat_16, 0);
     lv_obj_set_style_text_letter_space(s_title, 3, 0);
-    lv_obj_set_style_text_color(s_title, theme_color(TC_LABEL), 0);
     lv_obj_align(s_title, LV_ALIGN_CENTER, 0, -150);
 
     s_menu = lv_roller_create(s_scr);
     lv_obj_set_width(s_menu, 320);
     lv_roller_set_visible_row_count(s_menu, 5);
     lv_obj_center(s_menu);
-    lv_obj_set_style_bg_color(s_menu, theme_color(TC_BG), LV_PART_MAIN);
     lv_obj_set_style_bg_opa(s_menu, 240, LV_PART_MAIN);
     lv_obj_set_style_border_width(s_menu, 0, LV_PART_MAIN);
     lv_obj_set_style_text_font(s_menu, &lv_font_montserrat_24, LV_PART_MAIN);
-    lv_obj_set_style_text_color(s_menu, theme_color(TC_LABEL), LV_PART_MAIN);
     lv_obj_set_style_text_line_space(s_menu, 22, LV_PART_MAIN);
-    lv_obj_set_style_bg_color(s_menu, theme_color(TC_NEUTRAL), LV_PART_SELECTED);
     lv_obj_set_style_bg_opa(s_menu, 46, LV_PART_SELECTED);
-    lv_obj_set_style_border_color(s_menu, theme_color(TC_NEUTRAL), LV_PART_SELECTED);
     lv_obj_set_style_border_width(s_menu, 2, LV_PART_SELECTED);
     lv_obj_set_style_radius(s_menu, 14, LV_PART_SELECTED);
-    lv_obj_set_style_text_color(s_menu, theme_color(TC_DIGITS), LV_PART_SELECTED);
     lv_obj_set_style_text_font(s_menu, &lv_font_montserrat_28, LV_PART_SELECTED);
     lv_obj_set_style_outline_width(s_menu, 0, LV_STATE_FOCUSED);
     lv_obj_set_style_outline_width(s_menu, 0, LV_STATE_FOCUS_KEY);
     lv_obj_add_event_cb(s_menu, menu_event_cb, LV_EVENT_ALL, NULL);
+    ui_restyle();
 }
 
 static void menu_open(level_t level)

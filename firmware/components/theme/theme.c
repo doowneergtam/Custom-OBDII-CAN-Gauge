@@ -17,7 +17,7 @@ static const char *COLOR_NAMES[TC_COUNT] = {
     "Background", "Digits", "Labels", "Units", "Track", "Ticks",
     "Neutral", "Good", "Warn", "Bad", "Cold", "Stale",
 };
-static const char *STYLE_NAMES[STYLE_COUNT] = { "Ring", "Dial", "Numeric", "Stock" };
+static const char *STYLE_NAMES[STYLE_COUNT] = { "Ring", "Dial", "Numeric", "Stock 1", "Stock 2" };
 static const char *FILL_NAMES[FILL_COUNT]   = { "Gradient", "Segments", "Solid" };
 
 int         theme_preset_count(void)        { return sizeof PRESETS / sizeof PRESETS[0]; }

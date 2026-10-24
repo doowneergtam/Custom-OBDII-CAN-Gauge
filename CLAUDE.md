@@ -89,7 +89,7 @@ on by default. Soak-tested via the serial console (see Bench tooling). Implement
   behind `CONFIG_NB1_ENCODER` (default off) because its pull-ups would load the inputs.
   Flashed 2026-10-17 from the prebuilt bundle (boots clean, inputs off by default); not yet tested with a sender.
 
-- Stock style and preset (2026-10-23): `STYLE_STOCK` in `face_styles.inc` draws the factory NB1 cluster
+- Stock styles and preset (2026-10-23): `STYLE_STOCK` ("Stock 1", id `stock`) in `face_styles.inc` draws the factory NB1 tach/speedo
   (chrome bezel, rim ticks at "nice" major/minor steps with the numerals inside, thin needle in the neutral
   colour on a big hub, zones as blocks in the tick ring like the orange redline, value in an odometer window).
   Preset "Stock" is the cream face with black type. Pick both (Theme > preset Stock, Style > Stock) for the
@@ -97,7 +97,14 @@ on by default. Soak-tested via the serial console (see Bench tooling). Implement
   Built and flashed on the main PC 2026-10-23. Choosing Stock in the style picker applies the Stock preset (the picker
   previews it in those colours; stepping off or backing out restores). Numerals and labels go through
   `fonts_numerals()`: LiberationSans-BoldItalic.ttf (OFL, in `components/fonts` with its licence) via TinyTTF, bitmap
-  Montserrat otherwise. The bezel is a soft sheen only, no dark half.
+  Montserrat otherwise. The bezel is a soft sheen only, no dark half. `STYLE_STOCK2` ("Stock 2", id `stock2`) is the small
+  fuel/oil/temp gauge: pivot 0.30R below centre, 90-degree sweep across the top from left to right, seven ticks, range ends lettered past the
+  sweep, hub 0.22R. Both are proportioned off the factory faces (Stock 1: majors 0.115R long and 0.03R wide, minors 0.012R, numerals 44 px (0.14R) at 0.69R,
+  hub 0.145R, needle 0.87R). Choosing either applies the Stock preset and turns the zone bands off: the faces are black
+  and white like the factory, and the zone blocks and min/max pointers only appear with the bands switch. Menu, title,
+  style pill and alarm banner colours come from `ui_restyle()` (ui.c): background = face colour, text and selection
+  bubble keep the theme colours while they contrast (brightness gap > 90/255) and flip to near-black/near-white otherwise;
+  it runs from `apply_theme()`, so preset changes restyle an open menu.
 
 Not yet in firmware: stock-ECU path,
 headlight/ambient dimming input (EXIO0 or I2C lux sensor via the custom PCB).

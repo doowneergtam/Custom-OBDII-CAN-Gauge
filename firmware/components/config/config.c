@@ -36,7 +36,7 @@ static const char *CH_IDS[] = {
 };
 #define CH_IDS_N ((int)(sizeof CH_IDS / sizeof CH_IDS[0]))
 static const char *THEME_KEYS[TC_COUNT] = { "bg", "digits", "label", "units", "track", "tick", "neutral", "good", "warn", "bad", "cold", "stale" };
-static const char *STYLE_IDS[STYLE_COUNT] = { "ring", "dial", "numeric", "stock" };
+static const char *STYLE_IDS[STYLE_COUNT] = { "ring", "dial", "numeric", "stock", "stock2" };
 static const char *FILL_IDS[FILL_COUNT]   = { "gradient", "segments", "solid" };
 static const char *LEVEL_IDS[4]           = { "cold", "good", "warn", "bad" };
 

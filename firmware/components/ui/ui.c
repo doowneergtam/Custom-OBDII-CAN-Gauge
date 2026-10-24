@@ -85,9 +85,44 @@ static int layout_cells_base(uint8_t layout, cell_t *out)
     }
 }
 
+// Menu, title, style pill and alarm banner colours follow the face: the
+// background is the face colour, and the text and selection bubble keep the
+// theme's own colours while they contrast with it, flipping to near-black or
+// near-white when they would not (a light face with light type, say).
+static bool contrasts(lv_color_t a, lv_color_t b)
+{
+    int d = (int)lv_color_brightness(a) - (int)lv_color_brightness(b);
+    return d > 90 || d < -90;
+}
+static lv_color_t legible(theme_color_t slot, lv_color_t bg)
+{
+    lv_color_t c = theme_color(slot);
+    if (contrasts(c, bg)) return c;
+    return lv_color_brightness(bg) > 127 ? lv_color_hex(0x15181C) : lv_color_hex(0xF4F6F8);
+}
+static void ui_restyle(void)
+{
+    lv_color_t bg = theme_color(TC_BG), fg = legible(TC_LABEL, bg), sel = legible(TC_DIGITS, bg), accent = legible(TC_NEUTRAL, bg);
+    if (s_menu) {
+        lv_obj_set_style_bg_color(s_menu, bg, LV_PART_MAIN);
+        lv_obj_set_style_text_color(s_menu, fg, LV_PART_MAIN);
+        lv_obj_set_style_bg_color(s_menu, accent, LV_PART_SELECTED);
+        lv_obj_set_style_border_color(s_menu, accent, LV_PART_SELECTED);
+        lv_obj_set_style_text_color(s_menu, sel, LV_PART_SELECTED);
+    }
+    if (s_title) lv_obj_set_style_text_color(s_title, fg, 0);
+    if (s_pill) {
+        lv_obj_set_style_bg_color(s_pill, bg, 0);
+        lv_obj_set_style_border_color(s_pill, accent, 0);
+        lv_obj_set_style_text_color(lv_obj_get_child(s_pill, 0), sel, 0);
+    }
+    if (s_banner_lbl) lv_obj_set_style_text_color(s_banner_lbl, sel, 0);
+}
+
 static void apply_theme(void)
 {
     lv_obj_set_style_bg_color(s_scr, theme_color(TC_BG), 0);
+    ui_restyle();
     for (int i = 0; i < s_nfaces; i++) lv_obj_invalidate(s_faces[i]);
 }
 
