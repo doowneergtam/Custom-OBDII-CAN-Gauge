@@ -72,6 +72,10 @@ resistive (temperature) senders; open for 0 to 5 V senders. SJ1 is input 1
 (GPIO17, J3 pin 3), SJ2 is input 2 (GPIO18, J3 pin 4). J3: 5V, GND, SENS1,
 SENS2. Firmware filtering replaces the input capacitor.
 
+Build note (2026-10-24): on this gauge **SJ2 is bridged**, so input 2 (AIN2, J3 pin 4, GPIO18) is a
+resistive temperature sender; SJ1 stays open. Set the Input 2 card on the phone page to resistive
+with the sender's ohms-to-temperature points so the firmware matches the jumper.
+
 ## Connectors and header
 
 | J1 pin | Net | J2 (car) | J3 (sensors) |
@@ -84,6 +88,13 @@ SENS2. Firmware filtering replaces the input capacitor.
 | 6 3V3 | 3V3 | | |
 | 7 GND | GND | | |
 | 8 VBUS | 5V | | |
+
+## Next revision wishlist
+
+- Replace the solder bridges SJ1/SJ2 with something you can change without an iron: a 2-pin
+  2.54 mm header per input with a jumper cap, or a 2-position DIP switch (one position per input).
+  Same net pair as the bridge (sensor node to the 1 kΩ pull-up), so only the footprint changes.
+  Asked for at the rev C bench build, 2026-10-24.
 
 ## Verify before milling
 
