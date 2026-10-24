@@ -8,8 +8,8 @@ extern const uint8_t ttf_start[] asm("_binary_Montserrat_Light_ttf_start");
 extern const uint8_t ttf_end[]   asm("_binary_Montserrat_Light_ttf_end");
 #endif
 #if FONTS_HAVE_ITALIC
-extern const uint8_t ital_start[] asm("_binary_LiberationSans_BoldItalic_ttf_start");
-extern const uint8_t ital_end[]   asm("_binary_LiberationSans_BoldItalic_ttf_end");
+extern const uint8_t ital_start[] asm("_binary_NB1StockNumerals_BoldItalic_ttf_start");
+extern const uint8_t ital_end[]   asm("_binary_NB1StockNumerals_BoldItalic_ttf_end");
 #endif
 
 // Size steps above the bitmap fonts. Each is created on first use and kept.
@@ -18,7 +18,7 @@ static const int STEPS[] = { 56, 64, 72, 80, 96, 112, 128, 144, 160, 180, 200, 2
 static lv_font_t *s_fonts[NSTEPS];
 
 // Numeral sizes the faces ask for, from the small cells to the full-screen dial.
-static const int ISTEPS[] = { 12, 14, 16, 18, 20, 24, 28, 32, 36, 40, 48, 56, 64 };
+static const int ISTEPS[] = { 12, 14, 16, 18, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 64, 72 };
 #define NISTEPS ((int)(sizeof ISTEPS / sizeof ISTEPS[0]))
 static lv_font_t *s_italic[NISTEPS];
 

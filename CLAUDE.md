@@ -106,6 +106,22 @@ on by default. Soak-tested via the serial console (see Bench tooling). Implement
   bubble keep the theme colours while they contrast (brightness gap > 90/255) and flip to near-black/near-white otherwise;
   it runs from `apply_theme()`, so preset changes restyle an open menu.
 
+- Face renderer (2026-10-24): each needle/ring face caches its static artwork in a PSRAM image
+  (`face_object.inc`, P_BG pass via an LVGL canvas, rebuilt on `face_restyle_all()`/style/channel/stale
+  change); each frame blits it and draws only the moving parts (P_FG). Moving parts are marked
+  `DYN_BEGIN()/DYN_END()` in the styles; a P_MEASURE pass records their rectangles and only the
+  old+new rectangles are invalidated (needles as a chain of 80 px boxes, `LV_INV_BUF_SIZE=96`).
+  Needles and hubs are drawn by `fast_raster.inc` straight into the RGB565 strip buffer (convex
+  polygons only: the Stock needle is two pieces). The needle/bar follows the data with a critically
+  damped spring at the frame rate; the reading updates at 8 Hz (`DIGIT_US`). UI tick 16 ms,
+  `LV_DEF_REFR_PERIOD=16`, draw buffers 2 x 48 lines internal. Measured 32-39 fps on Stock 1
+  (was ~24). Console `stats` prints `perf`/`perf2`/`perf3` frame timings; `snap [step]` and
+  `tools/gauge_snap.py COM11 out.png [step]` capture the first face as a PNG.
+- Stock numerals font (2026-10-24): `NB1StockNumerals-BoldItalic.ttf`, built by
+  `tools/make_stock_font.py` from TeX Gyre Heros Bold Italic (free Helvetica clone, GUST Font
+  License, `components/fonts/GUST-FONT-LICENSE.txt`): basic Latin, TrueType outlines, slant 16 deg.
+  Replaces Liberation Sans (whose "1" did not match the cluster).
+
 Not yet in firmware: stock-ECU path,
 headlight/ambient dimming input (EXIO0 or I2C lux sensor via the custom PCB).
 Wi-Fi: on at boot by default; `tools/serial_peek.py COM9 N [--noreset]` reads the log.

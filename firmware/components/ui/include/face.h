@@ -22,6 +22,9 @@ void      face_set_style(lv_obj_t *face, int style);
 void      face_set_focused(lv_obj_t *face, bool focused);
 // Redraw with the current channel value; call from the LVGL tick.
 void      face_refresh(lv_obj_t *face, int64_t now_us);
+// Theme, units or ranges changed: every face re-renders its cached background on its next refresh.
+void      face_restyle_all(void);
+void      face_snapshot_dump(lv_obj_t *face, int step);   // console: print the face as hex rows
 
 #ifdef __cplusplus
 }

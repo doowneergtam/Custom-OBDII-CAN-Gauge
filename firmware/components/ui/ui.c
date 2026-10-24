@@ -19,7 +19,7 @@
 #include "webcfg.h"
 
 static const char *TAG = "ui";
-#define UI_REFRESH_MS 40
+#define UI_REFRESH_MS 16   // needle spring and invalidation, ~60 Hz
 #define C 233
 
 typedef enum { M_CLOSED = 0, M_ROOT, M_CHANNEL, M_LAYOUT, M_THEME, M_STYLE, M_ALARMS, M_ALTONE, M_ALTLVL, M_SYSTEM, M_BRIGHT, M_SCREENS } level_t;
@@ -130,6 +130,7 @@ static void apply_theme(void)
 {
     lv_obj_set_style_bg_color(s_scr, theme_color(TC_BG), 0);
     ui_restyle();
+    face_restyle_all();
     for (int i = 0; i < s_nfaces; i++) lv_obj_invalidate(s_faces[i]);
 }
 

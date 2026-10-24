@@ -292,6 +292,40 @@ static void hook_identify(void)     { ui_identify(); }
 static void hook_tone(int tone)     { audio_play((alarm_tone_t)tone, g_alarms.volume); }
 
 // ---------------------------------------------------------------- init
+extern int64_t g_face_inv_px, g_face_inv_rects, g_face_draw_us, g_face_draw_n;
+static int64_t s_wait_t0, s_wait_sum, s_flush_n, s_fl_t0, s_fl_sum; static int s_fl_out; static int s_draw_us_out, s_draw_n_out, s_wait_us_out, s_flush_n_out;
+static int s_inv_kpx_out, s_inv_rects_out;
+extern int64_t g_prim_us[9];
+static int s_prim_out[9];
+// Frame counter for the console: refreshes per second and how long each took.
+static int64_t s_refr_t0, s_perf_win;
+static int s_perf_n, s_perf_fps; static int64_t s_perf_sum, s_perf_max, s_perf_avg_out, s_perf_max_out;
+static void perf_cb(lv_event_t *e)
+{
+    int64_t now = esp_timer_get_time();
+    lv_event_code_t code = lv_event_get_code(e);
+    if (code == LV_EVENT_FLUSH_WAIT_START) { s_wait_t0 = now; return; }
+    if (code == LV_EVENT_FLUSH_WAIT_FINISH) { s_wait_sum += now - s_wait_t0; return; }
+    if (code == LV_EVENT_FLUSH_START) { s_flush_n++; s_fl_t0 = now; return; }
+    if (code == LV_EVENT_FLUSH_FINISH) { s_fl_sum += now - s_fl_t0; return; }
+    if (code == LV_EVENT_REFR_START) { s_refr_t0 = now; return; }
+    int64_t dt = now - s_refr_t0;
+    s_perf_n++; s_perf_sum += dt; if (dt > s_perf_max) s_perf_max = dt;
+    if (now - s_perf_win >= 1000000) {
+        s_perf_fps = s_perf_n; s_perf_avg_out = s_perf_n ? s_perf_sum / s_perf_n : 0; s_perf_max_out = s_perf_max;
+        s_draw_us_out = s_perf_n ? (int)(g_face_draw_us / s_perf_n) : 0; s_draw_n_out = s_perf_n ? (int)(g_face_draw_n / s_perf_n) : 0; g_face_draw_us = 0; g_face_draw_n = 0;
+        s_wait_us_out = s_perf_n ? (int)(s_wait_sum / s_perf_n) : 0; s_flush_n_out = s_perf_n ? (int)(s_flush_n / s_perf_n) : 0; s_wait_sum = 0; s_flush_n = 0; s_fl_out = s_perf_n ? (int)(s_fl_sum / s_perf_n) : 0; s_fl_sum = 0;
+        for (int i = 0; i < 9; i++) { s_prim_out[i] = s_perf_n ? (int)(g_prim_us[i] / s_perf_n) : 0; g_prim_us[i] = 0; }
+        s_inv_kpx_out = s_perf_n ? (int)(g_face_inv_px / s_perf_n / 1000) : 0; s_inv_rects_out = s_perf_n ? (int)(g_face_inv_rects / s_perf_n) : 0; g_face_inv_px = 0; g_face_inv_rects = 0;
+        s_perf_n = 0; s_perf_sum = 0; s_perf_max = 0; s_perf_win = now;
+    }
+}
+void ui_snapshot(int step) { if (s_nfaces < 1 || !hal_board_lock(3000)) return; face_snapshot_dump(s_faces[0], step); hal_board_unlock(); }
+void ui_perf(int *fps, int *avg_us, int *max_us) { *fps = s_perf_fps; *avg_us = (int)s_perf_avg_out; *max_us = (int)s_perf_max_out; }
+void ui_perf_more(int *draw_us, int *draw_calls, int *wait_us, int *flushes) { *draw_us = s_draw_us_out; *draw_calls = s_draw_n_out; *wait_us = s_wait_us_out * 0 + s_fl_out; *flushes = s_flush_n_out; }
+void ui_perf_prim(int *out6) { for (int i = 0; i < 9; i++) out6[i] = s_prim_out[i]; }
+void ui_perf_inv(int *kpx_per_frame, int *rects_per_frame) { *kpx_per_frame = s_inv_kpx_out; *rects_per_frame = s_inv_rects_out; }
+
 void ui_init(lv_group_t *group)
 {
     if (!hal_board_lock(1000)) { ESP_LOGE(TAG, "could not take LVGL lock"); return; }
@@ -316,6 +350,12 @@ void ui_init(lv_group_t *group)
     hal_board_set_brightness(g_ui_cfg.brightness);
     focus_gauge();
     lv_timer_create(ui_tick, UI_REFRESH_MS, NULL);
+    lv_display_add_event_cb(lv_display_get_default(), perf_cb, LV_EVENT_REFR_START, NULL);
+    lv_display_add_event_cb(lv_display_get_default(), perf_cb, LV_EVENT_REFR_READY, NULL);
+    lv_display_add_event_cb(lv_display_get_default(), perf_cb, LV_EVENT_FLUSH_WAIT_START, NULL);
+    lv_display_add_event_cb(lv_display_get_default(), perf_cb, LV_EVENT_FLUSH_WAIT_FINISH, NULL);
+    lv_display_add_event_cb(lv_display_get_default(), perf_cb, LV_EVENT_FLUSH_START, NULL);
+    lv_display_add_event_cb(lv_display_get_default(), perf_cb, LV_EVENT_FLUSH_FINISH, NULL);
     hal_board_unlock();
     ESP_LOGI(TAG, "ui ready: layout %d, style %s", g_ui_cfg.layout, theme_style_name(g_theme.style));
 }

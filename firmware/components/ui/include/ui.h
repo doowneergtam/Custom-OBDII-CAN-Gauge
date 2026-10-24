@@ -18,11 +18,17 @@ void ui_init(lv_group_t *group);
 void ui_reload(void);
 // Flash the display white twice so the user can tell which gauge this is.
 void ui_identify(void);
+void ui_snapshot(int step);   // console: dump the first face as hex rows
 
 // Bench console hooks: drive the UI like touch/encoder would.
 // what: "tap" (a=x, b=y), "hold", "click", "rot" (a=steps), "swipe" (a='l'/'r'/'u'/'d')
 void ui_test_input(const char *what, int a, int b);
 int  ui_test_level(void);   // 0 = gauge screen, else menu level
+// Display refreshes in the last full second and their average/worst render+flush time in microseconds.
+void ui_perf(int *fps, int *avg_us, int *max_us);
+void ui_perf_inv(int *kpx_per_frame, int *rects_per_frame);
+void ui_perf_more(int *draw_us, int *draw_calls, int *wait_us, int *flushes);
+void ui_perf_prim(int *out6);   // per frame: label, arc, line, rect, triangle, image (us)
 
 #ifdef __cplusplus
 }

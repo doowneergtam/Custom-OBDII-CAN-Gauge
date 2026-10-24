@@ -16,7 +16,7 @@ static void style_dial(lv_layer_t *l, face_t *f, res_t *r)
 
     if (el(EL_BAR)) draw_arc(l, cx, cy, R - 2, 2, a0, a0 + span, theme_color(TC_TRACK), LV_OPA_COVER, false);
     if (g_theme.bands && el(EL_BAR)) arc_bands(l, d, cx, cy, R - 4 - bw / 2, bw, a0, span, 230);
-    for (int i = 0; i <= n && el(EL_TICKS); i++) {
+    for (int i = 0; i <= n && el(EL_TICKS) && STATIC_ON; i++) {
         float a = (a0 + span * i / n) * PI_F / 180.0f;
         bool major = i % per == 0;
         float r1 = R - 6 - bw - 2 + dyp(EL_TICKS, R) * 0, r0 = r1 - (major ? R * 0.1f * tk->maj_len : R * 0.05f * tk->min_len);
@@ -33,19 +33,33 @@ static void style_dial(lv_layer_t *l, face_t *f, res_t *r)
     int lab = full ? 18 : (int)(13 * R / 90.0f);
     if (el(EL_LABEL)) draw_text(l, d->name, lfont(lab), r->dim ? theme_color(TC_STALE) : theme_color(TC_LABEL), cx, cy - (int32_t)(R * 0.4f) + dyp(EL_LABEL, R), lab / 5, LV_TEXT_ALIGN_CENTER);
     int vpx = full ? 48 : (int)fmaxf(18, R * 0.3f);
+    DYN_BEGIN();
     if (el(EL_DIGITS)) draw_text(l, r->str, fit_digits(r->str, vpx, (int32_t)(R * 1.1f)), r->digits, cx, cy + (int32_t)(R * 0.5f) + dyp(EL_DIGITS, R), 0, LV_TEXT_ALIGN_CENTER);
+    DYN_END();
     if (el(EL_UNITS)) draw_text(l, units_for(d), ufont(full ? 16 : (int)(11 * R / 90.0f)), theme_color(TC_UNITS), cx, cy + (int32_t)(R * 0.5f) + (full ? vpx * 3 / 4 : (int32_t)(R * 0.2f)) + dyp(EL_UNITS, R), 0, LV_TEXT_ALIGN_CENTER);
+    DYN_BEGIN();
     if (el(EL_MINMAX)) { char b[40]; if (minmax_text(r, b, sizeof b)) draw_text(l, b, mfont(full ? 13 * s : 9 * R / 90.0f), theme_color(TC_UNITS), cx, cy + (int32_t)(R * (full ? 0.86f : 0.74f)) + dyp(EL_MINMAX, R), 0, LV_TEXT_ALIGN_CENTER); }
 
     // needle: tapered triangle in the bar colour, hub ring
+    DYN_BEGIN();
     float a = (a0 + span * r->frac) * PI_F / 180.0f, L = (R - 12 - bw - R * 0.1f) * g_theme.needle_len, hub = fmaxf(3, R * 0.06f * g_theme.hub_scale);
     float ca = cosf(a), sa = sinf(a);
     float bx = cx - hub * 1.3f * ca, by = cy - hub * 1.3f * sa;
     float px = -sa * hub * 0.45f * g_theme.needle_w, py = ca * hub * 0.45f * g_theme.needle_w;
     if (el(EL_NEEDLE)) {
-        draw_tri(l, bx + px, by + py, bx - px, by - py, cx + L * ca, cy + L * sa, r->bar);
-        draw_disc(l, cx, cy, (int32_t)hub, theme_color(TC_BG), LV_OPA_COVER);
-        draw_arc(l, cx, cy, (int32_t)hub, (int32_t)fmaxf(2, 2.5f * s), 0, 360, r->bar, LV_OPA_COVER, false);
+        meas_line(bx, by, cx + L * ca, cy + L * sa, hub * 0.45f * g_theme.needle_w + 1);
+        s_nomeas = true;
+        if (fast_ok(l)) {
+            float xs[3] = { bx + px, bx - px, cx + L * ca }, ys[3] = { by + py, by - py, cy + L * sa };
+            fast_poly(l, xs, ys, 3, r->bar);
+            fast_circle(l, cx, cy, hub, 0, theme_color(TC_BG));
+            fast_circle(l, cx, cy, hub, fmaxf(2, 2.5f * s), r->bar);
+        } else {
+            draw_tri(l, bx + px, by + py, bx - px, by - py, cx + L * ca, cy + L * sa, r->bar);
+            draw_disc(l, cx, cy, (int32_t)hub, theme_color(TC_BG), LV_OPA_COVER);
+            draw_arc(l, cx, cy, (int32_t)hub, (int32_t)fmaxf(2, 2.5f * s), 0, 360, r->bar, LV_OPA_COVER, false);
+        }
+        s_nomeas = false;
     }
     // min and max markers on the rim
     for (int k = 0; k < 2 && el(EL_MINMAX); k++) {
@@ -53,6 +67,7 @@ static void style_dial(lv_layer_t *l, face_t *f, res_t *r)
         float am = (a0 + span * (k == 0 ? r->lofrac : r->pkfrac)) * PI_F / 180.0f, rr = R - 1, ri = R - 1 - 7 * s;
         draw_tri(l, cx + rr * cosf(am), cy + rr * sinf(am), cx + ri * cosf(am + 0.04f), cy + ri * sinf(am + 0.04f), cx + ri * cosf(am - 0.04f), cy + ri * sinf(am - 0.04f), r->dim ? theme_color(TC_STALE) : theme_color(TC_DIGITS));
     }
+    DYN_END();
 }
 
 // ---------------------------------------------------------------- stock
@@ -100,6 +115,7 @@ static int32_t stock_bezel(lv_layer_t *l, int32_t cx, int32_t cy, int32_t R, flo
 // with the big dark hub on top of it.
 static void stock_needle(lv_layer_t *l, float px, float py, float a, float L, float hub, int32_t R, float s, lv_color_t nc)
 {
+    DYN_BEGIN();
     L *= g_theme.needle_len; hub *= g_theme.hub_scale;
     float ca = cosf(a), sa = sinf(a);
     float wb = fmaxf(2.0f, R * 0.036f * g_theme.needle_w);      // base half-width where it leaves the hub
@@ -108,21 +124,44 @@ static void stock_needle(lv_layer_t *l, float px, float py, float a, float L, fl
     lv_color_t tick = theme_color(TC_TICK);
     // tail behind the hub, then the thick section tapering to the stem, then the stem to the tip
     float tl = fmaxf(hub * 1.5f, R * 0.2f);
-    draw_tri(l, px - sa * wb, py + ca * wb, px + sa * wb, py - ca * wb, px - tl * ca, py - tl * sa, nc);
-    draw_tri(l, px - sa * wb, py + ca * wb, px + sa * wb, py - ca * wb, px + Lb * ca - sa * wt, py + Lb * sa + ca * wt, nc);
-    draw_tri(l, px - sa * wb, py + ca * wb, px + Lb * ca - sa * wt, py + Lb * sa + ca * wt, px + Lb * ca + sa * wt, py + Lb * sa - ca * wt, nc);
-    draw_tri(l, px + Lb * ca - sa * wt, py + Lb * sa + ca * wt, px + Lb * ca + sa * wt, py + Lb * sa - ca * wt, px + L * ca, py + L * sa, nc);
-    draw_line(l, px + Lb * ca, py + Lb * sa, px + (L - 2 * s) * ca, py + (L - 2 * s) * sa, (int32_t)fmaxf(1, 2 * wt), nc, true);
-    draw_disc(l, (int32_t)px, (int32_t)py, (int32_t)hub, tick, LV_OPA_COVER);
-    draw_arc(l, (int32_t)px, (int32_t)py, (int32_t)hub, (int32_t)fmaxf(1, 2 * s), 0, 360, lv_color_mix(lv_color_white(), tick, 70), LV_OPA_COVER, false);
+    meas_line(px - tl * ca, py - tl * sa, px + Lb * ca, py + Lb * sa, wb);
+    meas_line(px + Lb * ca, py + Lb * sa, px + L * ca, py + L * sa, wt + 1);
+    // the hub never moves: the needle boxes already cover every needle pixel outside it, and the hub is redrawn wherever they overlap it
+    s_nomeas = true;
+    if (fast_ok(l)) {
+        // two convex pieces (the outline narrows then runs parallel, so it is not convex as one):
+        // tail point and the taper from the wide base to the stem, then the stem with a square-cut tip
+        // like the factory needle. The stem starts 3 px inside the taper so the join has no seam.
+        float xs[5], ys[5];
+        const float T1[5] = { -tl, 0, Lb, Lb, 0 }, W1[5] = { 0, wb, wt, -wt, -wb };
+        for (int i = 0; i < 5; i++) { xs[i] = px + T1[i] * ca - W1[i] * sa; ys[i] = py + T1[i] * sa + W1[i] * ca; }
+        fast_poly(l, xs, ys, 5, nc);
+        const float T2[4] = { Lb - 3, L, L, Lb - 3 }, W2[4] = { wt, wt, -wt, -wt };
+        for (int i = 0; i < 4; i++) { xs[i] = px + T2[i] * ca - W2[i] * sa; ys[i] = py + T2[i] * sa + W2[i] * ca; }
+        fast_poly(l, xs, ys, 4, nc);
+        fast_circle(l, px, py, hub, 0, tick);
+        fast_circle(l, px, py, hub, fmaxf(1, 2 * s), lv_color_mix(lv_color_white(), tick, 70));
+    } else {
+        draw_tri(l, px - sa * wb, py + ca * wb, px + sa * wb, py - ca * wb, px - tl * ca, py - tl * sa, nc);
+        draw_tri(l, px - sa * wb, py + ca * wb, px + sa * wb, py - ca * wb, px + Lb * ca - sa * wt, py + Lb * sa + ca * wt, nc);
+        draw_tri(l, px - sa * wb, py + ca * wb, px + Lb * ca - sa * wt, py + Lb * sa + ca * wt, px + Lb * ca + sa * wt, py + Lb * sa - ca * wt, nc);
+        draw_tri(l, px + Lb * ca - sa * wt, py + Lb * sa + ca * wt, px + Lb * ca + sa * wt, py + Lb * sa - ca * wt, px + L * ca, py + L * sa, nc);
+        draw_line(l, px + Lb * ca, py + Lb * sa, px + (L - 2 * s) * ca, py + (L - 2 * s) * sa, (int32_t)fmaxf(1, 2 * wt), nc, true);
+        draw_disc(l, (int32_t)px, (int32_t)py, (int32_t)hub, tick, LV_OPA_COVER);
+        draw_arc(l, (int32_t)px, (int32_t)py, (int32_t)hub, (int32_t)fmaxf(1, 2 * s), 0, 360, lv_color_mix(lv_color_white(), tick, 70), LV_OPA_COVER, false);
+    }
+    s_nomeas = false;
+    DYN_END();
 }
 
 // Small min/max pointer: tip at radius rr from (px, py), angle am.
 static void stock_marker(lv_layer_t *l, float px, float py, float am, float rr, float s, lv_color_t c)
 {
     float ri = rr - 7 * s;
+    DYN_BEGIN();
     draw_tri(l, px + rr * cosf(am), py + rr * sinf(am), px + ri * cosf(am + 0.05f), py + ri * sinf(am + 0.05f),
              px + ri * cosf(am - 0.05f), py + ri * sinf(am - 0.05f), c);
+    DYN_END();
 }
 
 // The value in an odometer-style window centred at (x, y), min/max under it.
@@ -131,10 +170,12 @@ static void stock_window(lv_layer_t *l, face_t *f, res_t *r, int32_t x, int32_t 
     bool full = f->full;
     int32_t ww = (int32_t)(R * 0.46f * g_theme.digit_scale), wh = (int32_t)(R * 0.17f * g_theme.digit_scale);
     int32_t yd = y + dyp(EL_DIGITS, R);
+    DYN_BEGIN();
     if (el(EL_WINDOW) && el(EL_DIGITS)) draw_rect(l, x - ww / 2, yd - wh / 2, ww, wh, wh / 4, lv_color_mix(theme_color(TC_TICK), theme_color(TC_BG), 28), LV_OPA_COVER);
     if (el(EL_DIGITS)) draw_text(l, r->str, dfont(full ? 30 : fmaxf(12, 13 * R / 90.0f)), r->digits, x, yd, 0, LV_TEXT_ALIGN_CENTER);
     char b[40];
     if (el(EL_MINMAX) && minmax_text(r, b, sizeof b)) draw_text(l, b, mfont(full ? 13 * s : 9 * R / 90.0f), theme_color(TC_UNITS), x, y + (int32_t)(R * 0.16f) + dyp(EL_MINMAX, R), full ? 1 : 0, LV_TEXT_ALIGN_CENTER);
+    DYN_END();
 }
 
 // Stock 1: the tach and speedo. Majors 0.115R long on the rim, numerals 0.14R
@@ -149,7 +190,7 @@ static void style_stock(lv_layer_t *l, face_t *f, res_t *r)
     const float span = 270, a0 = sweep0(135);
     lv_color_t ink = theme_color(TC_DIGITS), tick = theme_color(TC_TICK);
     const theme_ticks_t *tk = &g_theme.ticks;
-    int32_t bz = stock_bezel(l, cx, cy, R, s);
+    int32_t bz = STATIC_ON ? stock_bezel(l, cx, cy, R, s) : (int32_t)fmaxf(3, R * 0.04f);
 
     // scale in display units: majors at nice multiples, minors between them
     float dmin = channels_to_display(d, d->min), dmax = channels_to_display(d, d->max);
@@ -166,7 +207,7 @@ static void style_stock(lv_layer_t *l, face_t *f, res_t *r)
     if (j1 - j0 > 160) j1 = j0 + 160;
 
     // zone blocks in the tick ring (bands switch only), one per minor division, a hairline of face between them
-    if (g_theme.bands && d->zone_count) {
+    if (g_theme.bands && d->zone_count && STATIC_ON) {
         for (int j = j0; j < j1; j++) {
             float v0 = j * ms, v1 = (j + 1) * ms;
             ch_zone_level_t z = channels_zone_of(d, channels_from_display(d, (v0 + v1) * 0.5f));
@@ -176,7 +217,7 @@ static void style_stock(lv_layer_t *l, face_t *f, res_t *r)
         }
     }
     // ticks: majors 0.115R long and 0.03R wide in ink, minors 0.06R and 0.012R; minors inside a zone block are left out
-    for (int j = j0; j <= j1 && el(EL_TICKS); j++) {
+    for (int j = j0; j <= j1 && el(EL_TICKS) && STATIC_ON; j++) {
         float v = j * ms, fr = (v - dmin) / (dmax - dmin);
         bool major = ((j % minors) + minors) % minors == 0;
         if (!major && g_theme.bands && d->zone_count && channels_zone_of(d, channels_from_display(d, v)) != CH_ZONE_GOOD) continue;
@@ -225,15 +266,15 @@ static void style_stock2(lv_layer_t *l, face_t *f, res_t *r)
     const float span = 90, a0 = sweep0(225);   // upper left to upper right, clockwise over the top
     lv_color_t ink = theme_color(TC_DIGITS), tick = theme_color(TC_TICK);
     const theme_ticks_t *tk = &g_theme.ticks;
-    stock_bezel(l, cx, cy, R, s);
+    if (STATIC_ON) stock_bezel(l, cx, cy, R, s);
     float px = cx, py = cy + R * 0.30f, rt = R * 0.92f;
     float lend = R * 0.14f * tk->maj_len, lmid = R * 0.11f * tk->maj_len, lmin = R * 0.07f * tk->min_len;
     int nt = tk->maj_n ? tk->maj_n * (tk->min_n ? tk->min_n : 3) : 6;   // ticks between the ends
 
     // zone bands as solid arcs in the tick ring (bands switch only), like the red block at H on the factory temperature gauge
-    if (g_theme.bands && d->zone_count) arc_bands(l, d, (int32_t)px, (int32_t)py, (int32_t)rt, (int32_t)lend, a0, span, LV_OPA_COVER);
+    if (g_theme.bands && d->zone_count && STATIC_ON) arc_bands(l, d, (int32_t)px, (int32_t)py, (int32_t)rt, (int32_t)lend, a0, span, LV_OPA_COVER);
     // seven ticks, all radial to the pivot
-    for (int j = 0; j <= nt && el(EL_TICKS); j++) {
+    for (int j = 0; j <= nt && el(EL_TICKS) && STATIC_ON; j++) {
         float a = (a0 + span * j / (float)nt) * PI_F / 180.0f, ca = cosf(a), sa = sinf(a);
         int per = tk->maj_n ? (tk->min_n ? tk->min_n : 3) : 3;
         bool end = j == 0 || j == nt, mid = !end && j % per == 0;
@@ -242,7 +283,7 @@ static void style_stock2(lv_layer_t *l, face_t *f, res_t *r)
         draw_line(l, px + (rt - len) * ca, py + (rt - len) * sa, px + rt * ca, py + rt * sa, w, end || mid ? ink : tick, false);
     }
     // range ends lettered just past the sweep, like E and F
-    if (full || R > 70) {
+    if (STATIC_ON && (full || R > 70)) {
         for (int k = 0; k < 2; k++) {
             float a = (a0 + (k ? span + 12 : -12)) * PI_F / 180.0f;
             char b[16]; fmt_val(b, sizeof b, channels_to_display(d, k ? d->max : d->min), 0);
@@ -289,100 +330,5 @@ static void style_numeric(lv_layer_t *l, face_t *f, res_t *r)
     }
 }
 
-// ---------------------------------------------------------------- object
-static void draw_cb(lv_event_t *e)
-{
-    lv_obj_t *obj = lv_event_get_target(e);
-    face_t *f = lv_obj_get_user_data(obj);
-    if (!f || !channels_def(f->ch)) return;
-    lv_layer_t *l = lv_event_get_layer(e);
-    lv_area_t co; lv_obj_get_coords(obj, &co);
-    f->cx = (co.x1 + co.x2 + 1) / 2; f->cy = (co.y1 + co.y2 + 1) / 2;
 
-    res_t r; resolve(f, &r);
-    int style = f->style_override >= 0 ? f->style_override : g_theme.style;
-    switch (style) {
-    case STYLE_DIAL:    style_dial(l, f, &r); break;
-    case STYLE_NUMERIC: style_numeric(l, f, &r); break;
-    case STYLE_STOCK:   style_stock(l, f, &r); break;
-    case STYLE_STOCK2:  style_stock2(l, f, &r); break;
-    default:            style_ring(l, f, &r); break;
-    }
-    if (f->focused) draw_arc(l, f->cx, f->cy, f->R + 6, 2, 0, 360, theme_color(TC_DIGITS), 150, false);
-}
-
-static void delete_cb(lv_event_t *e) { lv_free(lv_event_get_user_data(e)); }
-
-lv_obj_t *face_create(lv_obj_t *parent, ch_id_t ch, int32_t cx, int32_t cy, int32_t radius, bool full)
-{
-    face_t *f = lv_malloc_zeroed(sizeof(face_t));
-    f->ch = ch; f->R = radius; f->full = full; f->style_override = -1;
-    lv_obj_t *obj = lv_obj_create(parent);
-    lv_obj_remove_style_all(obj);
-    int32_t pad = 10;   // focus ring and peak ticks draw just outside R
-    lv_obj_set_size(obj, 2 * (radius + pad), 2 * (radius + pad));
-    lv_obj_set_pos(obj, cx - radius - pad, cy - radius - pad);
-    lv_obj_set_scrollable(obj, false);
-    lv_obj_set_user_data(obj, f);
-    lv_obj_add_event_cb(obj, draw_cb, LV_EVENT_DRAW_MAIN, NULL);
-    lv_obj_add_event_cb(obj, delete_cb, LV_EVENT_DELETE, f);
-    return obj;
-}
-
-void face_set_channel(lv_obj_t *face, ch_id_t ch) { face_t *f = lv_obj_get_user_data(face); if (f) { f->ch = ch; lv_obj_invalidate(face); } }
-ch_id_t face_channel(lv_obj_t *face)             { face_t *f = lv_obj_get_user_data(face); return f ? f->ch : CH_RPM; }
-void face_set_style(lv_obj_t *face, int style)   { face_t *f = lv_obj_get_user_data(face); if (f) { f->style_override = style; lv_obj_invalidate(face); } }
-void face_set_focused(lv_obj_t *face, bool on)   { face_t *f = lv_obj_get_user_data(face); if (f && f->focused != on) { f->focused = on; lv_obj_invalidate(face); } }
-// Redraw only what moved. A face is re-rendered 25 times a second; rendering
-// the whole 466 px disc each time is what made the needle stutter and the
-// stripes tear. Now a tick that changes nothing redraws nothing, and a value
-// change on a needle style redraws just the needle sweep and the reading.
-static void inval(lv_obj_t *face, int32_t x1, int32_t y1, int32_t x2, int32_t y2)
-{
-    lv_area_t co; lv_obj_get_coords(face, &co);
-    lv_area_t a = { co.x1 + x1, co.y1 + y1, co.x1 + x2, co.y1 + y2 };
-    lv_obj_invalidate_area(face, &a);
-}
-void face_refresh(lv_obj_t *face, int64_t now_us)
-{
-    face_t *f = lv_obj_get_user_data(face);
-    if (!f) return;
-    f->now_us = now_us;
-    const ch_def_t *d = channels_def(f->ch);
-    const ch_state_t *st = channels_state(f->ch);
-    ch_freshness_t fr = channels_freshness(f->ch, now_us);
-    float frac = (fr == CH_DEAD) ? 0 : channels_frac(d, st->value);
-    bool bad = fr == CH_FRESH && channels_zone_of(d, st->value) == CH_ZONE_BAD;
-    bool flash = bad && ((now_us / FLASH_US) & 1) == 0;
-    int style = f->style_override >= 0 ? f->style_override : g_theme.style;
-    bool needle = style == STYLE_DIAL || style == STYLE_STOCK || style == STYLE_STOCK2;
-    bool changed = frac != f->last_frac || st->value != f->last_value || fr != f->last_fresh || flash != f->last_flash
-                   || st->peak != f->last_peak || st->floor != f->last_floor || f->focused != f->last_focus;
-    if (!changed && now_us - f->last_full_us < 1000000) return;    // nothing to show; a full pass once a second as a safety net
-    if (!needle || !changed) { lv_obj_invalidate(face); f->last_full_us = now_us; }
-    else {
-        // needle sweep between the old and new angle, from the pivot out to the rim, plus the hub and the reading window
-        int32_t pad = 10, R = f->R, ox = R + pad, oy = R + pad;         // object-local centre
-        float span = style == STYLE_STOCK2 ? 90 : 270, a0 = g_theme.sweep_rot + (style == STYLE_STOCK2 ? 225 : 135);
-        float py = style == STYLE_STOCK2 ? oy + R * 0.30f : oy;
-        float fa = fminf(f->last_frac, frac), fb = fmaxf(f->last_frac, frac);
-        float Lr = R * 1.02f;
-        int32_t x1 = (int32_t)ox, x2 = (int32_t)ox, y1 = (int32_t)py, y2 = (int32_t)py;
-        int steps = (int)fmaxf(2, (fb - fa) * span / 10) + 1;
-        for (int i = 0; i <= steps; i++) {
-            float a = (a0 + span * (fa + (fb - fa) * i / steps)) * PI_F / 180.0f;
-            for (int k = -1; k <= 1; k += 2) {
-                int32_t x = (int32_t)(ox + k * Lr * cosf(a)), y = (int32_t)(py + k * Lr * sinf(a));
-                if (k < 0) { x = (int32_t)(ox - R * 0.3f * cosf(a)); y = (int32_t)(py - R * 0.3f * sinf(a)); }
-                x1 = x < x1 ? x : x1; x2 = x > x2 ? x : x2; y1 = y < y1 ? y : y1; y2 = y > y2 ? y : y2;
-            }
-        }
-        int32_t hub = (int32_t)(R * 0.3f);
-        inval(face, x1 - 8, y1 - 8, x2 + 8, y2 + 8);
-        inval(face, (int32_t)ox - hub, (int32_t)py - hub, (int32_t)ox + hub, (int32_t)py + hub);
-        inval(face, (int32_t)(ox - R * 0.6f), (int32_t)(oy + R * 0.25f), (int32_t)(ox + R * 0.6f), (int32_t)(oy + R * 1.0f));   // reading, units, min/max
-        if (style == STYLE_DIAL) inval(face, 0, 0, 2 * (R + pad), 2 * (R + pad));   // dial min/max markers sit on the rim: keep it simple
-    }
-    f->last_frac = frac; f->last_value = st->value; f->last_fresh = fr; f->last_flash = flash;
-    f->last_peak = st->peak; f->last_floor = st->floor; f->last_focus = f->focused;
-}
+#include "face_object.inc"

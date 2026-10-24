@@ -35,6 +35,13 @@ static int cmd_stats(int argc, char **argv)
            (unsigned)heap_caps_get_free_size(MALLOC_CAP_SPIRAM), (unsigned)heap_caps_get_minimum_free_size(MALLOC_CAP_SPIRAM),
            webcfg_is_on(), webcfg_clients(), (unsigned long)cs.frames_rx, (unsigned long)cs.frames_matched, (unsigned long)cs.obd_requests,
            g_ui_cfg.layout, g_theme.style, g_ui_cfg.sim, g_ui_cfg.source);
+    int fps, avg, mx; ui_perf(&fps, &avg, &mx);
+    int kpx, nr; ui_perf_inv(&kpx, &nr);
+    int dus, dn, wus, fl; ui_perf_more(&dus, &dn, &wus, &fl);
+    int pr[9]; ui_perf_prim(pr);
+    printf("perf3 label=%d arc=%d line=%d rect=%d tri=%d image=%d resolve=%d poly=%d circle=%d\n", pr[0], pr[1], pr[2], pr[3], pr[4], pr[5], pr[6], pr[7], pr[8]);
+    printf("perf2 draw_us=%d draw_calls=%d flush_cb_us=%d flushes=%d\n", dus, dn, wus, fl);
+    printf("perf fps=%d frame_avg_us=%d frame_max_us=%d inv_kpx=%d inv_rects=%d\n", fps, avg, mx, kpx, nr);
     printf("ok\n");
     return 0;
 }
@@ -114,6 +121,7 @@ static int cmd_aux(int argc, char **argv)
     }
     return 0;
 }
+static int cmd_snap(int argc, char **argv) { ui_snapshot(argc > 1 ? atoi(argv[1]) : 2); printf("ok\n"); return 0; }
 static int cmd_vals(int argc, char **argv)
 {
     (void)argc; (void)argv;
@@ -163,6 +171,7 @@ esp_err_t gauge_console_start(void)
         { .command = "screen", .help = "screen save <name> | load <index>", .func = cmd_screen },
         { .command = "save",   .help = "save config now", .func = cmd_save },
         { .command = "vals",   .help = "channel values", .func = cmd_vals },
+        { .command = "snap",   .help = "snap [step]: dump the first face as hex rows", .func = cmd_snap },
         { .command = "aux",    .help = "analog inputs: raw volts/ohms and value", .func = cmd_aux },
         { .command = "reboot", .help = "restart", .func = cmd_reboot },
     };

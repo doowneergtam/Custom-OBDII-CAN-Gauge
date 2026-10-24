@@ -18,7 +18,7 @@ static lv_indev_t   *s_touch;
 static esp_codec_dev_handle_t s_spk;
 static bool s_spk_open;
 
-#define DISP_BUF_LINES 24   // 466 x 24 x 2 bytes = 22 KB per buffer, two buffers, internal DMA RAM
+#define DISP_BUF_LINES 48   // 466 x 48 x 2 bytes = 44 KB per buffer, two buffers, internal DMA RAM. Fewer render strips per frame: each strip costs ~2 ms of fixed overhead
 
 // CO5300 wants even start and odd end coordinates (copied from the BSP).
 static void rounder_event_cb(lv_event_t *e)
