@@ -46,7 +46,8 @@ typedef enum {
 } ch_id_t;
 
 typedef struct {
-    char        name[CH_NAME_LEN];
+    char        name[CH_NAME_LEN];     // shown on the gauge; the user may rename it
+    char        dname[CH_NAME_LEN];    // the preset's name, restored when the label is cleared
     char        units[CH_UNITS_LEN];   // base units label (used when kind == NONE)
     ch_source_t source;
     ch_kind_t   kind;

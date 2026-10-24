@@ -8,18 +8,20 @@ static void style_dial(lv_layer_t *l, face_t *f, res_t *r)
     int32_t cx = f->cx, cy = f->cy, R = f->R;
     float s = R / 229.0f;
     bool full = f->full;
-    const float span = 270, a0 = 135;
-    int n = full ? 50 : 20;
+    const float span = 270, a0 = sweep0(135);
+    const theme_ticks_t *tk = &g_theme.ticks;
+    int per = tk->min_n ? tk->min_n : (full ? 5 : 4), majors = tk->maj_n ? tk->maj_n : (full ? 10 : 5);
+    int n = per * majors;
     int32_t bw = (int32_t)fmaxf(2, R * 0.032f * g_theme.bar_scale);
 
-    draw_arc(l, cx, cy, R - 2, 2, a0, a0 + span, theme_color(TC_TRACK), LV_OPA_COVER, false);
-    if (g_theme.bands) arc_bands(l, d, cx, cy, R - 4 - bw / 2, bw, a0, span, 230);
-    for (int i = 0; i <= n; i++) {
+    if (el(EL_BAR)) draw_arc(l, cx, cy, R - 2, 2, a0, a0 + span, theme_color(TC_TRACK), LV_OPA_COVER, false);
+    if (g_theme.bands && el(EL_BAR)) arc_bands(l, d, cx, cy, R - 4 - bw / 2, bw, a0, span, 230);
+    for (int i = 0; i <= n && el(EL_TICKS); i++) {
         float a = (a0 + span * i / n) * PI_F / 180.0f;
-        bool major = i % (full ? 5 : 4) == 0;
-        float r1 = R - 6 - bw - 2, r0 = r1 - (major ? R * 0.1f : R * 0.05f);
+        bool major = i % per == 0;
+        float r1 = R - 6 - bw - 2 + dyp(EL_TICKS, R) * 0, r0 = r1 - (major ? R * 0.1f * tk->maj_len : R * 0.05f * tk->min_len);
         draw_line(l, cx + r0 * cosf(a), cy + r0 * sinf(a), cx + r1 * cosf(a), cy + r1 * sinf(a),
-                  major ? (int32_t)fmaxf(2, 2.2f * s) : 1, major ? theme_color(TC_DIGITS) : theme_color(TC_TICK), false);
+                  major ? (int32_t)fmaxf(1, 2.2f * s * tk->maj_w) : (int32_t)fmaxf(1, 1.0f * tk->min_w), major ? theme_color(TC_DIGITS) : theme_color(TC_TICK), false);
         if (major && (full || R > 70)) {
             float v = channels_to_display(d, d->min + (d->max - d->min) * i / n);
             char b[16];
@@ -29,22 +31,24 @@ static void style_dial(lv_layer_t *l, face_t *f, res_t *r)
         }
     }
     int lab = full ? 18 : (int)(13 * R / 90.0f);
-    draw_text(l, d->name, lfont(lab), r->dim ? theme_color(TC_STALE) : theme_color(TC_LABEL), cx, cy - (int32_t)(R * 0.4f), lab / 5, LV_TEXT_ALIGN_CENTER);
+    if (el(EL_LABEL)) draw_text(l, d->name, lfont(lab), r->dim ? theme_color(TC_STALE) : theme_color(TC_LABEL), cx, cy - (int32_t)(R * 0.4f) + dyp(EL_LABEL, R), lab / 5, LV_TEXT_ALIGN_CENTER);
     int vpx = full ? 48 : (int)fmaxf(18, R * 0.3f);
-    draw_text(l, r->str, fit_digits(r->str, vpx, (int32_t)(R * 1.1f)), r->digits, cx, cy + (int32_t)(R * 0.5f), 0, LV_TEXT_ALIGN_CENTER);
-    if (full) draw_text(l, units_for(d), ufont(16), theme_color(TC_UNITS), cx, cy + (int32_t)(R * 0.5f) + vpx * 3 / 4, 0, LV_TEXT_ALIGN_CENTER);
-    if (!full) { char b[40]; if (minmax_text(r, b, sizeof b)) draw_text(l, b, mfont(9 * R / 90.0f), theme_color(TC_UNITS), cx, cy + (int32_t)(R * 0.74f), 0, LV_TEXT_ALIGN_CENTER); }
+    if (el(EL_DIGITS)) draw_text(l, r->str, fit_digits(r->str, vpx, (int32_t)(R * 1.1f)), r->digits, cx, cy + (int32_t)(R * 0.5f) + dyp(EL_DIGITS, R), 0, LV_TEXT_ALIGN_CENTER);
+    if (el(EL_UNITS)) draw_text(l, units_for(d), ufont(full ? 16 : (int)(11 * R / 90.0f)), theme_color(TC_UNITS), cx, cy + (int32_t)(R * 0.5f) + (full ? vpx * 3 / 4 : (int32_t)(R * 0.2f)) + dyp(EL_UNITS, R), 0, LV_TEXT_ALIGN_CENTER);
+    if (el(EL_MINMAX)) { char b[40]; if (minmax_text(r, b, sizeof b)) draw_text(l, b, mfont(full ? 13 * s : 9 * R / 90.0f), theme_color(TC_UNITS), cx, cy + (int32_t)(R * (full ? 0.86f : 0.74f)) + dyp(EL_MINMAX, R), 0, LV_TEXT_ALIGN_CENTER); }
 
     // needle: tapered triangle in the bar colour, hub ring
-    float a = (a0 + span * r->frac) * PI_F / 180.0f, L = R - 12 - bw - R * 0.1f, hub = fmaxf(5, R * 0.06f);
+    float a = (a0 + span * r->frac) * PI_F / 180.0f, L = (R - 12 - bw - R * 0.1f) * g_theme.needle_len, hub = fmaxf(3, R * 0.06f * g_theme.hub_scale);
     float ca = cosf(a), sa = sinf(a);
     float bx = cx - hub * 1.3f * ca, by = cy - hub * 1.3f * sa;
-    float px = -sa * hub * 0.45f, py = ca * hub * 0.45f;
-    draw_tri(l, bx + px, by + py, bx - px, by - py, cx + L * ca, cy + L * sa, r->bar);
-    draw_disc(l, cx, cy, (int32_t)hub, theme_color(TC_BG), LV_OPA_COVER);
-    draw_arc(l, cx, cy, (int32_t)hub, (int32_t)fmaxf(2, 2.5f * s), 0, 360, r->bar, LV_OPA_COVER, false);
+    float px = -sa * hub * 0.45f * g_theme.needle_w, py = ca * hub * 0.45f * g_theme.needle_w;
+    if (el(EL_NEEDLE)) {
+        draw_tri(l, bx + px, by + py, bx - px, by - py, cx + L * ca, cy + L * sa, r->bar);
+        draw_disc(l, cx, cy, (int32_t)hub, theme_color(TC_BG), LV_OPA_COVER);
+        draw_arc(l, cx, cy, (int32_t)hub, (int32_t)fmaxf(2, 2.5f * s), 0, 360, r->bar, LV_OPA_COVER, false);
+    }
     // min and max markers on the rim
-    for (int k = 0; k < 2; k++) {
+    for (int k = 0; k < 2 && el(EL_MINMAX); k++) {
         if (k == 0 ? !r->has_lo : !r->has_pk) continue;
         float am = (a0 + span * (k == 0 ? r->lofrac : r->pkfrac)) * PI_F / 180.0f, rr = R - 1, ri = R - 1 - 7 * s;
         draw_tri(l, cx + rr * cosf(am), cy + rr * sinf(am), cx + ri * cosf(am + 0.04f), cy + ri * sinf(am + 0.04f), cx + ri * cosf(am - 0.04f), cy + ri * sinf(am - 0.04f), r->dim ? theme_color(TC_STALE) : theme_color(TC_DIGITS));
@@ -96,10 +100,11 @@ static int32_t stock_bezel(lv_layer_t *l, int32_t cx, int32_t cy, int32_t R, flo
 // with the big dark hub on top of it.
 static void stock_needle(lv_layer_t *l, float px, float py, float a, float L, float hub, int32_t R, float s, lv_color_t nc)
 {
-    float ca = cosf(a), sa = sinf(a), nw = fmaxf(1.5f, R * 0.013f);
+    L *= g_theme.needle_len; hub *= g_theme.hub_scale;
+    float ca = cosf(a), sa = sinf(a), nw = fmaxf(1.0f, R * 0.013f * g_theme.needle_w);
     lv_color_t tick = theme_color(TC_TICK);
     draw_tri(l, px - sa * nw, py + ca * nw, px + sa * nw, py - ca * nw, px + L * ca, py + L * sa, nc);
-    draw_line(l, px, py, px + (L - 2 * s) * ca, py + (L - 2 * s) * sa, (int32_t)fmaxf(2, R * 0.013f), nc, true);
+    draw_line(l, px, py, px + (L - 2 * s) * ca, py + (L - 2 * s) * sa, (int32_t)fmaxf(1, R * 0.013f * g_theme.needle_w), nc, true);
     draw_disc(l, (int32_t)px, (int32_t)py, (int32_t)hub, tick, LV_OPA_COVER);
     draw_arc(l, (int32_t)px, (int32_t)py, (int32_t)hub, (int32_t)fmaxf(1, 2 * s), 0, 360, lv_color_mix(lv_color_white(), tick, 70), LV_OPA_COVER, false);
 }
@@ -116,11 +121,12 @@ static void stock_marker(lv_layer_t *l, float px, float py, float am, float rr, 
 static void stock_window(lv_layer_t *l, face_t *f, res_t *r, int32_t x, int32_t y, int32_t R, float s)
 {
     bool full = f->full;
-    int32_t ww = (int32_t)(R * 0.46f), wh = (int32_t)(R * 0.17f);
-    draw_rect(l, x - ww / 2, y - wh / 2, ww, wh, wh / 4, lv_color_mix(theme_color(TC_TICK), theme_color(TC_BG), 28), LV_OPA_COVER);
-    draw_text(l, r->str, dfont(full ? 30 : fmaxf(12, 13 * R / 90.0f)), r->digits, x, y, 0, LV_TEXT_ALIGN_CENTER);
+    int32_t ww = (int32_t)(R * 0.46f * g_theme.digit_scale), wh = (int32_t)(R * 0.17f * g_theme.digit_scale);
+    int32_t yd = y + dyp(EL_DIGITS, R);
+    if (el(EL_WINDOW) && el(EL_DIGITS)) draw_rect(l, x - ww / 2, yd - wh / 2, ww, wh, wh / 4, lv_color_mix(theme_color(TC_TICK), theme_color(TC_BG), 28), LV_OPA_COVER);
+    if (el(EL_DIGITS)) draw_text(l, r->str, dfont(full ? 30 : fmaxf(12, 13 * R / 90.0f)), r->digits, x, yd, 0, LV_TEXT_ALIGN_CENTER);
     char b[40];
-    if (minmax_text(r, b, sizeof b)) draw_text(l, b, mfont(full ? 13 * s : 9 * R / 90.0f), theme_color(TC_UNITS), x, y + (int32_t)(R * 0.16f), full ? 1 : 0, LV_TEXT_ALIGN_CENTER);
+    if (el(EL_MINMAX) && minmax_text(r, b, sizeof b)) draw_text(l, b, mfont(full ? 13 * s : 9 * R / 90.0f), theme_color(TC_UNITS), x, y + (int32_t)(R * 0.16f) + dyp(EL_MINMAX, R), full ? 1 : 0, LV_TEXT_ALIGN_CENTER);
 }
 
 // Stock 1: the tach and speedo. Majors 0.115R long on the rim, numerals 0.14R
@@ -132,18 +138,22 @@ static void style_stock(lv_layer_t *l, face_t *f, res_t *r)
     int32_t cx = f->cx, cy = f->cy, R = f->R;
     float s = R / 229.0f;
     bool full = f->full;
-    const float span = 270, a0 = 135;
+    const float span = 270, a0 = sweep0(135);
     lv_color_t ink = theme_color(TC_DIGITS), tick = theme_color(TC_TICK);
+    const theme_ticks_t *tk = &g_theme.ticks;
     int32_t bz = stock_bezel(l, cx, cy, R, s);
 
     // scale in display units: majors at nice multiples, minors between them
     float dmin = channels_to_display(d, d->min), dmax = channels_to_display(d, d->max);
     if (dmax < dmin) { float t = dmin; dmin = dmax; dmax = t; }
     if (dmax - dmin < 1e-6f) dmax = dmin + 1;
-    int minors; float step = nice_step(dmax - dmin, &minors), ms = step / minors;
+    int minors; float step = nice_step(dmax - dmin, &minors);
+    if (tk->maj_n) step = (dmax - dmin) / tk->maj_n;
+    if (tk->min_n) minors = tk->min_n;
+    float ms = step / minors;
     uint8_t dec = fabsf(step - roundf(step)) < 1e-3f ? 0 : fabsf(step * 10 - roundf(step * 10)) < 1e-3f ? 1 : 2;
     bool thousands = fabsf(dmax) >= 1000;
-    float rt1 = R - bz - 2 * s, lmaj = R * 0.115f, lmin = R * 0.06f;
+    float rt1 = R - bz - 2 * s, lmaj = R * 0.115f * tk->maj_len, lmin = R * 0.06f * tk->min_len;
     int j0 = (int)ceilf(dmin / ms - 1e-3f), j1 = (int)floorf(dmax / ms + 1e-3f);
     if (j1 - j0 > 160) j1 = j0 + 160;
 
@@ -158,13 +168,13 @@ static void style_stock(lv_layer_t *l, face_t *f, res_t *r)
         }
     }
     // ticks: majors 0.115R long and 0.03R wide in ink, minors 0.06R and 0.012R; minors inside a zone block are left out
-    for (int j = j0; j <= j1; j++) {
+    for (int j = j0; j <= j1 && el(EL_TICKS); j++) {
         float v = j * ms, fr = (v - dmin) / (dmax - dmin);
         bool major = ((j % minors) + minors) % minors == 0;
         if (!major && g_theme.bands && d->zone_count && channels_zone_of(d, channels_from_display(d, v)) != CH_ZONE_GOOD) continue;
         float a = (a0 + span * fr) * PI_F / 180.0f, ca = cosf(a), sa = sinf(a), r0 = rt1 - (major ? lmaj : lmin);
         draw_line(l, cx + r0 * ca, cy + r0 * sa, cx + rt1 * ca, cy + rt1 * sa,
-                  major ? (int32_t)fmaxf(3, R * 0.03f) : (int32_t)fmaxf(1, R * 0.012f), major ? ink : tick, false);
+                  major ? (int32_t)fmaxf(1, R * 0.03f * tk->maj_w) : (int32_t)fmaxf(1, R * 0.012f * tk->min_w), major ? ink : tick, false);
         if (major && (full || R > 70)) {
             char b[16];
             if (thousands) snprintf(b, sizeof b, step >= 1000 ? "%.0f" : "%.1f", (double)(v / 1000)); else fmt_val(b, sizeof b, v, dec);
@@ -175,17 +185,17 @@ static void style_stock(lv_layer_t *l, face_t *f, res_t *r)
 
     // name and units where the factory prints "x1000r/min", the value window and min/max below them
     int lab = full ? 22 : (int)(12 * R / 90.0f);
-    draw_text(l, d->name, nfont(lab), r->dim ? theme_color(TC_STALE) : theme_color(TC_LABEL), cx, cy + (int32_t)(R * 0.44f), 1, LV_TEXT_ALIGN_CENTER);
+    if (el(EL_LABEL)) draw_text(l, d->name, nfont(lab), r->dim ? theme_color(TC_STALE) : theme_color(TC_LABEL), cx, cy + (int32_t)(R * 0.44f) + dyp(EL_LABEL, R), 1, LV_TEXT_ALIGN_CENTER);
     char ub[32]; const char *u = units_for(d);
     if (thousands) snprintf(ub, sizeof ub, "x1000%s%s", u[0] ? " " : "", u); else snprintf(ub, sizeof ub, "%s", u);
-    if (ub[0]) draw_text(l, ub, nfont(full ? 17 : 10 * R / 90.0f), theme_color(TC_UNITS), cx, cy + (int32_t)(R * 0.55f), 0, LV_TEXT_ALIGN_CENTER);
+    if (ub[0] && el(EL_UNITS)) draw_text(l, ub, nfont(full ? 17 : 10 * R / 90.0f), theme_color(TC_UNITS), cx, cy + (int32_t)(R * 0.55f) + dyp(EL_UNITS, R), 0, LV_TEXT_ALIGN_CENTER);
     stock_window(l, f, r, cx, cy + (int32_t)(R * 0.70f), R, s);
 
     // needle to just inside the tick ring, hub like the factory's; min/max pointers only with the bands
     float a = (a0 + span * r->frac) * PI_F / 180.0f;
     lv_color_t nc = r->dim ? theme_color(TC_STALE) : theme_color(TC_NEUTRAL);
-    stock_needle(l, cx, cy, a, R * 0.87f, fmaxf(6, R * 0.145f), R, s, nc);
-    if (g_theme.bands) for (int k = 0; k < 2; k++) {
+    if (el(EL_NEEDLE)) stock_needle(l, cx, cy, a, R * 0.87f, fmaxf(6, R * 0.145f), R, s, nc);
+    if (g_theme.bands && el(EL_MINMAX)) for (int k = 0; k < 2; k++) {
         if (k == 0 ? !r->has_lo : !r->has_pk) continue;
         stock_marker(l, cx, cy, (a0 + span * (k == 0 ? r->lofrac : r->pkfrac)) * PI_F / 180.0f, R - bz - 1, s, nc);
     }
@@ -203,20 +213,23 @@ static void style_stock2(lv_layer_t *l, face_t *f, res_t *r)
     int32_t cx = f->cx, cy = f->cy, R = f->R;
     float s = R / 229.0f;
     bool full = f->full;
-    const float span = 90, a0 = 225;   // upper left to upper right, clockwise over the top
+    const float span = 90, a0 = sweep0(225);   // upper left to upper right, clockwise over the top
     lv_color_t ink = theme_color(TC_DIGITS), tick = theme_color(TC_TICK);
+    const theme_ticks_t *tk = &g_theme.ticks;
     stock_bezel(l, cx, cy, R, s);
     float px = cx, py = cy + R * 0.30f, rt = R * 0.92f;
-    float lend = R * 0.14f, lmid = R * 0.11f, lmin = R * 0.07f;
+    float lend = R * 0.14f * tk->maj_len, lmid = R * 0.11f * tk->maj_len, lmin = R * 0.07f * tk->min_len;
+    int nt = tk->maj_n ? tk->maj_n * (tk->min_n ? tk->min_n : 3) : 6;   // ticks between the ends
 
     // zone bands as solid arcs in the tick ring (bands switch only), like the red block at H on the factory temperature gauge
     if (g_theme.bands && d->zone_count) arc_bands(l, d, (int32_t)px, (int32_t)py, (int32_t)rt, (int32_t)lend, a0, span, LV_OPA_COVER);
     // seven ticks, all radial to the pivot
-    for (int j = 0; j <= 6; j++) {
-        float a = (a0 + span * j / 6.0f) * PI_F / 180.0f, ca = cosf(a), sa = sinf(a);
-        bool end = j == 0 || j == 6, mid = j == 3;
+    for (int j = 0; j <= nt && el(EL_TICKS); j++) {
+        float a = (a0 + span * j / (float)nt) * PI_F / 180.0f, ca = cosf(a), sa = sinf(a);
+        int per = tk->maj_n ? (tk->min_n ? tk->min_n : 3) : 3;
+        bool end = j == 0 || j == nt, mid = !end && j % per == 0;
         float len = end ? lend : mid ? lmid : lmin;
-        int32_t w = end ? (int32_t)fmaxf(3, R * 0.04f) : mid ? (int32_t)fmaxf(2, R * 0.028f) : (int32_t)fmaxf(1, R * 0.016f);
+        int32_t w = end ? (int32_t)fmaxf(1, R * 0.04f * tk->maj_w) : mid ? (int32_t)fmaxf(1, R * 0.028f * tk->maj_w) : (int32_t)fmaxf(1, R * 0.016f * tk->min_w);
         draw_line(l, px + (rt - len) * ca, py + (rt - len) * sa, px + rt * ca, py + rt * sa, w, end || mid ? ink : tick, false);
     }
     // range ends lettered just past the sweep, like E and F
@@ -230,16 +243,16 @@ static void style_stock2(lv_layer_t *l, face_t *f, res_t *r)
 
     // name between the sweep and the hub, units under it, value window below the hub
     int lab = full ? 22 : (int)(12 * R / 90.0f);
-    draw_text(l, d->name, nfont(lab), r->dim ? theme_color(TC_STALE) : theme_color(TC_LABEL), cx, (int32_t)(py - R * 0.44f), 1, LV_TEXT_ALIGN_CENTER);
+    if (el(EL_LABEL)) draw_text(l, d->name, nfont(lab), r->dim ? theme_color(TC_STALE) : theme_color(TC_LABEL), cx, (int32_t)(py - R * 0.44f) + dyp(EL_LABEL, R), 1, LV_TEXT_ALIGN_CENTER);
     const char *u = units_for(d);
-    if (u[0]) draw_text(l, u, nfont(full ? 17 : 10 * R / 90.0f), theme_color(TC_UNITS), cx, (int32_t)(py - R * 0.33f), 0, LV_TEXT_ALIGN_CENTER);
+    if (u[0] && el(EL_UNITS)) draw_text(l, u, nfont(full ? 17 : 10 * R / 90.0f), theme_color(TC_UNITS), cx, (int32_t)(py - R * 0.33f) + dyp(EL_UNITS, R), 0, LV_TEXT_ALIGN_CENTER);
     stock_window(l, f, r, cx, cy + (int32_t)(R * 0.64f), R, s);
 
     // needle from the pivot to just inside the ticks; min/max pointers only with the bands
     float a = (a0 + span * r->frac) * PI_F / 180.0f;
     lv_color_t nc = r->dim ? theme_color(TC_STALE) : theme_color(TC_NEUTRAL);
-    stock_needle(l, px, py, a, rt - lend - R * 0.02f, fmaxf(6, R * 0.22f), R, s, nc);
-    if (g_theme.bands) for (int k = 0; k < 2; k++) {
+    if (el(EL_NEEDLE)) stock_needle(l, px, py, a, rt - lend - R * 0.02f, fmaxf(6, R * 0.22f), R, s, nc);
+    if (g_theme.bands && el(EL_MINMAX)) for (int k = 0; k < 2; k++) {
         if (k == 0 ? !r->has_lo : !r->has_pk) continue;
         stock_marker(l, px, py, (a0 + span * (k == 0 ? r->lofrac : r->pkfrac)) * PI_F / 180.0f, rt + 8 * s, s, nc);
     }
@@ -254,17 +267,16 @@ static void style_numeric(lv_layer_t *l, face_t *f, res_t *r)
     float s = R / 229.0f;
     bool full = f->full;
     int lab = full ? 20 : (int)(13 * R / 90.0f);
-    draw_text(l, d->name, lfont(lab), r->dim ? theme_color(TC_STALE) : theme_color(TC_LABEL), cx, cy - (int32_t)(R * (full ? 0.5f : 0.56f)), lab / 5, LV_TEXT_ALIGN_CENTER);
+    if (el(EL_LABEL)) draw_text(l, d->name, lfont(lab), r->dim ? theme_color(TC_STALE) : theme_color(TC_LABEL), cx, cy - (int32_t)(R * (full ? 0.5f : 0.56f)) + dyp(EL_LABEL, R), lab / 5, LV_TEXT_ALIGN_CENTER);
 
     // Biggest digits that fit the cell width.
     const lv_font_t *vf = fit_digits(r->str, full ? 150 : R * 0.9f, (int32_t)(R * 1.7f));
     lv_color_t col = r->dim ? theme_color(TC_STALE) : r->flash ? theme_color(TC_BAD) : (d->zone_count ? r->bar : theme_color(TC_DIGITS));
-    draw_text(l, r->str, vf, col, cx, cy + (int32_t)(R * (full ? 0.02f : 0.06f)), 0, LV_TEXT_ALIGN_CENTER);
-    draw_text(l, units_for(d), ufont(full ? 20 : (int)(11 * R / 90.0f)), theme_color(TC_UNITS), cx, cy + (int32_t)(R * (full ? 0.36f : 0.62f)), 0, LV_TEXT_ALIGN_CENTER);
-    if (!full) { char b[40]; if (minmax_text(r, b, sizeof b)) draw_text(l, b, mfont(9 * R / 90.0f), theme_color(TC_UNITS), cx, cy + (int32_t)(R * 0.84f), 0, LV_TEXT_ALIGN_CENTER); }
-    if (full) {
+    if (el(EL_DIGITS)) draw_text(l, r->str, vf, col, cx, cy + (int32_t)(R * (full ? 0.02f : 0.06f)) + dyp(EL_DIGITS, R), 0, LV_TEXT_ALIGN_CENTER);
+    if (el(EL_UNITS)) draw_text(l, units_for(d), ufont(full ? 20 : (int)(11 * R / 90.0f)), theme_color(TC_UNITS), cx, cy + (int32_t)(R * (full ? 0.36f : 0.62f)) + dyp(EL_UNITS, R), 0, LV_TEXT_ALIGN_CENTER);
+    if (el(EL_MINMAX)) {
         char b[40];
-        if (minmax_text(r, b, sizeof b)) draw_text(l, b, mfont(13 * s), theme_color(TC_UNITS), cx, cy + (int32_t)(R * 0.62f), 1, LV_TEXT_ALIGN_CENTER);
+        if (minmax_text(r, b, sizeof b)) draw_text(l, b, mfont(full ? 13 * s : 9 * R / 90.0f), theme_color(TC_UNITS), cx, cy + (int32_t)(R * (full ? 0.62f : 0.84f)) + dyp(EL_MINMAX, R), full ? 1 : 0, LV_TEXT_ALIGN_CENTER);
     }
 }
 

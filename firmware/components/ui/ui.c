@@ -60,9 +60,16 @@ static int layout_cells_base(uint8_t layout, cell_t *out);
 static int layout_cells(uint8_t layout, cell_t *out)
 {
     int n = layout_cells_base(layout, out);
-    // Outer cells grow with the theme's cell scale (centre cell stays).
+    // Outer cells grow with the theme's cell scale (centre cell stays; the single face is untouched).
     float cs = g_theme.cell_scale > 1.0f ? g_theme.cell_scale : 1.0f;
-    for (int i = (layout >= 6 ? 1 : 0); i < n; i++) out[i].r = (int16_t)(out[i].r * cs);
+    if (layout > 1) for (int i = (layout >= 6 ? 1 : 0); i < n; i++) out[i].r = (int16_t)(out[i].r * cs);
+    // Screen zoom scales every cell's position and size about the screen centre.
+    float z = g_ui_cfg.zoom >= 0.5f && g_ui_cfg.zoom <= 1.5f ? g_ui_cfg.zoom : 1.0f;
+    if (z != 1.0f) for (int i = 0; i < n; i++) {
+        out[i].cx = (int16_t)lroundf(C + (out[i].cx - C) * z);
+        out[i].cy = (int16_t)lroundf(C + (out[i].cy - C) * z);
+        out[i].r  = (int16_t)lroundf(out[i].r * z);
+    }
     return n;
 }
 static int layout_cells_base(uint8_t layout, cell_t *out)
@@ -81,7 +88,7 @@ static int layout_cells_base(uint8_t layout, cell_t *out)
         }
         return layout;
     }
-    default: out[0] = (cell_t){ C, C, 229 }; return 1;
+    default: out[0] = (cell_t){ C, C, 240 }; return 1;   // 5% past the old 229 so the face fills the glass
     }
 }
 

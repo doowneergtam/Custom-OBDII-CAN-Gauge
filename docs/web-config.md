@@ -84,3 +84,13 @@ you enter are the sensor's own. Enabled inputs appear in `channels`, the
 cell pickers and the alarm tones under ids `AUX1` and `AUX2`; disabled ones
 are hidden. The page's Channels tab carries the two input cards and shows the
 live raw reading from `aux_raw`. Console: `aux`.
+
+## Theme controls (2026-10-24)
+
+`zoom` (0.7-1.3) scales the whole screen. `theme.el` holds one object per face element
+(`digits`, `label`, `units`, `minmax`, `bar`, `ticks`, `needle`, `window`) with `on` and `dy`
+(vertical offset as a fraction of the cell radius, plus is down); the sizes stay in the
+existing `*_scale` keys. `theme.ticks` = `{maj_w, maj_len, min_w, min_len, maj_n, min_n}`
+(multipliers, counts; 0 = style default), `theme.needle` = `{w, len, hub}` multipliers,
+`theme.sweep_rot` degrees (-90..90). `channels[id].label` renames a channel on the gauge
+(blank restores the preset name).

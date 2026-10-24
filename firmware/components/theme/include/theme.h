@@ -21,6 +21,16 @@ typedef enum {
     TC_COUNT
 } theme_color_t;
 
+// Face elements the user can switch off and move. Scale lives in the *_scale
+// fields below (digits, label, units, minmax, bar); dy is a vertical offset
+// as a fraction of the cell radius, positive = down.
+typedef enum { EL_DIGITS = 0, EL_LABEL, EL_UNITS, EL_MINMAX, EL_TICKS, EL_BAR, EL_NEEDLE, EL_WINDOW, EL_COUNT } theme_el_t;
+
+typedef struct {
+    float maj_w, maj_len, min_w, min_len;   // tick width/length multipliers, 1.0 = style default
+    uint8_t maj_n, min_n;                   // major count over the range / minors per major; 0 = style default
+} theme_ticks_t;
+
 typedef struct {
     uint32_t      rgb[TC_COUNT];   // 0xRRGGBB
     gauge_style_t style;
@@ -33,7 +43,17 @@ typedef struct {
     float         minmax_scale;    // 0.6..2.5
     float         bar_scale;       // 0.5..2.5, ring and segment thickness
     int8_t        preset;          // index into theme_preset_name(), -1 = custom
+    bool          el_on[EL_COUNT];
+    float         el_dy[EL_COUNT]; // -1..1, fraction of R
+    theme_ticks_t ticks;
+    float         needle_w;        // base width multiplier
+    float         needle_len;      // length multiplier
+    float         hub_scale;       // dial/stock centre disc size multiplier
+    float         sweep_rot;       // degrees added to the sweep start, -90..90
 } theme_t;
+
+void         theme_defaults_extra(void);           // elements on, offsets 0, ticks and needle at 1.0
+const char  *theme_el_id(theme_el_t e);            // json key: digits, label, ...
 
 extern theme_t g_theme;
 

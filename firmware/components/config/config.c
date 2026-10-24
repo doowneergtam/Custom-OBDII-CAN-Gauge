@@ -76,6 +76,8 @@ void config_defaults(void)
     g_theme.style = STYLE_RING; g_theme.fill = FILL_GRADIENT; g_theme.bands = true;
     g_theme.digit_scale = 1.0f; g_theme.label_scale = 1.0f; g_theme.cell_scale = 1.0f;
     g_theme.units_scale = 1.0f; g_theme.minmax_scale = 1.0f; g_theme.bar_scale = 1.0f;
+    theme_defaults_extra();
+    g_ui_cfg.zoom = 1.0f;
     theme_apply_preset(0);
     alarms_load_defaults();
     channels_set_units((ch_units_t){ false, false, false });
@@ -90,6 +92,7 @@ static cJSON *build_json(void)
     cJSON *cells = cJSON_AddArrayToObject(root, "cells");
     for (int i = 0; i < UI_CELLS_MAX; i++) cJSON_AddItemToArray(cells, cJSON_CreateString(config_channel_id((ch_id_t)g_ui_cfg.cells[i])));
     cJSON_AddNumberToObject(root, "brightness", g_ui_cfg.brightness);
+    cJSON_AddNumberToObject(root, "zoom", num4(g_ui_cfg.zoom));
     cJSON_AddBoolToObject(root, "sim", g_ui_cfg.sim);
     cJSON_AddStringToObject(root, "source", g_ui_cfg.source == SRC_OBD ? "obd" : "ms");
 
@@ -110,6 +113,19 @@ static cJSON *build_json(void)
     cJSON_AddNumberToObject(theme, "units_scale", num4(g_theme.units_scale));
     cJSON_AddNumberToObject(theme, "minmax_scale", num4(g_theme.minmax_scale));
     cJSON_AddNumberToObject(theme, "bar_scale", num4(g_theme.bar_scale));
+    cJSON *el = cJSON_AddObjectToObject(theme, "el");
+    for (int i = 0; i < EL_COUNT; i++) {
+        cJSON *e = cJSON_AddObjectToObject(el, theme_el_id((theme_el_t)i));
+        cJSON_AddBoolToObject(e, "on", g_theme.el_on[i]);
+        cJSON_AddNumberToObject(e, "dy", num4(g_theme.el_dy[i]));
+    }
+    cJSON *tk = cJSON_AddObjectToObject(theme, "ticks");
+    cJSON_AddNumberToObject(tk, "maj_w", num4(g_theme.ticks.maj_w)); cJSON_AddNumberToObject(tk, "maj_len", num4(g_theme.ticks.maj_len));
+    cJSON_AddNumberToObject(tk, "min_w", num4(g_theme.ticks.min_w)); cJSON_AddNumberToObject(tk, "min_len", num4(g_theme.ticks.min_len));
+    cJSON_AddNumberToObject(tk, "maj_n", g_theme.ticks.maj_n); cJSON_AddNumberToObject(tk, "min_n", g_theme.ticks.min_n);
+    cJSON *nd = cJSON_AddObjectToObject(theme, "needle");
+    cJSON_AddNumberToObject(nd, "w", num4(g_theme.needle_w)); cJSON_AddNumberToObject(nd, "len", num4(g_theme.needle_len)); cJSON_AddNumberToObject(nd, "hub", num4(g_theme.hub_scale));
+    cJSON_AddNumberToObject(theme, "sweep_rot", num4(g_theme.sweep_rot));
     cJSON *rgb = cJSON_AddObjectToObject(theme, "rgb");
     for (int i = 0; i < TC_COUNT; i++) { char hex[9]; snprintf(hex, sizeof hex, "#%06lx", (unsigned long)g_theme.rgb[i]); cJSON_AddStringToObject(rgb, THEME_KEYS[i], hex); }
 
@@ -132,6 +148,7 @@ static cJSON *build_json(void)
         cJSON *c = cJSON_AddObjectToObject(chs, config_channel_id((ch_id_t)i));
         cJSON_AddNumberToObject(c, "min", num4(d->min));
         cJSON_AddNumberToObject(c, "max", num4(d->max));
+        if (strcmp(d->name, d->dname) != 0) cJSON_AddStringToObject(c, "label", d->name);
         cJSON_AddBoolToObject(c, "show_units", d->show_units);
         cJSON_AddBoolToObject(c, "show_min", d->show_min);
         cJSON_AddBoolToObject(c, "show_max", d->show_max);
@@ -199,6 +216,7 @@ esp_err_t config_apply_json(const char *text)
     cJSON *cells = cJSON_GetObjectItem(root, "cells");
     if (cJSON_IsArray(cells)) { int i = 0; cJSON *it; cJSON_ArrayForEach(it, cells) { if (i >= UI_CELLS_MAX) break; int id = cJSON_IsString(it) ? ch_by_id(it->valuestring) : -1; if (id >= 0) g_ui_cfg.cells[i] = id; i++; } }
     int br = (int)num(root, "brightness", g_ui_cfg.brightness); if (br >= 5 && br <= 100) g_ui_cfg.brightness = br;
+    float zm = (float)num(root, "zoom", g_ui_cfg.zoom); if (zm >= 0.5f && zm <= 1.5f) g_ui_cfg.zoom = zm;
     g_ui_cfg.sim = bln(root, "sim", g_ui_cfg.sim);
     const char *src = str(root, "source"); if (src) g_ui_cfg.source = strcasecmp(src, "obd") == 0 ? SRC_OBD : SRC_MEGASQUIRT;
 
@@ -223,6 +241,29 @@ esp_err_t config_apply_json(const char *text)
         if (ms >= 0.3f && ms <= 4.1f) g_theme.minmax_scale = ms;
         float bs = (float)num(theme, "bar_scale", g_theme.bar_scale);
         if (bs >= 0.3f && bs <= 3.1f) g_theme.bar_scale = bs;
+        cJSON *el = cJSON_GetObjectItem(theme, "el");
+        if (cJSON_IsObject(el)) for (int i = 0; i < EL_COUNT; i++) {
+            cJSON *e = cJSON_GetObjectItem(el, theme_el_id((theme_el_t)i));
+            if (!cJSON_IsObject(e)) continue;
+            g_theme.el_on[i] = bln(e, "on", g_theme.el_on[i]);
+            float dy = (float)num(e, "dy", g_theme.el_dy[i]); if (dy >= -1.5f && dy <= 1.5f) g_theme.el_dy[i] = dy;
+        }
+        cJSON *tk = cJSON_GetObjectItem(theme, "ticks");
+        if (cJSON_IsObject(tk)) {
+            float *fp[4] = { &g_theme.ticks.maj_w, &g_theme.ticks.maj_len, &g_theme.ticks.min_w, &g_theme.ticks.min_len };
+            const char *fk[4] = { "maj_w", "maj_len", "min_w", "min_len" };
+            for (int i = 0; i < 4; i++) { float v = (float)num(tk, fk[i], *fp[i]); if (v >= 0.1f && v <= 5.0f) *fp[i] = v; }
+            int mn = (int)num(tk, "maj_n", g_theme.ticks.maj_n); if (mn >= 0 && mn <= 40) g_theme.ticks.maj_n = (uint8_t)mn;
+            int mi = (int)num(tk, "min_n", g_theme.ticks.min_n); if (mi >= 0 && mi <= 10) g_theme.ticks.min_n = (uint8_t)mi;
+        }
+        cJSON *nd = cJSON_GetObjectItem(theme, "needle");
+        if (cJSON_IsObject(nd)) {
+            float w = (float)num(nd, "w", g_theme.needle_w), ln = (float)num(nd, "len", g_theme.needle_len);
+            if (w >= 0.2f && w <= 5.0f) g_theme.needle_w = w;
+            if (ln >= 0.2f && ln <= 2.0f) g_theme.needle_len = ln;
+            float hb = (float)num(nd, "hub", g_theme.hub_scale); if (hb >= 0.2f && hb <= 3.0f) g_theme.hub_scale = hb;
+        }
+        float sr = (float)num(theme, "sweep_rot", g_theme.sweep_rot); if (sr >= -90 && sr <= 90) g_theme.sweep_rot = sr;
         cJSON *rgb = cJSON_GetObjectItem(theme, "rgb");
         if (cJSON_IsObject(rgb)) for (int i = 0; i < TC_COUNT; i++) { const char *h = str(rgb, THEME_KEYS[i]); if (h && h[0] == '#') g_theme.rgb[i] = (uint32_t)strtoul(h + 1, NULL, 16) & 0xFFFFFF; }
     }
@@ -246,6 +287,7 @@ esp_err_t config_apply_json(const char *text)
         ch_def_t *d = channels_def_mut((ch_id_t)id);
         float mn = (float)num(c, "min", d->min), mx = (float)num(c, "max", d->max);
         if (mx > mn) { d->min = mn; d->max = mx; }
+        { const char *lb = str(c, "label"); if (lb && id < CH_AUX1) snprintf(d->name, CH_NAME_LEN, "%s", lb[0] ? lb : d->dname); }
         d->show_units = bln(c, "show_units", d->show_units);
         d->show_min = bln(c, "show_min", d->show_min);
         d->show_max = bln(c, "show_max", d->show_max);

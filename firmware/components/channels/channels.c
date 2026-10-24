@@ -31,6 +31,7 @@ static ch_def_t *slot(ch_id_t id, const char *name, const char *units, ch_kind_t
     ch_def_t *d = &s_def[id];
     memset(d, 0, sizeof *d);
     snprintf(d->name, CH_NAME_LEN, "%s", name);
+    snprintf(d->dname, CH_NAME_LEN, "%s", name);
     snprintf(d->units, CH_UNITS_LEN, "%s", units);
     d->kind = kind; d->min = min; d->max = max; d->decimals = decimals;
     d->scale = 1.0f; d->big_endian = true;

@@ -1,3 +1,4 @@
+<meta charset="utf-8">
 <title>NB1 Gauge Setup</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Montserrat:wght@300;600&display=swap">
@@ -34,6 +35,10 @@ select, input[type=number], input[type=text], input[type=password] { background:
 select { max-width: 60vw; }
 input[type=number] { width: 86px; font-family: var(--font-mono); text-align: right; }
 input[type=range] { width: 100%; accent-color: var(--accent); margin: 0; height: 32px; }
+.sl { display: grid; grid-template-columns: 40px 1fr 40px; gap: 8px; align-items: center; margin: 2px 0 8px; }
+.sl button { min-height: 36px; background: var(--card2); color: var(--fg); border: 1px solid var(--line); border-radius: 9px; font-size: 18px; cursor: pointer; }
+.sl .v { font-variant-numeric: tabular-nums; }
+.elbox { border-top: 1px solid var(--line); padding-top: 6px; margin-top: 6px; }
 input[type=color] { width: 42px; height: 34px; border: 1px solid var(--line); border-radius: 9px; background: none; padding: 0; }
 .seg { display: flex; gap: 4px; background: var(--card2); border: 1px solid var(--line); border-radius: 11px; padding: 3px; }
 .seg button { flex: 1; min-height: 38px; background: transparent; color: var(--muted); border: 0; border-radius: 8px; font: 500 14px var(--font-ui); cursor: pointer; }
@@ -164,11 +169,14 @@ const CH = [
 const AUX_DEFAULT = () => ({ enabled: false, resistive: false, label: 'AUX', units: 'V', decimals: 2, pts: [[0, 0], [5, 5]] });
 // Analog input names and units live in cfg.aux; mirror them into the channel table so every tab shows them.
 function syncAux() {
+  syncLabels();
   if (!cfg.aux) cfg.aux = { 1: AUX_DEFAULT(), 2: AUX_DEFAULT() };
   for (const c of CH) if (c.aux) { const a = cfg.aux[c.aux] || (cfg.aux[c.aux] = AUX_DEFAULT()); if (!a.label) a.label = 'AUX ' + c.aux; c.name = a.label; c.units = a.units || ''; c.dp = +a.decimals || 0; c.enabled = !!a.enabled; }
 }
 const chVisible = c => !c.aux || c.enabled;
+for (const c of CH) c.name0 = c.name;
 const byId = Object.fromEntries(CH.map(c => [c.id, c]));
+function syncLabels() { for (const c of CH) if (!c.aux) { const cc = cfg.channels[c.id]; c.name = (cc && cc.label) ? cc.label : c.name0; } }
 const THEME_KEYS = [['bg','Background'],['digits','Digits'],['label','Labels'],['units','Units, peaks'],['track','Track'],['tick','Ticks, scale'],['neutral','Neutral bar'],['good','Good zone'],['warn','Warning zone'],['bad','Bad zone'],['cold','Cold zone'],['stale','Stale data']];
 const PRESETS = {
   Ice:   { bg:'#000000', digits:'#f4f6f8', label:'#8a93a0', units:'#6b737f', track:'#1b1f26', tick:'#5a6270', neutral:'#38bdf8', good:'#34d399', warn:'#fbbf24', bad:'#ff3b30', cold:'#60a5fa', stale:'#4b5058' },
@@ -182,11 +190,32 @@ const LAYOUTS = [1, 3, 4, 6, 7];
 const STYLES = ['ring', 'dial', 'numeric', 'stock', 'stock2'], FILLS = ['gradient', 'segments', 'solid'];
 const STYLE_LABELS = { stock: 'Stock 1', stock2: 'Stock 2' }, styleLabel = s => STYLE_LABELS[s] || cap(s);
 
+// Face elements, with which styles draw each one.
+const ELEMENTS = [
+  ['digits', 'Live reading', 'digit_scale', ['ring', 'dial', 'numeric', 'stock', 'stock2']],
+  ['label',  'Label',        'label_scale', ['ring', 'dial', 'numeric', 'stock', 'stock2']],
+  ['units',  'Units',        'units_scale', ['ring', 'dial', 'numeric', 'stock', 'stock2']],
+  ['minmax', 'Min and max',  'minmax_scale', ['ring', 'dial', 'numeric', 'stock', 'stock2']],
+  ['bar',    'Ring / track', 'bar_scale',   ['ring', 'dial']],
+  ['ticks',  'Tick ring',    null,          ['dial', 'stock', 'stock2']],
+  ['needle', 'Needle',       null,          ['dial', 'stock', 'stock2']],
+  ['window', 'Reading backdrop', null,      ['stock', 'stock2']],
+];
+function themeElDefaults() { const o = {}; for (const [k] of ELEMENTS) o[k] = { on: k !== 'window', dy: 0 }; return o; }
+function fixTheme(t) {
+  t.el = t.el || {}; for (const [k] of ELEMENTS) t.el[k] = Object.assign({ on: k !== 'window', dy: 0 }, t.el[k] || {});
+  t.ticks = Object.assign({ maj_w: 1, maj_len: 1, min_w: 1, min_len: 1, maj_n: 0, min_n: 0 }, t.ticks || {});
+  t.needle = Object.assign({ w: 1, len: 1, hub: 1 }, t.needle || {});
+  if (t.sweep_rot === undefined) t.sweep_rot = 0;
+  return t;
+}
 function defaultConfig() {
   const cfg = {
     layout: 1, cells: ['BOOST', 'OILP', 'CLT', 'AFR', 'BATT', 'OILT', 'RPM'], brightness: 80, sim: true, source: 'ms',
     units: { temp_c: false, press_bar: false, speed_kmh: false },
-    theme: { preset: 'Ice', style: 'ring', fill: 'gradient', bands: true, digit_scale: 1, label_scale: 1, cell_scale: 1, units_scale: 1, minmax_scale: 1, bar_scale: 1, rgb: { ...PRESETS.Ice } },
+    zoom: 1,
+    theme: { preset: 'Ice', style: 'ring', fill: 'gradient', bands: true, digit_scale: 1, label_scale: 1, cell_scale: 1, units_scale: 1, minmax_scale: 1, bar_scale: 1, rgb: { ...PRESETS.Ice },
+             el: themeElDefaults(), ticks: { maj_w: 1, maj_len: 1, min_w: 1, min_len: 1, maj_n: 0, min_n: 0 }, needle: { w: 1, len: 1, hub: 1 }, sweep_rot: 0 },
     alarms: { volume: 60, warn_on: true, bad_on: true, mute: false, repeat_s: 10, tone_warn: {}, tone_bad: {} },
     channels: {},
     wifi: { ssid: 'NB1-Gauge-3F2A', password: 'miata2000', timeout_min: 0, on: true },
@@ -310,6 +339,17 @@ function seg(values, labels, get, set) {
   values.forEach((v, i) => el.append(h('button', { type: 'button', 'aria-pressed': String(get() === v), onclick: () => { set(v); render(); } }, labels[i])));
   return el;
 }
+// Slider with a value readout and 1-step arrow buttons at each end. get/set work in the slider's
+// integer units; fmt turns the value into the readout text. onLive runs on every change for previews.
+const sl = (label, sub, min, max, get, set, fmt = v => v + '%', onLive = null) => {
+  const val = h('span', { class: 'sub v' }, fmt(get()));
+  const rng = h('input', { type: 'range', min, max, value: get(), 'aria-label': label });
+  const apply = (v, commit) => { v = Math.max(min, Math.min(max, Math.round(v))); set(v); rng.value = v; val.textContent = fmt(v); if (onLive) onLive(); if (commit) save(); };
+  rng.oninput = () => apply(+rng.value, false); rng.onchange = () => apply(+rng.value, true);
+  return h('div', {}, h('div', { class: 'row' }, h('div', {}, h('div', { class: 'lab' }, label), sub ? h('div', { class: 'sub' }, sub) : null), val),
+    h('div', { class: 'sl' }, h('button', { type: 'button', 'aria-label': label + ' down', onclick: () => apply(get() - 1, true) }, '−'), rng,
+      h('button', { type: 'button', 'aria-label': label + ' up', onclick: () => apply(get() + 1, true) }, '+')));
+};
 const sw = (get, set) => h('button', { type: 'button', class: 'switch', role: 'switch', 'aria-checked': String(!!get()), onclick: e => { set(!get()); e.currentTarget.setAttribute('aria-checked', String(!!get())); } });
 function sel(options, labels, get, set) {
   const el = h('select', { onchange: e => set(e.target.value) });
@@ -385,7 +425,9 @@ function renderScreen() {
           card('Channel per cell', cells),
           card('Saved screens', cfg.screens.length ? list : h('p', { class: 'note' }, 'Nothing saved yet. Set up a layout, channels and theme you like, then save it here to switch back to it later, from this page or from the gauge\'s Screens menu.'),
             h('div', { class: 'row' }, nameIn, saveBtn)),
-          card('Brightness', h('input', { type: 'range', min: 10, max: 100, value: cfg.brightness, 'aria-label': 'Brightness', oninput: e => { cfg.brightness = +e.target.value; save('Brightness ' + cfg.brightness + '%'); } }))];
+          card('Size and brightness',
+            sl('Screen zoom', 'Everything on the screen, 70% to 130%', 70, 130, () => Math.round((cfg.zoom || 1) * 100), v => { cfg.zoom = v / 100; }),
+            sl('Brightness', null, 10, 100, () => cfg.brightness, v => { cfg.brightness = v; }))];
 }
 
 // ---------------------------------------------------------------- Channels
@@ -401,6 +443,7 @@ function zoneBar(id) {
 function renderChannel(c) {
   const cc = cfg.channels[c.id], u = unitLabel(c), dp = dpOf(c), r = v => +conv(c, v).toFixed(dp);
   const body = h('div', { class: 'body' });
+  if (!c.aux) body.append(row('Display name', 'Up to 8 characters; blank restores ' + c.name0, h('input', { type: 'text', value: cc.label || '', placeholder: c.name0, maxlength: 8, 'aria-label': 'Display name', onchange: e => { cc.label = e.target.value.toUpperCase().slice(0, 8); c.name = cc.label || c.name0; save(); render(); } })));
   body.append(zoneBar(c.id));
   body.append(h('div', { class: 'zrow' }, h('span', { class: 'sub' }, 'Gauge range (' + u + ')'),
     h('input', { type: 'number', value: r(cc.min), 'aria-label': 'Minimum', onchange: e => { cc.min = unconv(c, +e.target.value); save(); render(); } }),
@@ -556,7 +599,7 @@ function miniGauge() {
 }
 function refreshMini() { const m = $('#mini'); if (m) m.replaceWith(Object.assign(miniGauge(), { id: 'mini' })); }
 function renderTheme() {
-  const t = cfg.theme;
+  const t = fixTheme(cfg.theme);
   const presets = h('div', { class: 'presets' });
   for (const [name, p] of Object.entries(PRESETS)) presets.append(h('button', { type: 'button', 'aria-pressed': String(t.preset === name), onclick: () => { t.preset = name; t.rgb = { ...p }; save(); render(); } },
     h('span', { class: 'sw' }, ...['neutral', 'good', 'warn', 'bad'].map(k => { const i = h('i'); i.style.background = p[k]; return i; })), name));
@@ -578,24 +621,30 @@ function renderTheme() {
   for (const [k, lab] of THEME_KEYS) colors.append(h('label', {}, h('input', { type: 'color', value: t.rgb[k], 'aria-label': lab, oninput: e => { t.rgb[k] = e.target.value; t.preset = 'Custom'; save(); refreshMini(); } }), h('span', {}, lab, h('code', {}, t.rgb[k]))));
   return [card('Preview', Object.assign(miniGauge(), { id: 'mini' }), h('p', { class: 'note' }, 'Boost at 9.4 psi, drawn the way the gauge will draw it.')),
           card('Presets', presets, cfg.theme_presets.length ? mine : null, h('div', { class: 'row' }, pName, pSave)),
-          card('Style', seg(STYLES, STYLES.map(styleLabel), () => t.style, v => { t.style = v; if (v.startsWith('stock')) { t.preset = 'Stock'; t.rgb = { ...PRESETS.Stock }; t.bands = false; } save(); }),
-            row('Bar fill', 'Gradient: one colour sampled from a blend through the zones at the tip. Segments: each block its own zone. Solid: the zone the tip is in.', null),
-            seg(FILLS, FILLS.map(cap), () => t.fill, v => { t.fill = v; save(); }),
-            row('Zone bands on track', 'Faint colour where each zone starts', sw(() => t.bands, v => { t.bands = v; save(); refreshMini(); }))),
-          card('Type size',
-            row('Digits', Math.round((t.digit_scale || 1) * 100) + '%', null),
-            h('input', { type: 'range', min: 50, max: 500, value: Math.round((t.digit_scale || 1) * 100), 'aria-label': 'Digit scale', oninput: e => { t.digit_scale = e.target.value / 100; e.target.previousSibling.querySelector('.sub').textContent = e.target.value + '%'; refreshMini(); }, onchange: () => save() }),
-            row('Labels', Math.round((t.label_scale || 1) * 100) + '%', null),
-            h('input', { type: 'range', min: 50, max: 400, value: Math.round((t.label_scale || 1) * 100), 'aria-label': 'Label scale', oninput: e => { t.label_scale = e.target.value / 100; e.target.previousSibling.querySelector('.sub').textContent = e.target.value + '%'; refreshMini(); }, onchange: () => save() }),
-            row('Units', Math.round((t.units_scale || 1) * 100) + '%', null),
-            h('input', { type: 'range', min: 50, max: 400, value: Math.round((t.units_scale || 1) * 100), 'aria-label': 'Units scale', oninput: e => { t.units_scale = e.target.value / 100; e.target.previousSibling.querySelector('.sub').textContent = e.target.value + '%'; refreshMini(); }, onchange: () => save() }),
-            row('Min and max', Math.round((t.minmax_scale || 1) * 100) + '%', null),
-            h('input', { type: 'range', min: 50, max: 400, value: Math.round((t.minmax_scale || 1) * 100), 'aria-label': 'Min max scale', oninput: e => { t.minmax_scale = e.target.value / 100; e.target.previousSibling.querySelector('.sub').textContent = e.target.value + '%'; refreshMini(); }, onchange: () => save() }),
-            row('Ring and segment thickness', Math.round((t.bar_scale || 1) * 100) + '%', null),
-            h('input', { type: 'range', min: 50, max: 300, value: Math.round((t.bar_scale || 1) * 100), 'aria-label': 'Ring thickness', oninput: e => { t.bar_scale = e.target.value / 100; e.target.previousSibling.querySelector('.sub').textContent = e.target.value + '%'; refreshMini(); }, onchange: () => save() }),
-            row('Outer cells', Math.round((t.cell_scale || 1) * 100) + '%', null),
-            h('input', { type: 'range', min: 100, max: 250, value: Math.round((t.cell_scale || 1) * 100), 'aria-label': 'Outer cell scale', oninput: e => { t.cell_scale = e.target.value / 100; e.target.previousSibling.querySelector('.sub').textContent = e.target.value + '%'; }, onchange: () => save() }),
-            h('p', { class: 'note' }, 'Outer cells enlarges every cell around the centre in the multi-cell layouts; in Numeric style they can overlap without harm. Digits above 48 px use a converted font on the gauge; the size chosen here picks the nearest one.')),
+          card('Style', seg(STYLES, STYLES.map(styleLabel), () => t.style, v => { t.style = v; if (v.startsWith('stock')) { t.preset = 'Stock'; t.rgb = { ...PRESETS.Stock }; t.bands = false; } save(); render(); }),
+            t.style === 'ring' ? row('Bar fill', 'Gradient: one colour sampled from a blend through the zones at the tip. Segments: each block its own zone. Solid: the zone the tip is in.', null) : null,
+            t.style === 'ring' ? seg(FILLS, FILLS.map(cap), () => t.fill, v => { t.fill = v; save(); }) : null,
+            t.style !== 'numeric' ? row('Zone bands on track', 'Faint colour where each zone starts', sw(() => t.bands, v => { t.bands = v; save(); refreshMini(); })) : null),
+          card('Elements', h('p', { class: 'note' }, 'Each part of the ' + styleLabel(t.style) + ' face: switch it off, size it, or move it up and down. Only the parts this style draws are listed.'),
+            ...ELEMENTS.filter(([k, , , styles]) => styles.includes(t.style)).map(([k, name, scaleKey]) => h('div', { class: 'elbox' },
+              row(name, null, sw(() => t.el[k].on, v => { t.el[k].on = v; save(); refreshMini(); })),
+              scaleKey ? sl('Size', null, 50, 500, () => Math.round((t[scaleKey] || 1) * 100), v => { t[scaleKey] = v / 100; }, v => v + '%', refreshMini) : null,
+              k !== 'ticks' && k !== 'bar' && k !== 'needle' ? sl('Up / down', 'Percent of the cell radius, plus is down', -100, 100, () => Math.round((t.el[k].dy || 0) * 100), v => { t.el[k].dy = v / 100; }, v => (v > 0 ? '+' : '') + v + '%', refreshMini) : null))),
+          ['dial', 'stock', 'stock2'].includes(t.style) ? card('Ticks',
+            sl('Major tick width', null, 20, 400, () => Math.round(t.ticks.maj_w * 100), v => { t.ticks.maj_w = v / 100; }),
+            sl('Major tick length', null, 20, 400, () => Math.round(t.ticks.maj_len * 100), v => { t.ticks.maj_len = v / 100; }),
+            sl('Minor tick width', null, 20, 400, () => Math.round(t.ticks.min_w * 100), v => { t.ticks.min_w = v / 100; }),
+            sl('Minor tick length', null, 20, 400, () => Math.round(t.ticks.min_len * 100), v => { t.ticks.min_len = v / 100; }),
+            sl('Major ticks', 'Across the range; 0 picks a sensible count', 0, 40, () => t.ticks.maj_n || 0, v => { t.ticks.maj_n = v; }, v => v ? String(v) : 'auto'),
+            sl('Minor ticks per major', '0 = style default', 0, 10, () => t.ticks.min_n || 0, v => { t.ticks.min_n = v; }, v => v ? String(v) : 'auto'),
+            sl('Rotate sweep', 'Turns the tick ring and needle sweep, degrees', -90, 90, () => Math.round(t.sweep_rot || 0), v => { t.sweep_rot = v; }, v => (v > 0 ? '+' : '') + v + '°')) : null,
+          t.style === 'ring' ? card('Sweep', sl('Rotate sweep', 'Turns the ring, degrees', -90, 90, () => Math.round(t.sweep_rot || 0), v => { t.sweep_rot = v; }, v => (v > 0 ? '+' : '') + v + '°')) : null,
+          ['dial', 'stock', 'stock2'].includes(t.style) ? card('Needle',
+            sl('Needle base width', null, 20, 500, () => Math.round(t.needle.w * 100), v => { t.needle.w = v / 100; }),
+            sl('Needle length', null, 20, 200, () => Math.round(t.needle.len * 100), v => { t.needle.len = v / 100; }),
+            sl('Centre hub size', null, 20, 300, () => Math.round(t.needle.hub * 100), v => { t.needle.hub = v / 100; })) : null,
+          cfg.layout > 1 ? card('Layout',
+            sl('Outer cells', 'Enlarges every cell around the centre in the multi-cell layouts', 100, 250, () => Math.round((t.cell_scale || 1) * 100), v => { t.cell_scale = v / 100; })) : null,
           card('Colours', colors)];
 }
 
@@ -603,8 +652,7 @@ function renderTheme() {
 function renderAlarms() {
   const a = cfg.alarms;
   return [card('Speaker',
-      row('Volume', a.volume + '%', null),
-      h('input', { type: 'range', min: 0, max: 100, value: a.volume, 'aria-label': 'Volume', onchange: e => { a.volume = +e.target.value; save(); api.action('test-alarm', { tone: 'chirp' }); render(); } }),
+      sl('Volume', null, 0, 100, () => a.volume, v => { a.volume = v; }),
       row('Mute everything', 'Banners still show', sw(() => a.mute, v => { a.mute = v; save(); }))),
     card('Levels',
       row('Warn alarms', 'Tone when a channel enters a warn zone', sw(() => a.warn_on, v => { a.warn_on = v; save(); })),
