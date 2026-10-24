@@ -40,7 +40,8 @@ Delete `best_seed.txt` after moving parts so the router searches again.
 
 1. Mill the bottom (mirrored file), drill all holes, flip on two of the M2
    holes as your registration, mill the top (not mirrored).
-2. Fit the 9 rivet vias (1.0 mm holes), swage both sides. Positions, parts-side
+2. Fit the 9 vias (1.0 mm holes): copper rivets swaged both sides, or trimmed resistor leads soldered
+   both sides. The assembly sheet rings each one in its own colour (via key under the board). Positions, parts-side
    view, mm from the centre:
 
    | Via | Net | x | y |

@@ -1,6 +1,7 @@
 """Assembly sheet v2: parts drawn as shaded, colour-coded bodies at their real positions with the
-reference printed on them (no leader lines), connector pin numbers, vias marked, a 2x inset of the
-small-parts cluster, and a BOM whose rows carry the same colours. Output: mill/nb1_carrier_assembly_sheet.svg"""
+reference printed on them (no leader lines), connector pin numbers, vias ringed and named in their
+own colours with a key, a 2x inset of the small-parts cluster, and a BOM whose rows carry the same
+colours. Output: mill/nb1_carrier_assembly_sheet.svg"""
 import io, contextlib, math, pathlib
 with contextlib.redirect_stdout(io.StringIO()):
     import gen_pcb as g
@@ -33,9 +34,17 @@ BOM = [
  ("R11 R21 RP1 RP2", "1 kOhm 0603", "Yageo RC0603FR-071KL", "TOP side, see inset"),
  ("R12 R22", "1.5 kOhm 0603", "Yageo RC0603FR-071K5L", "TOP side, see inset"),
  ("SJ1 SJ2", "Solder-bridge pads", "none", "TOP side; bridged = resistive sender, open = 0-5 V"),
- ("V*", "Rivet via, 1.0 mm hole, 9 off", "your 1.0 mm copper rivets", "swage both sides first"),
+ ("V*", "Via, 1.0 mm hole, 9 off", "copper rivet or a trimmed resistor lead", "solder both sides first; colours in the via key"),
  ("H1-H3", "M2 standoff x3", "M2, ~8.5 mm", "Waveshare back to carrier copper face"),
 ]
+# Vias: each wire via rings its pad in its own colour and prints its name above, in the main view and
+# the inset, with a key under the board. The three component leads that also carry a top track are
+# vias too (solder both sides); they get a double dark ring so they cannot be mistaken for wire vias.
+VIA_COLOR = {"VL": "#e11d48", "VP5": "#f97316", "VA1": "#ca8a04", "V4": "#15803d", "V5": "#0d9488",
+             "V6": "#0284c7", "V7": "#7c3aed", "V8": "#c026d3", "V9": "#78350f"}
+VIA_NET = {"VL": "LIGHTS", "VP5": "5V", "VA1": "AIN1", "V4": "NODE1", "V5": "NODE2", "V6": "AIN2", "V7": "5V", "V8": "GND", "V9": "GND"}
+LEAD_VIAS = {("D1", "1"), ("D2", "1"), ("R2", "2")}
+LEAD_COLOR = "#111827"
 def esc(s): return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 def pads_of(f):
     fx, fy = f["at"]; r = math.radians(f["rot"]); c, s = math.cos(r), math.sin(r)
@@ -55,7 +64,7 @@ def draw_board(o, S, cx, cy, clip=None, show_tracks=True, label_scale=1.0):
     for f in b.footprints:
         for p, px, py in pads_of(f):
             sw, sh = p["size"]; via = f["ref"].startswith("V")
-            fill = "#c0392b" if via else ("#e67e22" if p.get("layer") == "F.Cu" else "#d4a017")
+            fill = VIA_COLOR.get(f["ref"], "#c0392b") if via else ("#e67e22" if p.get("layer") == "F.Cu" else "#d4a017")
             if p.get("shape") == "rect":
                 o.append(f'<rect x="{X(px) - sw * S / 2:.1f}" y="{Y(py) - sh * S / 2:.1f}" width="{sw * S:.1f}" height="{sh * S:.1f}" fill="{fill}" stroke="#444" stroke-width="0.8" transform="rotate({-f["rot"]} {X(px):.1f} {Y(py):.1f})"/>')
             else:
@@ -72,13 +81,23 @@ def draw_board(o, S, cx, cy, clip=None, show_tracks=True, label_scale=1.0):
         fs = 13 * label_scale if min(w, h) * S > 14 * label_scale else 9 * label_scale
         o.append(f'<text x="{X(fx):.1f}" y="{Y(fy) + fs * 0.35:.1f}" font-size="{fs:.0f}" font-weight="700" fill="{col}" text-anchor="middle" stroke="#fbfaf7" stroke-width="3" paint-order="stroke">{ref}</text>')
     for f in b.footprints:
-        if f["ref"].startswith("V"):
-            fx, fy = f["at"]
-            o.append(f'<text x="{X(fx):.1f}" y="{Y(fy) - 1.4 * S:.1f}" font-size="{8 * label_scale:.0f}" fill="#c0392b" text-anchor="middle" font-weight="700">{f["ref"]}</text>')
         if f["ref"] in ("J1", "J2", "J3", "U2", "U1", "J5"):
             for p, px, py in pads_of(f):
                 if p.get("net") or f["ref"] == "J5":
                     o.append(f'<text x="{X(px):.1f}" y="{Y(py) + 3 * label_scale:.1f}" font-size="{8 * label_scale:.0f}" fill="#000" text-anchor="middle" font-weight="700">{p["name"]}</text>')
+    # via marks on top of everything: a ring in the via's colour with its name above; the component
+    # leads that double as vias get a double dark ring and a "both sides" label
+    halo = 'stroke="#fbfaf7" stroke-width="3" paint-order="stroke"'
+    for f in b.footprints:
+        if f["ref"].startswith("V"):
+            fx, fy = f["at"]; col = VIA_COLOR.get(f["ref"], "#c0392b")
+            o.append(f'<circle cx="{X(fx):.1f}" cy="{Y(fy):.1f}" r="{1.4 * S:.1f}" fill="none" stroke="{col}" stroke-width="{0.25 * S:.1f}"/>')
+            o.append(f'<text x="{X(fx):.1f}" y="{Y(fy) - 1.9 * S:.1f}" font-size="{11 * label_scale:.0f}" fill="{col}" text-anchor="middle" font-weight="700" {halo}>{f["ref"]}</text>')
+        for p, px, py in pads_of(f):
+            if (f["ref"], p["name"]) in LEAD_VIAS:
+                o.append(f'<circle cx="{X(px):.1f}" cy="{Y(py):.1f}" r="{1.5 * S:.1f}" fill="none" stroke="{LEAD_COLOR}" stroke-width="{0.25 * S:.1f}"/>')
+                o.append(f'<circle cx="{X(px):.1f}" cy="{Y(py):.1f}" r="{1.0 * S:.1f}" fill="none" stroke="{LEAD_COLOR}" stroke-width="{0.12 * S:.1f}"/>')
+                o.append(f'<text x="{X(px):.1f}" y="{Y(py) - 1.9 * S:.1f}" font-size="{10 * label_scale:.0f}" fill="{LEAD_COLOR}" text-anchor="middle" font-weight="700" {halo}>{f["ref"]}-{p["name"]} both sides</text>')
 
 S = 20; R = DIA / 2
 BX, BY = 60 + R * S, 100 + R * S
@@ -86,7 +105,7 @@ W, H = 1750, 1200
 o = [f'<svg xmlns="http://www.w3.org/2000/svg" width="{W}" height="{H}" viewBox="0 0 {W} {H}" font-family="Segoe UI, Arial, sans-serif">',
      f'<rect width="{W}" height="{H}" fill="#fbfaf7"/>',
      f'<text x="{BX:.0f}" y="40" text-anchor="middle" font-size="22" font-weight="700" fill="#222">NB1 pod carrier rev C, assembly (parts side, rear of the pod)</text>',
-     f'<text x="{BX:.0f}" y="62" text-anchor="middle" font-size="12" fill="#555">Shaded bodies are the parts at true size, colours match the BOM. Gold pads: bottom solder. Orange pads: top-side chip parts. Red pads: rivet vias. Red dashes: top copper.</text>',
+     f'<text x="{BX:.0f}" y="62" text-anchor="middle" font-size="12" fill="#555">Shaded bodies are the parts at true size, colours match the BOM. Gold pads: bottom solder. Orange pads: top-side chip parts. Coloured rings: vias, see the key below. Double black rings: component leads soldered on both sides. Red dashes: top copper.</text>',
      f'<circle cx="{BX:.1f}" cy="{BY:.1f}" r="{R * S:.1f}" fill="#efe9d8" stroke="#333" stroke-width="2"/>']
 draw_board(o, S, BX, BY)
 o.append(f'<text x="{BX:.0f}" y="{BY + R * S + 28:.0f}" font-size="12" fill="#333" text-anchor="middle">J1 pins 1-8: AIN2, AIN1, unused, CAN_TX, CAN_RX, 3V3, GND, 5V (pin 1 = IO18 end, left).  Solder D1 pin 1, D2 pin 1 and the top end of R2 on BOTH sides.</text>')
@@ -112,6 +131,22 @@ for i, (ref, desc, pn, note) in enumerate(BOM):
     o.append(f'<text x="{tx + 130}" y="{yy}" font-size="11" fill="#222">{esc(desc)}</text>')
     o.append(f'<text x="{tx + 130}" y="{yy + 14}" font-size="10" fill="#1d4ed8">{esc(pn)}</text>')
     o.append(f'<text x="{tx + 400}" y="{yy + 7}" font-size="10" fill="#555">{esc(note)}</text>')
+# via key under the board: the nine wire vias in their colours, then the three component leads that
+# double as vias, with net and parts-side position (mm from the centre)
+KX, KY = 60, 1076
+o.append(f'<text x="{KX}" y="{KY}" font-size="14" font-weight="700" fill="#222">Via key (parts-side view, mm from centre): nine wire vias, each its own colour, and the three component leads that double as vias</text>')
+vias = {f["ref"]: f["at"] for f in b.footprints if f["ref"].startswith("V")}
+rows = [(ref, VIA_COLOR[ref], f"{VIA_NET[ref]}  ({vias[ref][0]:g}, {vias[ref][1]:g})", False) for ref in VIA_COLOR if ref in vias]
+rows += [(f"{f['ref']} pin {p['name']}", LEAD_COLOR, f"{p.get('net', '')}  ({px:g}, {py:g})  solder both sides", True)
+         for f in b.footprints for p, px, py in pads_of(f) if (f["ref"], p["name"]) in LEAD_VIAS]
+for i, (name, col, detail, lead) in enumerate(rows):
+    x = KX + (i // 4) * 340; y = KY + 24 + (i % 4) * 24
+    if lead:
+        o.append(f'<circle cx="{x + 8}" cy="{y - 4}" r="7" fill="none" stroke="{col}" stroke-width="2.5"/>')
+        o.append(f'<circle cx="{x + 8}" cy="{y - 4}" r="3.5" fill="none" stroke="{col}" stroke-width="1.5"/>')
+    else:
+        o.append(f'<circle cx="{x + 8}" cy="{y - 4}" r="7" fill="{col}" stroke="#444" stroke-width="0.8"/>')
+    o.append(f'<text x="{x + 22}" y="{y}" font-size="12"><tspan font-weight="700" fill="{col}">{esc(name)}</tspan><tspan fill="#333">  {esc(detail)}</tspan></text>')
 o.append("</svg>")
 out = pathlib.Path(__file__).resolve().parent / "mill" / "nb1_carrier_assembly_sheet.svg"
 out.write_text("\n".join(o), encoding="utf-8")
