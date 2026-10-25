@@ -259,6 +259,7 @@ void ui_reload(void)
     if (geom) { build_faces(); last_layout = g_ui_cfg.layout; last_zoom = g_ui_cfg.zoom; last_cs = g_theme.cell_scale; memcpy(last_cells, g_ui_cfg.cells, sizeof last_cells); }
     else for (int i = 0; i < s_nfaces; i++) lv_obj_invalidate(s_faces[i]);
     hal_board_set_brightness(g_ui_cfg.brightness);
+    hal_board_set_rotation(g_ui_cfg.rotation);
     if (s_level != M_CLOSED) { for (int i = 0; i < s_nfaces; i++) lv_obj_set_hidden(s_faces[i], true); }
     hal_board_unlock();
     src_can_set_feed(!g_ui_cfg.sim);
@@ -348,6 +349,7 @@ void ui_init(lv_group_t *group)
     webcfg_init(&(webcfg_hooks_t){ .reload = hook_reload, .reset_minmax = hook_reset, .identify = hook_identify, .test_tone = hook_tone });
     alarms_set_banner_cb(banner_cb);
     hal_board_set_brightness(g_ui_cfg.brightness);
+    hal_board_set_rotation(g_ui_cfg.rotation);
     focus_gauge();
     lv_timer_create(ui_tick, UI_REFRESH_MS, NULL);
     lv_display_add_event_cb(lv_display_get_default(), perf_cb, LV_EVENT_REFR_START, NULL);

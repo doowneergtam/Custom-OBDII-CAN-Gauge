@@ -22,6 +22,7 @@ typedef struct {
     uint8_t cells[UI_CELLS_MAX];    // ch_id_t per cell
     uint8_t brightness;             // 0..100
     float   zoom;                   // 0.7..1.3, whole screen and everything on it
+    int16_t rotation;               // -180..180 degrees, whole screen turned about its centre, plus = clockwise
     bool    sim;                    // synthetic engine instead of the bus
     data_source_t source;           // what the CAN listener expects
     char    wifi_ssid[33];          // empty = NB1-Gauge-<mac>

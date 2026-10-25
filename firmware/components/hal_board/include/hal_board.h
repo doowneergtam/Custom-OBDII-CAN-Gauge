@@ -36,6 +36,11 @@ void hal_board_unlock(void);
 // 0..100. AMOLED has no backlight; this drives the panel's own brightness.
 esp_err_t hal_board_set_brightness(uint8_t percent);
 
+// Turns the whole picture about the screen centre, -180..180 degrees, plus is
+// clockwise. Touch is turned back so taps land on what is under the finger.
+// Call with the display lock held; the next frame is a full redraw.
+void hal_board_set_rotation(int deg);
+
 // Speaker: 16-bit mono PCM at the given sample rate through the codec.
 esp_err_t hal_board_audio_init(uint32_t sample_rate);
 void      hal_board_audio_write_begin(void);          // unmute / enable amp

@@ -119,6 +119,13 @@ on by default. Soak-tested via the serial console (see Bench tooling). Implement
   `LV_DEF_REFR_PERIOD=16`, draw buffers 2 x 48 lines internal. Measured 32-39 fps on Stock 1
   (was ~24). Console `stats` prints `perf`/`perf2`/`perf3` frame timings; `snap [step]` and
   `tools/gauge_snap.py COM11 out.png [step]` capture the first face as a PNG.
+- Screen rotation (2026-10-24): config `rotation` (-180..180, phone page Screen tab) turns everything
+  below LVGL in `hal_board.c`. The adapter's `custom_draw_bitmap` hook copies each finished strip into a
+  PSRAM copy of the upright screen. After the last strip, each changed area's turned bounding box is
+  resampled bilinearly into 10-line chunks and sent to the panel, with rows split between the LVGL core
+  (pinned to core 1) and a helper task on core 0. Touch points are turned back in a wrapped indev read
+  callback. Angle 0 passes strips straight through. Costs about 30 KB internal RAM and 0.9 MB PSRAM once
+  used. Stock 2 sim measured about 35 fps at 30 degrees and 28 at 45 (the worst case) against 45-59 upright.
 - Stock numerals font (2026-10-24): `NB1StockNumerals-BoldItalic.ttf`, built by
   `tools/make_stock_font.py` from TeX Gyre Heros Bold Italic (free Helvetica clone, GUST Font
   License, `components/fonts/GUST-FONT-LICENSE.txt`): basic Latin, TrueType outlines, slant 16 deg.

@@ -87,7 +87,8 @@ live raw reading from `aux_raw`. Console: `aux`.
 
 ## Theme controls (2026-10-24)
 
-`zoom` (0.7-1.3) scales the whole screen. `theme.el` holds one object per face element
+`zoom` (0.7-1.3) scales the whole screen. `rotation` (-180..180 degrees, plus is clockwise)
+turns the whole picture and touch with it, for a pod mounted at an angle. `theme.el` holds one object per face element
 (`digits`, `label`, `units`, `minmax`, `bar`, `ticks`, `needle`, `window`, `scale`) with `on` and `dy`
 (vertical offset as a fraction of the cell radius, plus is down); the sizes stay in the
 existing `*_scale` keys. `scale` is the scale numbers (tick numerals on Dial and Stock 1,

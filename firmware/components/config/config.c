@@ -78,6 +78,7 @@ void config_defaults(void)
     g_theme.units_scale = 1.0f; g_theme.minmax_scale = 1.0f; g_theme.bar_scale = 1.0f;
     theme_defaults_extra();
     g_ui_cfg.zoom = 1.0f;
+    g_ui_cfg.rotation = 0;
     theme_apply_preset(0);
     alarms_load_defaults();
     channels_set_units((ch_units_t){ false, false, false });
@@ -93,6 +94,7 @@ static cJSON *build_json(void)
     for (int i = 0; i < UI_CELLS_MAX; i++) cJSON_AddItemToArray(cells, cJSON_CreateString(config_channel_id((ch_id_t)g_ui_cfg.cells[i])));
     cJSON_AddNumberToObject(root, "brightness", g_ui_cfg.brightness);
     cJSON_AddNumberToObject(root, "zoom", num4(g_ui_cfg.zoom));
+    cJSON_AddNumberToObject(root, "rotation", g_ui_cfg.rotation);
     cJSON_AddBoolToObject(root, "sim", g_ui_cfg.sim);
     cJSON_AddStringToObject(root, "source", g_ui_cfg.source == SRC_OBD ? "obd" : "ms");
 
@@ -218,6 +220,7 @@ esp_err_t config_apply_json(const char *text)
     if (cJSON_IsArray(cells)) { int i = 0; cJSON *it; cJSON_ArrayForEach(it, cells) { if (i >= UI_CELLS_MAX) break; int id = cJSON_IsString(it) ? ch_by_id(it->valuestring) : -1; if (id >= 0) g_ui_cfg.cells[i] = id; i++; } }
     int br = (int)num(root, "brightness", g_ui_cfg.brightness); if (br >= 5 && br <= 100) g_ui_cfg.brightness = br;
     float zm = (float)num(root, "zoom", g_ui_cfg.zoom); if (zm >= 0.5f && zm <= 1.5f) g_ui_cfg.zoom = zm;
+    int rot = (int)num(root, "rotation", g_ui_cfg.rotation); if (rot >= -180 && rot <= 180) g_ui_cfg.rotation = (int16_t)rot;
     g_ui_cfg.sim = bln(root, "sim", g_ui_cfg.sim);
     const char *src = str(root, "source"); if (src) g_ui_cfg.source = strcasecmp(src, "obd") == 0 ? SRC_OBD : SRC_MEGASQUIRT;
 

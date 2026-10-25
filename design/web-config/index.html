@@ -215,6 +215,7 @@ function defaultConfig() {
     layout: 1, cells: ['BOOST', 'OILP', 'CLT', 'AFR', 'BATT', 'OILT', 'RPM'], brightness: 80, sim: true, source: 'ms',
     units: { temp_c: false, press_bar: false, speed_kmh: false },
     zoom: 1,
+    rotation: 0,
     theme: { preset: 'Ice', style: 'ring', fill: 'gradient', bands: true, digit_scale: 1, label_scale: 1, cell_scale: 1, units_scale: 1, minmax_scale: 1, bar_scale: 1, num_scale: 1, rgb: { ...PRESETS.Ice },
              el: themeElDefaults(), ticks: { maj_w: 1, maj_len: 1, min_w: 1, min_len: 1, maj_n: 0, min_n: 0 }, needle: { w: 1, len: 1, hub: 1 }, sweep_rot: 0 },
     alarms: { volume: 60, warn_on: true, bad_on: true, mute: false, repeat_s: 10, tone_warn: {}, tone_bad: {} },
@@ -426,8 +427,9 @@ function renderScreen() {
           card('Channel per cell', cells),
           card('Saved screens', cfg.screens.length ? list : h('p', { class: 'note' }, 'Nothing saved yet. Set up a layout, channels and theme you like, then save it here to switch back to it later, from this page or from the gauge\'s Screens menu.'),
             h('div', { class: 'row' }, nameIn, saveBtn)),
-          card('Size and brightness',
+          card('Size, rotation and brightness',
             sl('Screen zoom', 'Everything on the screen, 70% to 130%', 70, 130, () => Math.round((cfg.zoom || 1) * 100), v => { cfg.zoom = v / 100; }),
+            sl('Rotation', 'Turns the whole screen and touch with it, plus is clockwise', -180, 180, () => cfg.rotation || 0, v => { cfg.rotation = v; }, v => (v > 0 ? '+' : '') + v + '°'),
             sl('Brightness', null, 10, 100, () => cfg.brightness, v => { cfg.brightness = v; }))];
 }
 
