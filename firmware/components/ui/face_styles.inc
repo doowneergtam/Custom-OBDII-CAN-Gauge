@@ -16,18 +16,18 @@ static void style_dial(lv_layer_t *l, face_t *f, res_t *r)
 
     if (el(EL_BAR)) draw_arc(l, cx, cy, R - 2, 2, a0, a0 + span, theme_color(TC_TRACK), LV_OPA_COVER, false);
     if (g_theme.bands && el(EL_BAR)) arc_bands(l, d, cx, cy, R - 4 - bw / 2, bw, a0, span, 230);
-    for (int i = 0; i <= n && el(EL_TICKS) && STATIC_ON; i++) {
+    for (int i = 0; i <= n && (el(EL_TICKS) || el(EL_SCALE)) && STATIC_ON; i++) {
         float a = (a0 + span * i / n) * PI_F / 180.0f;
         bool major = i % per == 0;
         float r1 = R - 6 - bw - 2 + dyp(EL_TICKS, R) * 0, r0 = r1 - (major ? R * 0.1f * tk->maj_len : R * 0.05f * tk->min_len);
-        draw_line(l, cx + r0 * cosf(a), cy + r0 * sinf(a), cx + r1 * cosf(a), cy + r1 * sinf(a),
+        if (el(EL_TICKS)) draw_line(l, cx + r0 * cosf(a), cy + r0 * sinf(a), cx + r1 * cosf(a), cy + r1 * sinf(a),
                   major ? (int32_t)fmaxf(1, 2.2f * s * tk->maj_w) : (int32_t)fmaxf(1, 1.0f * tk->min_w), major ? theme_color(TC_DIGITS) : theme_color(TC_TICK), false);
-        if (major && (full || R > 70)) {
+        if (el(EL_SCALE) && major && (full || R > 70)) {
             float v = channels_to_display(d, d->min + (d->max - d->min) * i / n);
             char b[16];
             if (fabsf(channels_to_display(d, d->max)) >= 1000) snprintf(b, sizeof b, "%.0f", (double)(v / 1000)); else fmt_val(b, sizeof b, v, 0);
-            float rt = r0 - R * 0.09f;
-            draw_text(l, b, font_px(full ? 18 : (int)(10 * R / 90.0f)), theme_color(TC_TICK), cx + (int32_t)(rt * cosf(a)), cy + (int32_t)(rt * sinf(a)), 0, LV_TEXT_ALIGN_CENTER);
+            float rt = r0 - R * 0.09f + scale_out(R);
+            draw_text(l, b, font_px((int)((full ? 18 : 10 * R / 90.0f) * g_theme.num_scale)), theme_color(TC_TICK), cx + (int32_t)(rt * cosf(a)), cy + (int32_t)(rt * sinf(a)), 0, LV_TEXT_ALIGN_CENTER);
         }
     }
     int lab = full ? 18 : (int)(13 * R / 90.0f);
@@ -218,19 +218,19 @@ static void style_stock(lv_layer_t *l, face_t *f, res_t *r)
         }
     }
     // ticks: majors 0.115R long and 0.03R wide in ink, minors 0.06R and 0.012R; minors inside a zone block are left out
-    for (int j = j0; j <= j1 && el(EL_TICKS) && STATIC_ON; j++) {
+    for (int j = j0; j <= j1 && (el(EL_TICKS) || el(EL_SCALE)) && STATIC_ON; j++) {
         float v = j * ms, fr = (v - dmin) / (dmax - dmin);
         bool major = ((j % minors) + minors) % minors == 0;
         if (!major && g_theme.bands && d->zone_count && channels_zone_of(d, channels_from_display(d, v)) != CH_ZONE_GOOD) continue;
         bool medium = !major && minors % 2 == 0 && ((j % minors) + minors) % minors == minors / 2;
         float a = (a0 + span * fr) * PI_F / 180.0f, ca = cosf(a), sa = sinf(a), r0 = rt1 - (major ? lmaj : medium ? lmid : lmin);
-        draw_line(l, cx + r0 * ca, cy + r0 * sa, cx + rt1 * ca, cy + rt1 * sa,
+        if (el(EL_TICKS)) draw_line(l, cx + r0 * ca, cy + r0 * sa, cx + rt1 * ca, cy + rt1 * sa,
                   major ? (int32_t)fmaxf(1, R * 0.03f * tk->maj_w) : medium ? (int32_t)fmaxf(1, R * 0.02f * tk->maj_w) : (int32_t)fmaxf(1, R * 0.012f * tk->min_w), major || medium ? ink : tick, false);
-        if (major && (full || R > 70)) {
+        if (el(EL_SCALE) && major && (full || R > 70)) {
             char b[16];
             if (thousands) snprintf(b, sizeof b, step >= 1000 ? "%.0f" : "%.1f", (double)(v / 1000)); else fmt_val(b, sizeof b, v, dec);
-            float rn = r0 - R * 0.17f;
-            draw_text(l, b, nfont(full ? 50 : 17 * R / 90.0f), ink, cx + (int32_t)(rn * ca), cy + (int32_t)(rn * sa), 0, LV_TEXT_ALIGN_CENTER);
+            float rn = r0 - R * 0.17f + scale_out(R);
+            draw_text(l, b, numfont(full ? 50 : 17 * R / 90.0f), ink, cx + (int32_t)(rn * ca), cy + (int32_t)(rn * sa), 0, LV_TEXT_ALIGN_CENTER);
         }
     }
 
@@ -284,11 +284,11 @@ static void style_stock2(lv_layer_t *l, face_t *f, res_t *r)
         draw_line(l, px + (rt - len) * ca, py + (rt - len) * sa, px + rt * ca, py + rt * sa, w, end || mid ? ink : tick, false);
     }
     // range ends lettered just past the sweep, like E and F
-    if (STATIC_ON && (full || R > 70)) {
+    if (STATIC_ON && el(EL_SCALE) && (full || R > 70)) {
         for (int k = 0; k < 2; k++) {
-            float a = (a0 + (k ? span + 12 : -12)) * PI_F / 180.0f;
+            float a = (a0 + (k ? span + 12 : -12)) * PI_F / 180.0f, rs = rt + scale_out(R);
             char b[16]; fmt_val(b, sizeof b, channels_to_display(d, k ? d->max : d->min), 0);
-            draw_text(l, b, nfont(full ? 40 : 15 * R / 90.0f), ink, (int32_t)(px + rt * cosf(a)), (int32_t)(py + rt * sinf(a)), 0, LV_TEXT_ALIGN_CENTER);
+            draw_text(l, b, numfont(full ? 40 : 15 * R / 90.0f), ink, (int32_t)(px + rs * cosf(a)), (int32_t)(py + rs * sinf(a)), 0, LV_TEXT_ALIGN_CENTER);
         }
     }
 

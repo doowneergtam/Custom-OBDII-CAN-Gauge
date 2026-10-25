@@ -18,13 +18,14 @@ static const char *COLOR_NAMES[TC_COUNT] = {
     "Neutral", "Good", "Warn", "Bad", "Cold", "Stale",
 };
 static const char *STYLE_NAMES[STYLE_COUNT] = { "Ring", "Dial", "Numeric", "Stock 1", "Stock 2" };
-static const char *EL_IDS[EL_COUNT] = { "digits", "label", "units", "minmax", "ticks", "bar", "needle", "window" };
+static const char *EL_IDS[EL_COUNT] = { "digits", "label", "units", "minmax", "ticks", "bar", "needle", "window", "scale" };
 const char *theme_el_id(theme_el_t e) { return e < EL_COUNT ? EL_IDS[e] : "?"; }
 void theme_defaults_extra(void)
 {
     for (int i = 0; i < EL_COUNT; i++) { g_theme.el_on[i] = true; g_theme.el_dy[i] = 0; }
     g_theme.el_on[EL_WINDOW] = false;   // the Stock odometer-window backdrop is off unless asked for
     g_theme.ticks = (theme_ticks_t){ 1, 1, 1, 1, 0, 0 };
+    g_theme.num_scale = 1;
     g_theme.needle_w = 1; g_theme.needle_len = 1; g_theme.hub_scale = 1; g_theme.sweep_rot = 0;
 }
 static const char *FILL_NAMES[FILL_COUNT]   = { "Gradient", "Segments", "Solid" };

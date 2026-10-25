@@ -24,7 +24,8 @@ typedef enum {
 // Face elements the user can switch off and move. Scale lives in the *_scale
 // fields below (digits, label, units, minmax, bar); dy is a vertical offset
 // as a fraction of the cell radius, positive = down.
-typedef enum { EL_DIGITS = 0, EL_LABEL, EL_UNITS, EL_MINMAX, EL_TICKS, EL_BAR, EL_NEEDLE, EL_WINDOW, EL_COUNT } theme_el_t;
+typedef enum { EL_DIGITS = 0, EL_LABEL, EL_UNITS, EL_MINMAX, EL_TICKS, EL_BAR, EL_NEEDLE, EL_WINDOW, EL_SCALE, EL_COUNT } theme_el_t;
+// EL_SCALE: the scale numbers (tick numerals, range ends). Its dy is a radial offset, plus = outward.
 
 typedef struct {
     float maj_w, maj_len, min_w, min_len;   // tick width/length multipliers, 1.0 = style default
@@ -42,6 +43,7 @@ typedef struct {
     float         units_scale;     // 0.6..2.5
     float         minmax_scale;    // 0.6..2.5
     float         bar_scale;       // 0.5..2.5, ring and segment thickness
+    float         num_scale;       // scale numbers (tick numerals, range ends)
     int8_t        preset;          // index into theme_preset_name(), -1 = custom
     bool          el_on[EL_COUNT];
     float         el_dy[EL_COUNT]; // -1..1, fraction of R

@@ -113,6 +113,7 @@ static cJSON *build_json(void)
     cJSON_AddNumberToObject(theme, "units_scale", num4(g_theme.units_scale));
     cJSON_AddNumberToObject(theme, "minmax_scale", num4(g_theme.minmax_scale));
     cJSON_AddNumberToObject(theme, "bar_scale", num4(g_theme.bar_scale));
+    cJSON_AddNumberToObject(theme, "num_scale", num4(g_theme.num_scale));
     cJSON *el = cJSON_AddObjectToObject(theme, "el");
     for (int i = 0; i < EL_COUNT; i++) {
         cJSON *e = cJSON_AddObjectToObject(el, theme_el_id((theme_el_t)i));
@@ -241,6 +242,8 @@ esp_err_t config_apply_json(const char *text)
         if (ms >= 0.3f && ms <= 4.1f) g_theme.minmax_scale = ms;
         float bs = (float)num(theme, "bar_scale", g_theme.bar_scale);
         if (bs >= 0.3f && bs <= 3.1f) g_theme.bar_scale = bs;
+        float ns = (float)num(theme, "num_scale", g_theme.num_scale);
+        if (ns >= 0.3f && ns <= 5.1f) g_theme.num_scale = ns;
         cJSON *el = cJSON_GetObjectItem(theme, "el");
         if (cJSON_IsObject(el)) for (int i = 0; i < EL_COUNT; i++) {
             cJSON *e = cJSON_GetObjectItem(el, theme_el_id((theme_el_t)i));

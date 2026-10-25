@@ -18,7 +18,7 @@ static const int STEPS[] = { 56, 64, 72, 80, 96, 112, 128, 144, 160, 180, 200, 2
 static lv_font_t *s_fonts[NSTEPS];
 
 // Numeral sizes the faces ask for, from the small cells to the full-screen dial.
-static const int ISTEPS[] = { 12, 14, 16, 18, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 64, 72 };
+static const int ISTEPS[] = { 12, 14, 16, 18, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 64, 72, 80, 96, 112, 128, 160 };
 #define NISTEPS ((int)(sizeof ISTEPS / sizeof ISTEPS[0]))
 static lv_font_t *s_italic[NISTEPS];
 

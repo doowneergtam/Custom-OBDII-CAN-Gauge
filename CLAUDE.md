@@ -65,7 +65,9 @@ on by default. Soak-tested via the serial console (see Bench tooling). Implement
   MAF, trims, O2. Five OBD-only channels added (LOAD, MAF, STFT, LTFT, O2).
 - Touch: tap cell = select, tap again = reset min/max, hold = menu, swipe = move; menu
   tap middle row = choose, above/below or swipe = scroll. Selection ring fades after 3 s.
-- Scalers (theme): digit, label, units, minmax, bar (ring thickness), cell (outer cells).
+- Scalers (theme): digit, label, units, minmax, bar (ring thickness), cell (outer cells), num (scale numbers).
+  Face elements (`theme.el`, see `docs/web-config.md`) each have on/off and an offset; `scale` (tick numerals,
+  range ends) is separate from `ticks` and its offset is radial.
   Per-channel show_units/show_min/show_max. User colour presets and saved screens in
   config (`theme_presets`, `screens`); Screens menu on the gauge, Saved screens card on the page.
 - Numeric style has no bar: digits as big as fit, coloured by zone. Min/max shown as lo/hi.

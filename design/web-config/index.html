@@ -200,6 +200,7 @@ const ELEMENTS = [
   ['ticks',  'Tick ring',    null,          ['dial', 'stock', 'stock2']],
   ['needle', 'Needle',       null,          ['dial', 'stock', 'stock2']],
   ['window', 'Reading backdrop', null,      ['stock', 'stock2']],
+  ['scale',  'Scale numbers', 'num_scale', ['ring', 'dial', 'stock', 'stock2']],
 ];
 function themeElDefaults() { const o = {}; for (const [k] of ELEMENTS) o[k] = { on: k !== 'window', dy: 0 }; return o; }
 function fixTheme(t) {
@@ -214,7 +215,7 @@ function defaultConfig() {
     layout: 1, cells: ['BOOST', 'OILP', 'CLT', 'AFR', 'BATT', 'OILT', 'RPM'], brightness: 80, sim: true, source: 'ms',
     units: { temp_c: false, press_bar: false, speed_kmh: false },
     zoom: 1,
-    theme: { preset: 'Ice', style: 'ring', fill: 'gradient', bands: true, digit_scale: 1, label_scale: 1, cell_scale: 1, units_scale: 1, minmax_scale: 1, bar_scale: 1, rgb: { ...PRESETS.Ice },
+    theme: { preset: 'Ice', style: 'ring', fill: 'gradient', bands: true, digit_scale: 1, label_scale: 1, cell_scale: 1, units_scale: 1, minmax_scale: 1, bar_scale: 1, num_scale: 1, rgb: { ...PRESETS.Ice },
              el: themeElDefaults(), ticks: { maj_w: 1, maj_len: 1, min_w: 1, min_len: 1, maj_n: 0, min_n: 0 }, needle: { w: 1, len: 1, hub: 1 }, sweep_rot: 0 },
     alarms: { volume: 60, warn_on: true, bad_on: true, mute: false, repeat_s: 10, tone_warn: {}, tone_bad: {} },
     channels: {},
@@ -629,7 +630,8 @@ function renderTheme() {
             ...ELEMENTS.filter(([k, , , styles]) => styles.includes(t.style)).map(([k, name, scaleKey]) => h('div', { class: 'elbox' },
               row(name, null, sw(() => t.el[k].on, v => { t.el[k].on = v; save(); refreshMini(); })),
               scaleKey ? sl('Size', null, 50, 500, () => Math.round((t[scaleKey] || 1) * 100), v => { t[scaleKey] = v / 100; }, v => v + '%', refreshMini) : null,
-              k !== 'ticks' && k !== 'bar' && k !== 'needle' ? sl('Up / down', 'Percent of the cell radius, plus is down', -100, 100, () => Math.round((t.el[k].dy || 0) * 100), v => { t.el[k].dy = v / 100; }, v => (v > 0 ? '+' : '') + v + '%', refreshMini) : null))),
+              k === 'scale' ? sl('In / out', 'Percent of the cell radius, plus is outward', -40, 40, () => Math.round((t.el[k].dy || 0) * 100), v => { t.el[k].dy = v / 100; }, v => (v > 0 ? '+' : '') + v + '%', refreshMini)
+              : k !== 'ticks' && k !== 'bar' && k !== 'needle' ? sl('Up / down', 'Percent of the cell radius, plus is down', -100, 100, () => Math.round((t.el[k].dy || 0) * 100), v => { t.el[k].dy = v / 100; }, v => (v > 0 ? '+' : '') + v + '%', refreshMini) : null))),
           ['dial', 'stock', 'stock2'].includes(t.style) ? card('Ticks',
             sl('Major tick width', null, 20, 400, () => Math.round(t.ticks.maj_w * 100), v => { t.ticks.maj_w = v / 100; }),
             sl('Major tick length', null, 20, 400, () => Math.round(t.ticks.maj_len * 100), v => { t.ticks.maj_len = v / 100; }),

@@ -289,7 +289,9 @@ static const lv_font_t *dfont(float px) { return fonts_digits((int)(px * g_theme
 static const lv_font_t *lfont(float px) { return font_px((int)(px * g_theme.label_scale)); }
 static const lv_font_t *ufont(float px) { return font_px((int)(px * g_theme.units_scale)); }
 static const lv_font_t *mfont(float px) { return font_px((int)(px * g_theme.minmax_scale)); }
-static const lv_font_t *nfont(float px) { return fonts_numerals((int)(px * g_theme.label_scale)); }   // Stock numerals and labels: bold italic when the TTF is compiled in
+static const lv_font_t *nfont(float px) { return fonts_numerals((int)(px * g_theme.label_scale)); }
+static const lv_font_t *numfont(float px) { return fonts_numerals((int)(px * g_theme.num_scale)); }   // scale numbers: own size slider
+static float scale_out(int32_t R) { return g_theme.el_dy[EL_SCALE] * R; }   // radial offset of the scale numbers, plus = outward   // Stock numerals and labels: bold italic when the TTF is compiled in
 // Digit font at the requested size, stepped down until the string fits max_w.
 static const lv_font_t *fit_digits(const char *s, float px, int32_t max_w)
 {
@@ -353,12 +355,12 @@ static void style_ring(lv_layer_t *l, face_t *f, res_t *r)
         draw_line(l, cx + r0 * cosf(a), cy + r0 * sinf(a), cx + r1 * cosf(a), cy + r1 * sinf(a), (int32_t)fmaxf(2, 2.5f * s), r->dim ? theme_color(TC_STALE) : theme_color(TC_DIGITS), false);
     }
     DYN_END();
-    if (full && el(EL_BAR)) {
-        float ri = rr - w - 14 * s; char b[16];
+    if (full && el(EL_SCALE)) {
+        float ri = rr - w - 14 * s + scale_out(R); char b[16];
         fmt_val(b, sizeof b, channels_to_display(d, d->min), 0);
-        draw_text(l, b, font_px((int)(13 * s)), theme_color(TC_TICK), cx + (int32_t)(ri * cosf(a0 * PI_F / 180)), cy + (int32_t)(ri * sinf(a0 * PI_F / 180)), 0, LV_TEXT_ALIGN_CENTER);
+        draw_text(l, b, font_px((int)(13 * s * g_theme.num_scale)), theme_color(TC_TICK), cx + (int32_t)(ri * cosf(a0 * PI_F / 180)), cy + (int32_t)(ri * sinf(a0 * PI_F / 180)), 0, LV_TEXT_ALIGN_CENTER);
         fmt_val(b, sizeof b, channels_to_display(d, d->max), 0);
-        draw_text(l, b, font_px((int)(13 * s)), theme_color(TC_TICK), cx + (int32_t)(ri * cosf((a0 + span) * PI_F / 180)), cy + (int32_t)(ri * sinf((a0 + span) * PI_F / 180)), 0, LV_TEXT_ALIGN_CENTER);
+        draw_text(l, b, font_px((int)(13 * s * g_theme.num_scale)), theme_color(TC_TICK), cx + (int32_t)(ri * cosf((a0 + span) * PI_F / 180)), cy + (int32_t)(ri * sinf((a0 + span) * PI_F / 180)), 0, LV_TEXT_ALIGN_CENTER);
     }
     int lab = full ? 18 : (int)(14 * R / 90.0f);
     if (el(EL_LABEL)) draw_text(l, d->name, lfont(lab), r->dim ? theme_color(TC_STALE) : theme_color(TC_LABEL), cx, cy - (int32_t)(R * 0.5f) + dyp(EL_LABEL, R), lab / 5, LV_TEXT_ALIGN_CENTER);
