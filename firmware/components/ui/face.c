@@ -7,6 +7,7 @@
 #include <string.h>
 #include <strings.h>
 #include "esp_timer.h"
+#include "esp_log.h"
 #include "theme.h"
 #include "fonts.h"
 

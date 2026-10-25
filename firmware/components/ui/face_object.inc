@@ -33,6 +33,7 @@ static void centre_of(lv_obj_t *obj, face_t *f)
 static void build_bg(lv_obj_t *obj, face_t *f, int style, bool dim)
 {
     int32_t w = lv_obj_get_width(obj), h = lv_obj_get_height(obj);
+    if (w <= 0 || h <= 0) { f->bg_valid = false; return; }   // not laid out yet: try again next frame
     lv_color_format_t cf = f->full ? LV_COLOR_FORMAT_RGB565 : LV_COLOR_FORMAT_ARGB8888;   // small cells keep their corners see-through
     if (f->bg && (f->bg->header.w != w || f->bg->header.h != h || f->bg->header.cf != cf)) {
         if (f->canvas) { lv_obj_delete(f->canvas); f->canvas = NULL; }
@@ -52,6 +53,7 @@ static void build_bg(lv_obj_t *obj, face_t *f, int style, bool dim)
     s_pass = P_ALL; s_dyn = false;
     lv_canvas_finish_layer(f->canvas, &layer);
     f->bg_valid = true; f->bg_gen = s_face_gen; f->bg_style = style; f->bg_dim = dim;
+    { const uint16_t *px = (const uint16_t *)f->bg->data; (void)px; ESP_LOGD("face", "bg built %ldx%ld cf %d", (long)w, (long)h, (int)cf); }
 }
 
 int64_t g_face_draw_us, g_face_draw_n;   // console perf: time inside the face drawing code
@@ -65,7 +67,8 @@ static void draw_cb(lv_event_t *e)
     centre_of(obj, f);
     res_t r; resolve(f, &r);
     int style = face_style(f);
-    if (cacheable(style) && f->bg_valid && f->bg_style == style) {
+    if (cacheable(style) && f->bg_valid && f->bg_style == style && f->bg
+        && (int32_t)f->bg->header.w == lv_obj_get_width(obj) && (int32_t)f->bg->header.h == lv_obj_get_height(obj)) {
         lv_area_t co; lv_obj_get_coords(obj, &co);
         lv_draw_image_dsc_t id; lv_draw_image_dsc_init(&id);
         id.src = f->bg;
@@ -137,6 +140,7 @@ void face_refresh(lv_obj_t *face, int64_t now_us)
 
     int style = face_style(f);
     bool dim = fr != CH_FRESH;
+    if (lv_obj_get_width(face) <= 0) lv_obj_update_layout(face);   // a face rebuilt this tick has no size until layout runs
     centre_of(face, f);
     bool whole = false;
     if (cacheable(style) && (!f->bg_valid || f->bg_gen != s_face_gen || f->bg_style != style || f->bg_dim != dim)) {
