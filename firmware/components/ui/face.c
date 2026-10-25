@@ -45,6 +45,7 @@ typedef struct {
     bool           bg_dim, bg_valid;
     // where the moving parts were drawn last frame, so the next frame repaints exactly those
     lv_area_t      dyn[24];
+    uint8_t        dyng[24];     // which moving part each rectangle belongs to (G_*)
     int            ndyn;
     char           last_str[16];
     int            last_flash, last_focus;
@@ -87,12 +88,15 @@ static bool    s_dyn;
 #ifndef NEEDLE_BOX_PX
 #define NEEDLE_BOX_PX 80.0f   // length of each box along a moving needle: fewer, larger areas beat many small ones
 #endif
+// Moving parts come in groups that change for different reasons; a frame repaints a group only when it changed.
+enum { G_TEXT = 0, G_NEEDLE, G_MARK };
+static uint8_t s_grp, *s_measg;
 static lv_area_t *s_meas; static int *s_nmeas;
 static uint32_t s_rawmask;   // rectangles recorded by meas_line/meas_raw: never merged into
 static bool s_nomeas;        // a part recording its own rectangles turns the per-primitive ones off
 #define STATIC_ON (s_pass == P_ALL || s_pass == P_BG)   // skip static loops entirely when only moving parts are wanted
 #define WANT() (gate() || (s_pass == P_MEASURE && s_dyn))
-#define DYN_BEGIN() (s_dyn = true)
+#define DYN_BEGIN() (s_dyn = true, s_grp = G_TEXT)
 #define DYN_END()   (s_dyn = false)
 static bool gate(void)
 {
@@ -103,14 +107,14 @@ static void meas(int32_t x1, int32_t y1, int32_t x2, int32_t y2)
     if (s_pass != P_MEASURE || !s_dyn || !s_meas || s_nomeas) return;
     lv_area_t a = { x1 - 3, y1 - 3, x2 + 3, y2 + 3 };
     for (int i = 0; i < *s_nmeas; i++) {   // merge with any rectangle it touches
-        if (s_rawmask & (1u << i)) continue;
+        if ((s_rawmask & (1u << i)) || s_measg[i] != s_grp) continue;
         lv_area_t *b = &s_meas[i];
         if (a.x1 <= b->x2 + 8 && a.x2 >= b->x1 - 8 && a.y1 <= b->y2 + 8 && a.y2 >= b->y1 - 8) {
             b->x1 = LV_MIN(a.x1, b->x1); b->y1 = LV_MIN(a.y1, b->y1); b->x2 = LV_MAX(a.x2, b->x2); b->y2 = LV_MAX(a.y2, b->y2);
             return;
         }
     }
-    if (*s_nmeas < MEAS_MAX) { s_meas[(*s_nmeas)++] = a; return; }
+    if (*s_nmeas < MEAS_MAX) { s_measg[*s_nmeas] = s_grp; s_meas[(*s_nmeas)++] = a; return; }
     lv_area_t *b = &s_meas[MEAS_MAX - 1];
     b->x1 = LV_MIN(a.x1, b->x1); b->y1 = LV_MIN(a.y1, b->y1); b->x2 = LV_MAX(a.x2, b->x2); b->y2 = LV_MAX(a.y2, b->y2);
 }
@@ -126,7 +130,7 @@ static void meas_raw(int32_t x1, int32_t y1, int32_t x2, int32_t y2)
 {
     if (s_pass != P_MEASURE || !s_meas) return;
     lv_area_t a = { x1, y1, x2, y2 };
-    if (*s_nmeas < MEAS_MAX) { s_rawmask |= 1u << *s_nmeas; s_meas[(*s_nmeas)++] = a; return; }
+    if (*s_nmeas < MEAS_MAX) { s_rawmask |= 1u << *s_nmeas; s_measg[*s_nmeas] = G_NEEDLE; s_meas[(*s_nmeas)++] = a; return; }
     lv_area_t *b = &s_meas[MEAS_MAX - 1];
     b->x1 = LV_MIN(a.x1, b->x1); b->y1 = LV_MIN(a.y1, b->y1); b->x2 = LV_MAX(a.x2, b->x2); b->y2 = LV_MAX(a.y2, b->y2);
 }
@@ -327,7 +331,7 @@ static void style_ring(lv_layer_t *l, face_t *f, res_t *r)
             if (on) c = r->dim ? theme_color(TC_STALE) : (d->zone_count ? band_color(d, fm) : theme_color(TC_NEUTRAL));
             else if (g_theme.bands && d->zone_count && channels_zone_of(d, d->min + fm * (d->max - d->min)) != CH_ZONE_GOOD) { c = band_color(d, fm); opa = 72; }
             else c = theme_color(TC_TRACK);
-            s_dyn = on;
+            s_dyn = on; s_grp = G_NEEDLE;
             draw_arc(l, cx, cy, rr, w, a0 + i * step + gap / 2, a0 + (i + 1) * step - gap / 2, c, opa, false);
         }
         DYN_END();
@@ -335,14 +339,14 @@ static void style_ring(lv_layer_t *l, face_t *f, res_t *r)
         draw_arc(l, cx, cy, rr, w, a0, a0 + span, theme_color(TC_TRACK), LV_OPA_COVER, true);
         if (g_theme.bands) arc_bands(l, d, cx, cy, rr, w, a0, span, 72);
         if (lit) {
-            DYN_BEGIN();
+            DYN_BEGIN(); s_grp = G_NEEDLE;
             draw_arc(l, cx, cy, rr, w, a0 + span * flo, a0 + span * fhi, r->bar, LV_OPA_COVER, true);
             float a = (a0 + span * r->frac) * PI_F / 180.0f;
             draw_disc(l, cx + (int32_t)(rr * cosf(a)), cy + (int32_t)(rr * sinf(a)), (int32_t)fmaxf(2, w * 0.22f), lv_color_white(), 217);
             DYN_END();
         }
     }
-    DYN_BEGIN();
+    DYN_BEGIN(); s_grp = G_MARK;
     for (int k = 0; k < 2 && el(EL_BAR); k++) {   // min and max markers
         if (k == 0 ? !r->has_lo : !r->has_pk) continue;
         float a = (a0 + span * (k == 0 ? r->lofrac : r->pkfrac)) * PI_F / 180.0f, r0 = rr + w / 2.0f + 2 * s, r1 = r0 + 7 * s;

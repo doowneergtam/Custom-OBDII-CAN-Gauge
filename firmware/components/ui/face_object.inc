@@ -149,25 +149,28 @@ void face_refresh(lv_obj_t *face, int64_t now_us)
     }
     res_t r; resolve(f, &r);
     if (f->focused != (bool)f->last_focus) whole = true;
-    bool changed = f->disp != f->last_disp || strcmp(r.str, f->last_str) != 0 || r.flash != f->last_flash
-                   || st->peak != f->last_peak || st->floor != f->last_floor;
+    bool ch_needle = f->disp != f->last_disp;
+    bool ch_marks = st->peak != f->last_peak || st->floor != f->last_floor;
+    bool ch_text = strcmp(r.str, f->last_str) != 0 || r.flash != f->last_flash || ch_marks;   // min/max text follows the marks
+    bool changed = ch_needle || ch_marks || ch_text;
     if (!changed && !whole) return;
     if (!cacheable(style)) whole = true;
 
-    lv_area_t now[MEAS_MAX]; int n = 0;
-    s_meas = now; s_nmeas = &n; s_rawmask = 0; s_nomeas = false; s_pass = P_MEASURE; s_dyn = false;
+    lv_area_t now[MEAS_MAX]; uint8_t nowg[MEAS_MAX]; int n = 0;
+    s_meas = now; s_measg = nowg; s_nmeas = &n; s_rawmask = 0; s_nomeas = false; s_pass = P_MEASURE; s_dyn = false;
     style_of(style)(NULL, f, &r);
     s_pass = P_ALL; s_dyn = false; s_meas = NULL; s_nmeas = NULL;
 
     { int64_t px = 0; if (whole) px = (int64_t)lv_obj_get_width(face) * lv_obj_get_height(face);
-      else { for (int i = 0; i < f->ndyn; i++) px += lv_area_get_size(&f->dyn[i]); for (int i = 0; i < n; i++) px += lv_area_get_size(&now[i]); }
+      else { for (int i = 0; i < f->ndyn; i++) px += lv_area_get_size(&f->dyn[i]); for (int i = 0; i < n; i++) px += lv_area_get_size(&now[i]); }   // upper bound
       g_face_inv_px += px; g_face_inv_rects += whole ? 1 : f->ndyn + n; }
     if (whole) lv_obj_invalidate(face);
     else {
-        for (int i = 0; i < f->ndyn; i++) lv_obj_invalidate_area(face, &f->dyn[i]);
-        for (int i = 0; i < n; i++) lv_obj_invalidate_area(face, &now[i]);
+        bool chg[3] = { ch_text, ch_needle, ch_marks };   // indexed by G_*
+        for (int i = 0; i < f->ndyn; i++) if (chg[f->dyng[i]]) lv_obj_invalidate_area(face, &f->dyn[i]);
+        for (int i = 0; i < n; i++) if (chg[nowg[i]]) lv_obj_invalidate_area(face, &now[i]);
     }
-    memcpy(f->dyn, now, sizeof now); f->ndyn = n;
+    memcpy(f->dyn, now, sizeof now); memcpy(f->dyng, nowg, sizeof nowg); f->ndyn = n;
     f->last_disp = f->disp; snprintf(f->last_str, sizeof f->last_str, "%s", r.str); f->last_flash = r.flash;
     f->last_peak = st->peak; f->last_floor = st->floor; f->last_focus = f->focused;
 }

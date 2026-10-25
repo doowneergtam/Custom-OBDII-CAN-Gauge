@@ -41,7 +41,7 @@ static void style_dial(lv_layer_t *l, face_t *f, res_t *r)
     if (el(EL_MINMAX)) { char b[40]; if (minmax_text(r, b, sizeof b)) draw_text(l, b, mfont(full ? 13 * s : 9 * R / 90.0f), theme_color(TC_UNITS), cx, cy + (int32_t)(R * (full ? 0.86f : 0.74f)) + dyp(EL_MINMAX, R), 0, LV_TEXT_ALIGN_CENTER); }
 
     // needle: tapered triangle in the bar colour, hub ring
-    DYN_BEGIN();
+    DYN_BEGIN(); s_grp = G_NEEDLE;
     float a = (a0 + span * r->frac) * PI_F / 180.0f, L = (R - 12 - bw - R * 0.1f) * g_theme.needle_len, hub = fmaxf(3, R * 0.06f * g_theme.hub_scale);
     float ca = cosf(a), sa = sinf(a);
     float bx = cx - hub * 1.3f * ca, by = cy - hub * 1.3f * sa;
@@ -62,6 +62,7 @@ static void style_dial(lv_layer_t *l, face_t *f, res_t *r)
         s_nomeas = false;
     }
     // min and max markers on the rim
+    s_grp = G_MARK;
     for (int k = 0; k < 2 && el(EL_MINMAX); k++) {
         if (k == 0 ? !r->has_lo : !r->has_pk) continue;
         float am = (a0 + span * (k == 0 ? r->lofrac : r->pkfrac)) * PI_F / 180.0f, rr = R - 1, ri = R - 1 - 7 * s;
@@ -115,7 +116,7 @@ static int32_t stock_bezel(lv_layer_t *l, int32_t cx, int32_t cy, int32_t R, flo
 // with the big dark hub on top of it.
 static void stock_needle(lv_layer_t *l, float px, float py, float a, float L, float hub, int32_t R, float s, lv_color_t nc)
 {
-    DYN_BEGIN();
+    DYN_BEGIN(); s_grp = G_NEEDLE;
     L *= g_theme.needle_len; hub *= g_theme.hub_scale;
     float ca = cosf(a), sa = sinf(a);
     float wb = fmaxf(2.0f, R * 0.036f * g_theme.needle_w);      // base half-width where it leaves the hub
@@ -158,7 +159,7 @@ static void stock_needle(lv_layer_t *l, float px, float py, float a, float L, fl
 static void stock_marker(lv_layer_t *l, float px, float py, float am, float rr, float s, lv_color_t c)
 {
     float ri = rr - 7 * s;
-    DYN_BEGIN();
+    DYN_BEGIN(); s_grp = G_MARK;
     draw_tri(l, px + rr * cosf(am), py + rr * sinf(am), px + ri * cosf(am + 0.05f), py + ri * sinf(am + 0.05f),
              px + ri * cosf(am - 0.05f), py + ri * sinf(am - 0.05f), c);
     DYN_END();
